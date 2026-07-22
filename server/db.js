@@ -59,6 +59,28 @@ const db = new sqlite3.Database(dbPath, (err) => {
         created_at TEXT DEFAULT (datetime('now'))
       )`);
 
+      // Products Catalog
+      db.run(`CREATE TABLE IF NOT EXISTS products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        ticket_price REAL DEFAULT 0,
+        cost REAL DEFAULT 0,
+        profit REAL DEFAULT 0,
+        category TEXT,
+        description TEXT
+      )`);
+
+      // Operational Agenda
+      db.run(`CREATE TABLE IF NOT EXISTS agenda_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        date TEXT,
+        time TEXT,
+        category TEXT,
+        assignee_id INTEGER,
+        status TEXT DEFAULT 'Agendado'
+      )`);
+
       // Tasks
       db.run(`CREATE TABLE IF NOT EXISTS tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +89,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
         FOREIGN KEY (assignee_id) REFERENCES users (id)
       )`);
 
-      // ── Seed Data ──
+      // ── Seed Users ──
       db.get("SELECT count(*) as count FROM users", (err, row) => {
         if (!err && row.count <= 3) {
           db.run(`DELETE FROM users`);
@@ -79,10 +101,52 @@ const db = new sqlite3.Database(dbPath, (err) => {
         }
       });
 
+      // ── Seed Products ──
+      db.get("SELECT count(*) as count FROM products", (err, row) => {
+        if (!err && row.count === 0) {
+          const sampleProducts = [
+            ['Pacote Software Customizado', 5000, 1700, 3300, 'Sistemas', 'Sistema sob medida com ticket de R$ 5k, custo de R$ 1.7k e margem de R$ 3.3k (66%)'],
+            ['Agente de IA de Atendimento', 12000, 3200, 8800, 'IA', 'Automação inteligente de suporte e vendas com IA'],
+            ['Pack 3 Landing Pages Alta Conversão', 8500, 2200, 6300, 'Sites', 'Páginas otimizadas para tráfego pago'],
+            ['Integração de APIs & ERP', 15000, 4500, 10500, 'Integrações', 'Conexão entre plataformas e bancos de dados'],
+            ['Dashboard de BI & Analytics', 9000, 2500, 6500, 'Sistemas', 'Painel de inteligência de negócios customizado']
+          ];
+          sampleProducts.forEach(([name, price, cost, profit, cat, desc]) => {
+            db.run(`INSERT INTO products (name, ticket_price, cost, profit, category, description) VALUES (?,?,?,?,?,?)`,
+              [name, price, cost, profit, cat, desc]);
+          });
+        }
+      });
+
+      // ── Seed Agenda Events (All 2026 including 22/07, 23/07, etc) ──
+      db.get("SELECT count(*) as count FROM agenda_events", (err, row) => {
+        if (!err && row.count === 0) {
+          const sampleEvents = [
+            ['Reunião de Alinhamento com Cliente XYZ', '2026-07-22', '14:00', 'Cliente', 2, 'Concluído'],
+            ['Apresentação de Proposta ERP', '2026-07-22', '16:30', 'Vendas', 2, 'Concluído'],
+            ['Entrega da Fase 1 - Sistema OS', '2026-07-23', '10:00', 'Projeto', 3, 'Agendado'],
+            ['Code Review Agente IA', '2026-07-23', '15:00', 'Dev', 3, 'Agendado'],
+            ['Sprints Planning Agosto/2026', '2026-07-25', '09:00', 'Interno', 1, 'Agendado'],
+            ['Workshop de Treinamento de Clientes', '2026-07-28', '11:00', 'Cliente', 4, 'Agendado'],
+            ['Fechamento Financeiro de Julho/2026', '2026-07-31', '17:00', 'Financeiro', 1, 'Agendado']
+          ];
+          sampleEvents.forEach(([title, date, time, cat, assignee, status]) => {
+            db.run(`INSERT INTO agenda_events (title, date, time, category, assignee_id, status) VALUES (?,?,?,?,?,?)`,
+              [title, date, time, cat, assignee, status]);
+          });
+        }
+      });
+
+      // ── Seed Transactions (Full 2026 Calendar Jan-Dec) ──
       db.get("SELECT count(*) as count FROM transactions", (err, row) => {
         if (!err) {
           db.run(`DELETE FROM transactions`);
           const revenues = [
+            // Jan
+            ['Sistema ERP Módulo Alpha','38000','income','Sistemas','2026-01'],
+            ['Landing Page Institucional','6500','income','Sites','2026-01'],
+            ['Servidor AWS','3000','expense','Infraestrutura','2026-01'],
+            ['Salários','18000','expense','Pessoas','2026-01'],
             // Feb
             ['Sistema E-commerce','42000','income','Sistemas','2026-02'],
             ['Landing Page Pack','8500','income','Sites','2026-02'],
@@ -111,7 +175,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
             ['Agente IA Vendas','18000','income','IA','2026-06'],
             ['Google Ads','3000','expense','Marketing','2026-06'],
             ['Salários','22000','expense','Pessoas','2026-06'],
-            // Jul (current - 22/07/2026)
+            // Jul (Current - 22/07/2026)
             ['Sistema OS SolutionMath','38000','income','Sistemas','2026-07'],
             ['Pack 3 Landing Pages','14500','income','Sites','2026-07'],
             ['Integração CRM Custom','18000','income','Integrações','2026-07'],
@@ -119,6 +183,26 @@ const db = new sqlite3.Database(dbPath, (err) => {
             ['Servidor AWS','3800','expense','Infraestrutura','2026-07'],
             ['Salários','22000','expense','Pessoas','2026-07'],
             ['Ferramentas Dev','2200','expense','Ferramentas','2026-07'],
+            // Aug (Forecast/Projeção)
+            ['[Projeção] Contrato ERP Beta','45000','income','Sistemas','2026-08'],
+            ['[Projeção] Agente IA Vendas v2','25000','income','IA','2026-08'],
+            ['[Projeção] Custo Fixo Operacional','25000','expense','Pessoas','2026-08'],
+            // Sep (Forecast/Projeção)
+            ['[Projeção] App Mobile SaaS','38000','income','Apps','2026-09'],
+            ['[Projeção] Integração API Cloud','20000','income','Integrações','2026-09'],
+            ['[Projeção] Custo Fixo Operacional','25000','expense','Pessoas','2026-09'],
+            // Oct (Forecast/Projeção)
+            ['[Projeção] Renovação Contratos IA','30000','income','IA','2026-10'],
+            ['[Projeção] Sistema Sob Medida Corp','50000','income','Sistemas','2026-10'],
+            ['[Projeção] Custo Fixo Operacional','26000','expense','Pessoas','2026-10'],
+            // Nov (Forecast/Projeção)
+            ['[Projeção] Licenciamento SaaS','40000','income','Sistemas','2026-11'],
+            ['[Projeção] Consultoria IA Enterprise','35000','income','IA','2026-11'],
+            ['[Projeção] Custo Fixo Operacional','26000','expense','Pessoas','2026-11'],
+            // Dec (Forecast/Projeção)
+            ['[Projeção] Projeto Especial Fim de Ano','60000','income','Sistemas','2026-12'],
+            ['[Projeção] Agentes IA Black Friday','32000','income','IA','2026-12'],
+            ['[Projeção] Custo Fixo Operacional','28000','expense','Pessoas','2026-12']
           ];
           revenues.forEach(([desc, amt, type, cat, month]) => {
             db.run(`INSERT INTO transactions (description,amount,type,category,month) VALUES (?,?,?,?,?)`,
@@ -127,6 +211,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
         }
       });
 
+      // ── Seed Deals ──
       db.get("SELECT count(*) as count FROM deals", (err, row) => {
         if (!err && row.count === 0) {
           const deals = [

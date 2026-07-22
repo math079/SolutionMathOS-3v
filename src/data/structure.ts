@@ -13,7 +13,7 @@ export interface ProcessDetail {
   automations: string[];
   integrations: string[];
   relatedModules: string[];
-  type?: 'default' | 'crm' | 'tasks' | 'hr';
+  type?: 'default' | 'crm' | 'tasks' | 'hr' | 'products' | 'agenda';
 }
 
 export interface Sector {

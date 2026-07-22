@@ -5,6 +5,8 @@ import { ChevronRight, Settings, Key, Link as LinkIcon, Users, Target, X, Maximi
 import CRMView from './CRMView';
 import TasksView from './TasksView';
 import HRView from './HRView';
+import ProductsView from './ProductsView';
+import AgendaCalendarView from './AgendaCalendarView';
 
 interface DepartmentWindowProps {
   department: Department;
@@ -121,6 +123,10 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
             <TasksView />
           ) : activeProcess.type === 'hr' ? (
             <HRView />
+          ) : activeProcess.type === 'products' ? (
+            <ProductsView />
+          ) : activeProcess.type === 'agenda' ? (
+            <AgendaCalendarView />
           ) : (
             /* Process Detail View */
             <div className="flex-1 flex flex-col overflow-hidden">

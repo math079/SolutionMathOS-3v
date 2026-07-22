@@ -133,7 +133,7 @@ const HRView: React.FC = () => {
   // KPIs
   const totalEmployees = users.length;
   const activeEmployees = users.filter(u => u.status === 'Ativo' || !u.status).length;
-  const totalPayroll   = users.reduce((sum, u) => sum + (u.salary || 0), 0);
+  const totalPayroll   = users.reduce((sum, u) => sum + (parseFloat(String(u.salary || 0)) || 0), 0);
   const avgSalary      = totalEmployees > 0 ? totalPayroll / totalEmployees : 0;
   const pjCount        = users.filter(u => u.contract_type === 'PJ').length;
   const cltCount       = users.filter(u => u.contract_type === 'CLT').length;
