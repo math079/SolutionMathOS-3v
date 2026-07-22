@@ -80,45 +80,45 @@ const db = new sqlite3.Database(dbPath, (err) => {
       });
 
       db.get("SELECT count(*) as count FROM transactions", (err, row) => {
-        if (!err && row.count === 0) {
-          const months = ['2025-02','2025-03','2025-04','2025-05','2025-06','2025-07'];
+        if (!err) {
+          db.run(`DELETE FROM transactions`);
           const revenues = [
             // Feb
-            ['Sistema E-commerce','42000','income','Sistemas','2025-02'],
-            ['Landing Page Pack','8500','income','Sites','2025-02'],
-            ['Servidor AWS','3200','expense','Infraestrutura','2025-02'],
-            ['Salários','18000','expense','Pessoas','2025-02'],
+            ['Sistema E-commerce','42000','income','Sistemas','2026-02'],
+            ['Landing Page Pack','8500','income','Sites','2026-02'],
+            ['Servidor AWS','3200','expense','Infraestrutura','2026-02'],
+            ['Salários','18000','expense','Pessoas','2026-02'],
             // Mar
-            ['App Mobile Fintech','35000','income','Apps','2025-03'],
-            ['Agente IA Atendimento','12000','income','IA','2025-03'],
-            ['Ferramentas SaaS','2100','expense','Ferramentas','2025-03'],
-            ['Salários','18000','expense','Pessoas','2025-03'],
+            ['App Mobile Fintech','35000','income','Apps','2026-03'],
+            ['Agente IA Atendimento','12000','income','IA','2026-03'],
+            ['Ferramentas SaaS','2100','expense','Ferramentas','2026-03'],
+            ['Salários','18000','expense','Pessoas','2026-03'],
             // Apr
-            ['Site Institucional','7500','income','Sites','2025-04'],
-            ['Integração API Pagamentos','18000','income','Integrações','2025-04'],
-            ['Sistema ERP Módulo','28000','income','Sistemas','2025-04'],
-            ['Marketing Ads','4500','expense','Marketing','2025-04'],
-            ['Salários','20000','expense','Pessoas','2025-04'],
+            ['Site Institucional','7500','income','Sites','2026-04'],
+            ['Integração API Pagamentos','18000','income','Integrações','2026-04'],
+            ['Sistema ERP Módulo','28000','income','Sistemas','2026-04'],
+            ['Marketing Ads','4500','expense','Marketing','2026-04'],
+            ['Salários','20000','expense','Pessoas','2026-04'],
             // May
-            ['Automação Workflows','15000','income','Automações','2025-05'],
-            ['Landing Page Premium','9000','income','Sites','2025-05'],
-            ['Consultoria IA','22000','income','IA','2025-05'],
-            ['Servidor AWS','3500','expense','Infraestrutura','2025-05'],
-            ['Salários','20000','expense','Pessoas','2025-05'],
+            ['Automação Workflows','15000','income','Automações','2026-05'],
+            ['Landing Page Premium','9000','income','Sites','2026-05'],
+            ['Consultoria IA','22000','income','IA','2026-05'],
+            ['Servidor AWS','3500','expense','Infraestrutura','2026-05'],
+            ['Salários','20000','expense','Pessoas','2026-05'],
             // Jun
-            ['Dashboard Analytics','19000','income','Sistemas','2025-06'],
-            ['App Mobile v2','25000','income','Apps','2025-06'],
-            ['Agente IA Vendas','18000','income','IA','2025-06'],
-            ['Google Ads','3000','expense','Marketing','2025-06'],
-            ['Salários','22000','expense','Pessoas','2025-06'],
-            // Jul (current - partial)
-            ['Sistema OS SolutionMath','38000','income','Sistemas','2025-07'],
-            ['Pack 3 Landing Pages','14500','income','Sites','2025-07'],
-            ['Integração CRM Custom','18000','income','Integrações','2025-07'],
-            ['Agente IA Suporte','14000','income','IA','2025-07'],
-            ['Servidor AWS','3800','expense','Infraestrutura','2025-07'],
-            ['Salários','22000','expense','Pessoas','2025-07'],
-            ['Ferramentas Dev','2200','expense','Ferramentas','2025-07'],
+            ['Dashboard Analytics','19000','income','Sistemas','2026-06'],
+            ['App Mobile v2','25000','income','Apps','2026-06'],
+            ['Agente IA Vendas','18000','income','IA','2026-06'],
+            ['Google Ads','3000','expense','Marketing','2026-06'],
+            ['Salários','22000','expense','Pessoas','2026-06'],
+            // Jul (current - 22/07/2026)
+            ['Sistema OS SolutionMath','38000','income','Sistemas','2026-07'],
+            ['Pack 3 Landing Pages','14500','income','Sites','2026-07'],
+            ['Integração CRM Custom','18000','income','Integrações','2026-07'],
+            ['Agente IA Suporte','14000','income','IA','2026-07'],
+            ['Servidor AWS','3800','expense','Infraestrutura','2026-07'],
+            ['Salários','22000','expense','Pessoas','2026-07'],
+            ['Ferramentas Dev','2200','expense','Ferramentas','2026-07'],
           ];
           revenues.forEach(([desc, amt, type, cat, month]) => {
             db.run(`INSERT INTO transactions (description,amount,type,category,month) VALUES (?,?,?,?,?)`,

@@ -7,12 +7,12 @@ import { TrendingUp, TrendingDown, DollarSign, Percent, Target, Zap, PlusCircle,
 
 const COLORS = ['#14b8a6','#2dd4bf','#0d9488','#5eead4','#99f6e4','#f59e0b','#ef4444','#8b5cf6'];
 const MONTH_LABELS: Record<string, string> = {
-  '2025-02': 'Fevereiro 2025', '2025-03': 'Março 2025', '2025-04': 'Abril 2025',
-  '2025-05': 'Maio 2025', '2025-06': 'Junho 2025', '2025-07': 'Julho 2025'
+  '2026-02': 'Fevereiro 2026', '2026-03': 'Março 2026', '2026-04': 'Abril 2026',
+  '2026-05': 'Maio 2026', '2026-06': 'Junho 2026', '2026-07': 'Julho 2026'
 };
 const MONTH_SHORT: Record<string, string> = {
-  '2025-02': 'Fev', '2025-03': 'Mar', '2025-04': 'Abr',
-  '2025-05': 'Mai', '2025-06': 'Jun', '2025-07': 'Jul'
+  '2026-02': 'Fev', '2026-03': 'Mar', '2026-04': 'Abr',
+  '2026-05': 'Mai', '2026-06': 'Jun', '2026-07': 'Jul'
 };
 
 const fmt = (v: number) => `R$ ${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`;
@@ -29,7 +29,7 @@ const FinancialDashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>('all'); // 'all' or '2025-07', etc.
   const [showAdd, setShowAdd]           = useState(false);
-  const [form, setForm]                 = useState({ description: '', amount: '', type: 'income', category: 'Sistemas', month: '2025-07' });
+  const [form, setForm]                 = useState({ description: '', amount: '', type: 'income', category: 'Sistemas', month: '2026-07' });
 
   useEffect(() => { loadAll(); }, []);
 
@@ -397,7 +397,7 @@ const FinancialDashboard: React.FC = () => {
                   <tr key={t.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-2.5 px-3 text-white/90 font-medium">{t.description}</td>
                     <td className="py-2.5 px-3 text-white/50">{t.category}</td>
-                    <td className="py-2.5 px-3 text-white/50">{MONTH_SHORT[t.month] || t.month} 2025</td>
+                    <td className="py-2.5 px-3 text-white/50">{MONTH_SHORT[t.month] || t.month} 2026</td>
                     <td className="py-2.5 px-3">
                       <span className={`px-2 py-0.5 rounded text-xs font-bold ${t.type === 'income' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
                         {t.type === 'income' ? 'Receita' : 'Despesa'}

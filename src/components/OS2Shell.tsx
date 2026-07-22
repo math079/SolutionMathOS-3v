@@ -53,7 +53,7 @@ const OS2Home: React.FC = () => (
     </div>
     <div className="mt-8 bg-primary/10 border border-primary/20 rounded-2xl p-6">
       <h3 className="text-primary font-bold mb-3 flex items-center gap-2">
-        <DollarSign size={18}/> Resumo Executivo — Julho 2025
+        <DollarSign size={18}/> Resumo Executivo — Julho 2026
       </h3>
       <p className="text-white/70 text-sm leading-relaxed">
         A Solution Math encerrou o mês com faturamento de <strong className="text-white">R$ 84.500</strong>, 
