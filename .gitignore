@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+dist/
+.env
+.env.local
+
+# Database
+server/database.sqlite
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+*.suo
+*.user
