@@ -51,7 +51,7 @@ const AgendaCalendarView: React.FC = () => {
       }
     } catch (e) {
       console.error("Erro ao carregar agenda:", e);
-    } fontally {
+    } finally {
       setLoading(false);
     }
   };
