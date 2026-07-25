@@ -40,8 +40,8 @@ const FinancialDashboard: React.FC = () => {
   const [editingTx, setEditingTx]       = useState<Transaction | null>(null);
 
   // Predictability Simulation Additions
-  const [simExtraMonthlySales, setSimExtraMonthlySales] = useState<number>(2); // 2 extra products per month
-  const [simProductTicket, setSimProductTicket]         = useState<number>(5000); // R$ 5k product ticket
+  const [simExtraMonthlySales, setSimExtraMonthlySales] = useState<number>(2);
+  const [simProductTicket, setSimProductTicket]         = useState<number>(5000);
 
   const [form, setForm] = useState({
     description: '', amount: '', type: 'income',
@@ -113,7 +113,6 @@ const FinancialDashboard: React.FC = () => {
     window.print();
   };
 
-  // Filtered metrics calculation based on selected month
   const filteredTransactions = selectedMonth === 'all'
     ? transactions
     : transactions.filter(t => t.month === selectedMonth);
@@ -153,20 +152,13 @@ const FinancialDashboard: React.FC = () => {
 
   const viewMargin = viewRevenue > 0 ? (viewProfit / viewRevenue) * 100 : 0;
 
-  // Category breakdown for filtered transactions
-  const categoryMap: Record<string, number> = {};
-  filteredTransactions.filter(t => t.type === 'income').forEach(t => {
-    categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount;
-  });
-  const filteredCategories = Object.entries(categoryMap).map(([category, revenue]) => ({ category, revenue }));
-
-  // Annual Predictability Calculations (Forecast to Dec 2026)
+  // Annual Predictability Calculations
   const realizedRevenue2026 = monthly.reduce((s, m) => s + m.revenue, 0);
   const realizedExpense2026 = monthly.reduce((s, m) => s + m.expense, 0);
-  const simExtraMonthlyRevenue = simExtraMonthlySales * simProductTicket; // Extra revenue per remaining month
-  const simExtraTotal2026      = simExtraMonthlyRevenue * 5; // Aug-Dec (5 remaining months)
+  const simExtraMonthlyRevenue = simExtraMonthlySales * simProductTicket;
+  const simExtraTotal2026      = simExtraMonthlyRevenue * 5;
   const totalProjectedRevenue2026 = realizedRevenue2026 + simExtraTotal2026;
-  const totalProjectedProfit2026  = totalProjectedRevenue2026 - (realizedExpense2026 + (26000 * 5)); // Estimated expense Aug-Dec
+  const totalProjectedProfit2026  = totalProjectedRevenue2026 - (realizedExpense2026 + (26000 * 5));
 
   const monthlyProfitData = monthly.map(m => ({
     ...m,
@@ -178,12 +170,12 @@ const FinancialDashboard: React.FC = () => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
-      <div className="bg-[#111] border border-white/10 rounded-xl p-3 text-sm">
-        <div className="font-bold text-white mb-2">{label}</div>
+      <div className="th-surface border th-border rounded-xl p-3 text-sm shadow-xl">
+        <div className="font-bold th-text mb-2">{label}</div>
         {payload.map((p: any) => (
           <div key={p.name} className="flex justify-between gap-4">
             <span style={{ color: p.color }}>{p.name}</span>
-            <span className="text-white font-medium">{fmt(p.value)}</span>
+            <span className="th-text font-semibold">{fmt(p.value)}</span>
           </div>
         ))}
       </div>
@@ -192,7 +184,7 @@ const FinancialDashboard: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 bg-transparent space-y-6">
-      {/* Printable DRE Header (hidden in web UI, visible only in PDF / Print mode) */}
+      {/* Printable DRE Header */}
       <div className="hidden print:block text-black p-4 space-y-4">
         <h1 className="text-2xl font-bold border-b pb-2">SOLUTION MATH — DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE 2026)</h1>
         <p className="text-sm">Relatório gerado em 22/07/2026 | Período: {selectedMonth === 'all' ? 'Ano 2026 Completo' : ALL_MONTHS[selectedMonth]}</p>
@@ -204,39 +196,39 @@ const FinancialDashboard: React.FC = () => {
       </div>
 
       {/* Screen Web Interface Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5 print:hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b th-border pb-5 print:hidden">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold th-text flex items-center gap-2">
             Dashboard Financeiro & Previsibilidade 2026
             {selectedMonth !== 'all' && (
-              <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-bold rounded-full border border-primary/30">
+              <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full border border-primary/20">
                 {ALL_MONTHS[selectedMonth]}
               </span>
             )}
           </h2>
-          <p className="text-white/40 text-sm mt-1">Gestão de faturamento, simulação de metas e emissão de DRE/Relatórios</p>
+          <p className="th-muted text-sm mt-1">Gestão de faturamento, simulação de metas e emissão de DRE/Relatórios</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Month Selector Filter (All 12 Months 2026) */}
-          <div className="flex items-center gap-2 bg-black/50 border border-white/10 px-3 py-2 rounded-xl text-sm">
+          {/* Month Selector Filter */}
+          <div className="flex items-center gap-2 th-surface2 border th-border px-3 py-2 rounded-xl text-sm">
             <Calendar size={16} className="text-primary" />
-            <span className="text-white/50 text-xs font-semibold">Mês:</span>
+            <span className="th-muted text-xs font-semibold">Mês:</span>
             <select
               value={selectedMonth}
               onChange={e => setSelectedMonth(e.target.value)}
-              className="bg-transparent text-white font-bold outline-none cursor-pointer"
+              className="bg-transparent th-text font-bold outline-none cursor-pointer"
             >
-              <option value="all" className="bg-[#111]">Ano 2026 Completo (Visão Geral)</option>
+              <option value="all" className="th-surface th-text">Ano 2026 Completo (Visão Geral)</option>
               {Object.entries(ALL_MONTHS).map(([key, label]) => (
-                <option key={key} value={key} className="bg-[#111]">{label}</option>
+                <option key={key} value={key} className="th-surface th-text">{label}</option>
               ))}
             </select>
           </div>
 
           <button
             onClick={handlePrintDRE}
-            className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-sm font-semibold rounded-xl transition-colors"
+            className="flex items-center gap-2 px-3 py-2 th-surface2 border th-border th-text hover:bg-primary/10 text-sm font-semibold rounded-xl transition-colors"
             title="Imprimir Relatório DRE em PDF"
           >
             <Printer size={16} /> Relatório PDF
@@ -244,21 +236,21 @@ const FinancialDashboard: React.FC = () => {
 
           <button
             onClick={() => { resetForm(); setEditingTx(null); setShowAddModal(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-black text-sm font-bold rounded-xl shadow-neon hover:bg-secondary transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl shadow-md hover:bg-primary/90 transition-colors"
           >
             <PlusCircle size={16}/> Lançar Faturamento
           </button>
         </div>
       </div>
 
-      {/* Month Filter Quick Badges (Full 12 Months 2026) */}
+      {/* Month Filter Quick Badges */}
       <div className="flex flex-wrap items-center gap-1.5 print:hidden">
         <button
           onClick={() => setSelectedMonth('all')}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
             selectedMonth === 'all'
-              ? 'bg-primary text-black border-primary shadow-neon'
-              : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'
+              ? 'bg-primary text-white border-primary shadow-sm'
+              : 'th-surface2 th-muted border-th-border hover:text-primary'
           }`}
         >
           Ano 2026
@@ -269,8 +261,8 @@ const FinancialDashboard: React.FC = () => {
             onClick={() => setSelectedMonth(key)}
             className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
               selectedMonth === key
-                ? 'bg-primary text-black border-primary shadow-neon'
-                : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'
+                ? 'bg-primary text-white border-primary shadow-sm'
+                : 'th-surface2 th-muted border-th-border hover:text-primary'
             }`}
           >
             {MONTH_SHORT[key]}
@@ -279,115 +271,115 @@ const FinancialDashboard: React.FC = () => {
       </div>
 
       {/* Predictability Simulator Card */}
-      <div className="bg-gradient-to-r from-primary/10 via-black/40 to-black/30 border border-primary/20 rounded-2xl p-6 relative overflow-hidden print:hidden">
+      <div className="th-card p-6 border-l-4 border-l-primary relative overflow-hidden print:hidden">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-primary/20 text-primary rounded-xl">
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
               <Calculator size={20} />
             </div>
             <div>
-              <h4 className="text-lg font-bold text-white">Calculadora de Previsibilidade & Projeção Anual (2026)</h4>
-              <p className="text-xs text-white/50">Simule novos contratos e veja o faturamento projetado até Dezembro/2026</p>
+              <h4 className="text-lg font-bold th-text">Calculadora de Previsibilidade & Projeção Anual (2026)</h4>
+              <p className="text-xs th-muted">Simule novos contratos e veja o faturamento projetado até Dezembro/2026</p>
             </div>
           </div>
-          <span className="text-xs text-green-400 font-bold px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-full">
+          <span className="text-xs text-emerald-600 font-bold px-3 py-1 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-full">
             Projeção 2026
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-black/50 border border-white/10 rounded-xl p-4">
-            <label className="text-xs font-semibold text-white/50 mb-1 block">Meta Vendas / Mês</label>
+          <div className="th-surface2 border th-border rounded-xl p-4">
+            <label className="text-xs font-semibold th-muted mb-1 block">Meta Vendas / Mês</label>
             <input
               type="number"
               min={0}
               value={simExtraMonthlySales}
               onChange={e => setSimExtraMonthlySales(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-sm text-white font-bold outline-none"
+              className="th-input text-sm font-bold"
             />
           </div>
 
-          <div className="bg-black/50 border border-white/10 rounded-xl p-4">
-            <label className="text-xs font-semibold text-white/50 mb-1 block">Ticket Médio (R$)</label>
+          <div className="th-surface2 border th-border rounded-xl p-4">
+            <label className="text-xs font-semibold th-muted mb-1 block">Ticket Médio (R$)</label>
             <input
               type="number"
               value={simProductTicket}
               onChange={e => setSimProductTicket(parseFloat(e.target.value) || 0)}
-              className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-sm text-white font-bold outline-none"
+              className="th-input text-sm font-bold"
             />
           </div>
 
-          <div className="bg-black/50 border border-white/10 rounded-xl p-4">
-            <span className="text-xs font-semibold text-white/50 block mb-1">Projeção Faturamento 2026</span>
+          <div className="th-surface2 border th-border rounded-xl p-4">
+            <span className="text-xs font-semibold th-muted block mb-1">Projeção Faturamento 2026</span>
             <div className="text-2xl font-bold text-primary">{fmt(totalProjectedRevenue2026)}</div>
             <div className="text-xs text-primary/80 mt-1">Realizado + Meta Ago-Dez</div>
           </div>
 
-          <div className="bg-black/50 border border-green-500/30 rounded-xl p-4 bg-green-500/5">
-            <span className="text-xs font-semibold text-green-400 block mb-1">Lucro Líquido Projetado 2026</span>
-            <div className="text-2xl font-bold text-green-400">{fmt(totalProjectedProfit2026)}</div>
-            <div className="text-xs text-white/40 mt-1">Após custos fixos e variáveis</div>
+          <div className="th-surface2 border border-emerald-300 dark:border-emerald-800 rounded-xl p-4 bg-emerald-50 dark:bg-emerald-950/20">
+            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 block mb-1">Lucro Líquido Projetado 2026</span>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(totalProjectedProfit2026)}</div>
+            <div className="text-xs th-muted mt-1">Após custos fixos e variáveis</div>
           </div>
         </div>
       </div>
 
       {/* Dynamic KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 print:hidden">
-        <div className="bg-black/30 border border-white/5 rounded-2xl p-5">
-          <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-400 mb-4">
+        <div className="th-card p-5">
+          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/40 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4">
             <DollarSign size={20}/>
           </div>
-          <div className="text-white/50 text-xs mb-1">
+          <div className="th-muted text-xs mb-1">
             {selectedMonth === 'all' ? 'Faturamento Total 2026' : `Faturamento (${MONTH_SHORT[selectedMonth]})`}
           </div>
-          <div className="text-2xl font-bold text-green-400 mb-1">{fmt(viewRevenue)}</div>
+          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">{fmt(viewRevenue)}</div>
           <div className="text-xs text-primary font-medium">{viewTrend}</div>
         </div>
 
-        <div className="bg-black/30 border border-white/5 rounded-2xl p-5">
-          <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-400 mb-4">
+        <div className="th-card p-5">
+          <div className="w-10 h-10 bg-rose-100 dark:bg-rose-950/40 rounded-xl flex items-center justify-center text-rose-600 dark:text-rose-400 mb-4">
             <TrendingDown size={20}/>
           </div>
-          <div className="text-white/50 text-xs mb-1">
+          <div className="th-muted text-xs mb-1">
             {selectedMonth === 'all' ? 'Custos Totais 2026' : `Custos (${MONTH_SHORT[selectedMonth]})`}
           </div>
-          <div className="text-2xl font-bold text-red-400 mb-1">{fmt(viewExpense)}</div>
-          <div className="text-xs text-white/40">Despesas operacionais</div>
+          <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 mb-1">{fmt(viewExpense)}</div>
+          <div className="text-xs th-muted">Despesas operacionais</div>
         </div>
 
-        <div className="bg-black/30 border border-white/5 rounded-2xl p-5">
+        <div className="th-card p-5">
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
             <TrendingUp size={20}/>
           </div>
-          <div className="text-white/50 text-xs mb-1">
+          <div className="th-muted text-xs mb-1">
             {selectedMonth === 'all' ? 'Lucro Líquido 2026' : `Lucro (${MONTH_SHORT[selectedMonth]})`}
           </div>
           <div className="text-2xl font-bold text-primary mb-1">{fmt(viewProfit)}</div>
           <div className="text-xs text-primary font-medium">Após todas as deduções</div>
         </div>
 
-        <div className="bg-black/30 border border-white/5 rounded-2xl p-5">
-          <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-400 mb-4">
+        <div className="th-card p-5">
+          <div className="w-10 h-10 bg-amber-100 dark:bg-amber-950/40 rounded-xl flex items-center justify-center text-amber-600 dark:text-amber-400 mb-4">
             <Percent size={20}/>
           </div>
-          <div className="text-white/50 text-xs mb-1">Margem de Lucro</div>
-          <div className="text-2xl font-bold text-amber-400 mb-1">{viewMargin.toFixed(1)}%</div>
-          <div className="text-xs text-white/40">{viewMargin > 50 ? 'Margem Saudável ✓' : 'Moderada'}</div>
+          <div className="th-muted text-xs mb-1">Margem de Lucro</div>
+          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-1">{viewMargin.toFixed(1)}%</div>
+          <div className="text-xs th-muted">{viewMargin > 50 ? 'Margem Saudável ✓' : 'Moderada'}</div>
         </div>
       </div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden">
         {/* Monthly Revenue vs Expense Chart */}
-        <div className="bg-black/30 border border-white/5 rounded-2xl p-5">
-          <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+        <div className="th-card p-5">
+          <h3 className="font-bold th-text mb-4 flex items-center gap-2">
             <TrendingUp size={16} className="text-primary"/> Histórico de Faturamento 2026 (Jan a Dez)
           </h3>
           <ResponsiveContainer width="100%" height={230}>
             <BarChart data={monthlyProfitData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)"/>
-              <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false}/>
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`}/>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)"/>
+              <XAxis dataKey="name" tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} axisLine={false} tickLine={false}/>
+              <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`}/>
               <Tooltip content={<CustomTooltip/>}/>
               <Bar dataKey="revenue" name="Receita" fill="#14b8a6" radius={[4,4,0,0]}/>
               <Bar dataKey="expense" name="Custo" fill="#ef4444" opacity={0.7} radius={[4,4,0,0]}/>
@@ -396,8 +388,8 @@ const FinancialDashboard: React.FC = () => {
         </div>
 
         {/* Profit Area Chart */}
-        <div className="bg-black/30 border border-white/5 rounded-2xl p-5">
-          <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+        <div className="th-card p-5">
+          <h3 className="font-bold th-text mb-4 flex items-center gap-2">
             <Target size={16} className="text-primary"/> Evolução do Lucro Anual
           </h3>
           <ResponsiveContainer width="100%" height={230}>
@@ -408,9 +400,9 @@ const FinancialDashboard: React.FC = () => {
                   <stop offset="95%" stopColor="#14b8a6" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)"/>
-              <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false}/>
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`}/>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)"/>
+              <XAxis dataKey="name" tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} axisLine={false} tickLine={false}/>
+              <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`}/>
               <Tooltip content={<CustomTooltip/>}/>
               <Area type="monotone" dataKey="lucro" name="Lucro Líquido" stroke="#14b8a6" strokeWidth={2} fill="url(#profitGrad)"/>
             </AreaChart>
@@ -419,13 +411,13 @@ const FinancialDashboard: React.FC = () => {
       </div>
 
       {/* Transactions Table with EDIT & DELETE */}
-      <div className="bg-black/30 border border-white/5 rounded-2xl p-5 print:bg-white print:text-black">
+      <div className="th-card p-5 print:bg-white print:text-black">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <div>
-            <h3 className="font-bold text-white print:text-black">
+            <h3 className="font-bold th-text print:text-black">
               Lançamentos & Transações {selectedMonth !== 'all' ? `— ${ALL_MONTHS[selectedMonth]}` : '2026'}
             </h3>
-            <p className="text-white/40 text-xs mt-0.5 print:text-black">
+            <p className="th-muted text-xs mt-0.5 print:text-black">
               {filteredTransactions.length} lançamentos registrados {selectedMonth !== 'all' && `em ${ALL_MONTHS[selectedMonth]}`}
             </p>
           </div>
@@ -442,40 +434,40 @@ const FinancialDashboard: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10">
+              <tr className="border-b th-border th-surface2">
                 {['Descrição','Categoria','Mês','Tipo','Valor','Ações'].map(h => (
-                  <th key={h} className="py-2.5 px-3 text-left text-xs font-semibold text-white/40 uppercase tracking-wider print:text-black">{h}</th>
+                  <th key={h} className="py-2.5 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider print:text-black">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filteredTransactions.length === 0 ? (
-                <tr><td colSpan={6} className="py-6 text-center text-white/40 text-sm">Nenhuma transação encontrada neste período.</td></tr>
+                <tr><td colSpan={6} className="py-6 text-center th-muted text-sm">Nenhuma transação encontrada neste período.</td></tr>
               ) : (
                 filteredTransactions.map(t => (
-                  <tr key={t.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="py-2.5 px-3 text-white/90 font-medium print:text-black">{t.description}</td>
-                    <td className="py-2.5 px-3 text-white/50 print:text-black">{t.category}</td>
-                    <td className="py-2.5 px-3 text-white/50 print:text-black">{MONTH_SHORT[t.month] || t.month} 2026</td>
+                  <tr key={t.id} className="border-b th-border hover:bg-primary/5 transition-colors">
+                    <td className="py-2.5 px-3 th-text font-medium print:text-black">{t.description}</td>
+                    <td className="py-2.5 px-3 th-muted print:text-black">{t.category}</td>
+                    <td className="py-2.5 px-3 th-muted print:text-black">{MONTH_SHORT[t.month] || t.month} 2026</td>
                     <td className="py-2.5 px-3">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${t.type === 'income' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${t.type === 'income' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-300 dark:border-rose-800'}`}>
                         {t.type === 'income' ? 'Receita' : 'Despesa'}
                       </span>
                     </td>
-                    <td className={`py-2.5 px-3 font-bold ${t.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                    <td className={`py-2.5 px-3 font-bold ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                       {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}
                     </td>
                     <td className="py-2.5 px-3 text-right space-x-1 print:hidden">
                       <button
                         onClick={() => openEditModal(t)}
-                        className="p-1 text-white/30 hover:text-primary transition-colors"
+                        className="p-1 th-muted hover:text-primary transition-colors"
                         title="Editar Transação"
                       >
                         <Edit3 size={15} />
                       </button>
                       <button
                         onClick={() => deleteTransaction(t.id)}
-                        className="p-1 text-white/30 hover:text-red-400 transition-colors"
+                        className="p-1 th-muted hover:text-rose-500 transition-colors"
                         title="Excluir Transação"
                       >
                         <Trash2 size={15} />
@@ -491,64 +483,64 @@ const FinancialDashboard: React.FC = () => {
 
       {/* Add / Edit Transaction Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 print:hidden">
-          <div className="bg-[#0f0f13] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 print:hidden">
+          <div className="th-card border th-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex justify-between items-center mb-5 border-b th-border pb-3">
+              <h3 className="text-lg font-bold th-text flex items-center gap-2">
                 <DollarSign size={18} className="text-primary" />
                 {editingTx ? 'Editar Faturamento / Transação' : 'Novo Lançamento Financeiro'}
               </h3>
-              <button onClick={() => setShowAddModal(false)} className="text-white/40 hover:text-white"><X size={18}/></button>
+              <button onClick={() => setShowAddModal(false)} className="th-muted hover:text-rose-500 transition-colors"><X size={18}/></button>
             </div>
             <form onSubmit={handleSaveTransaction} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-white/50 mb-1 block">Descrição do Lançamento *</label>
+                <label className="text-xs font-semibold th-muted mb-1 block">Descrição do Lançamento *</label>
                 <input type="text" required placeholder="Ex: Venda Sistema OS SolutionMath" value={form.description}
                   onChange={e => setForm({...form, description: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"/>
+                  className="th-input"/>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-white/50 mb-1 block">Valor (R$) *</label>
+                  <label className="text-xs font-semibold th-muted mb-1 block">Valor (R$) *</label>
                   <input type="number" required placeholder="38000" value={form.amount}
                     onChange={e => setForm({...form, amount: e.target.value})}
-                    className="w-full px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"/>
+                    className="th-input"/>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-white/50 mb-1 block">Tipo de Lançamento</label>
+                  <label className="text-xs font-semibold th-muted mb-1 block">Tipo de Lançamento</label>
                   <select value={form.type} onChange={e => setForm({...form, type: e.target.value})}
-                    className="w-full px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none">
-                    <option value="income" className="bg-[#111]">Receita (+)</option>
-                    <option value="expense" className="bg-[#111]">Despesa (-)</option>
+                    className="th-input">
+                    <option value="income" className="th-surface th-text">Receita (+)</option>
+                    <option value="expense" className="th-surface th-text">Despesa (-)</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-white/50 mb-1 block">Categoria</label>
+                  <label className="text-xs font-semibold th-muted mb-1 block">Categoria</label>
                   <select value={form.category} onChange={e => setForm({...form, category: e.target.value})}
-                    className="w-full px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none">
+                    className="th-input">
                     {['Sistemas','Sites','Apps','IA','Integrações','Automações','Infraestrutura','Pessoas','Marketing','Ferramentas'].map(c =>
-                      <option key={c} value={c} className="bg-[#111]">{c}</option>
+                      <option key={c} value={c} className="th-surface th-text">{c}</option>
                     )}
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-white/50 mb-1 block">Mês de Competência</label>
+                  <label className="text-xs font-semibold th-muted mb-1 block">Mês de Competência</label>
                   <select value={form.month} onChange={e => setForm({...form, month: e.target.value})}
-                    className="w-full px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none">
+                    className="th-input">
                     {Object.entries(ALL_MONTHS).map(([m, label]) =>
-                      <option key={m} value={m} className="bg-[#111]">{label}</option>
+                      <option key={m} value={m} className="th-surface th-text">{label}</option>
                     )}
                   </select>
                 </div>
               </div>
 
-              <button type="submit" className="w-full py-3 bg-primary text-black font-bold rounded-xl shadow-neon hover:bg-secondary transition-colors mt-2">
+              <button type="submit" className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-primary/90 transition-colors mt-2">
                 {editingTx ? 'Atualizar Faturamento' : 'Salvar Transação'}
               </button>
             </form>

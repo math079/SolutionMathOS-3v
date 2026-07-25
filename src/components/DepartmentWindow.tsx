@@ -38,25 +38,25 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
       className={`absolute transition-all duration-200 ease-out flex flex-col ${
         isMaximized ? 'inset-4' : 'top-10 left-10 w-[1000px] h-[650px]'
       } ${
-        isActive ? 'shadow-[0_0_50px_-15px_rgba(20,184,166,0.3)] border-primary/50' : 'shadow-2xl border-white/10 opacity-95'
-      } bg-[#0f0f13]/95 backdrop-blur-2xl rounded-2xl overflow-hidden border`}
+        isActive ? 'shadow-2xl border-primary/50' : 'shadow-lg th-border opacity-95'
+      } th-surface rounded-2xl overflow-hidden border`}
       style={{ zIndex: windowState.zIndex }}
     >
       {/* Window Header */}
       <div 
-        className={`h-12 flex items-center justify-between px-4 select-none ${isActive ? 'bg-white/5' : 'bg-transparent'} border-b border-white/10`}
+        className={`h-12 flex items-center justify-between px-4 select-none ${isActive ? 'th-surface2' : 'bg-transparent'} border-b th-border`}
       >
         <div className="flex items-center space-x-3">
-          <div className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 cursor-pointer shadow-[0_0_8px_rgba(239,68,68,0.5)] transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); onClose(); }}>
+          <div className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 cursor-pointer transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); onClose(); }}>
             <X size={8} className="text-black opacity-0 group-hover:opacity-100" />
           </div>
-          <div className="w-3 h-3 rounded-full bg-amber-500 hover:bg-amber-400 cursor-pointer shadow-[0_0_8px_rgba(245,158,11,0.5)] transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); onMinimize(); }}>
+          <div className="w-3 h-3 rounded-full bg-amber-500 hover:bg-amber-400 cursor-pointer transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); onMinimize(); }}>
             <Minus size={8} className="text-black opacity-0 group-hover:opacity-100" />
           </div>
-          <div className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 cursor-pointer shadow-[0_0_8px_rgba(34,197,94,0.5)] transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); setIsMaximized(!isMaximized); }}>
+          <div className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 cursor-pointer transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); setIsMaximized(!isMaximized); }}>
             <Maximize2 size={8} className="text-black opacity-0 group-hover:opacity-100" />
           </div>
-          <span className="ml-4 font-medium text-white/80 tracking-wide text-sm">{department.name}</span>
+          <span className="ml-4 font-semibold th-text tracking-wide text-sm">{department.name}</span>
         </div>
       </div>
 
@@ -64,8 +64,8 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
       <div className="flex flex-1 overflow-hidden">
         
         {/* Sidebar - Sectors */}
-        <div className="w-64 bg-black/20 border-r border-white/10 p-4 overflow-y-auto">
-          <h4 className="text-xs font-bold text-white/30 uppercase tracking-wider mb-4">Setores</h4>
+        <div className="w-64 th-surface2 border-r th-border p-4 overflow-y-auto">
+          <h4 className="text-xs font-bold th-muted uppercase tracking-wider mb-4">Setores</h4>
           <div className="space-y-1">
             {department.sectors.map(sector => (
               <button
@@ -76,8 +76,8 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
                 }}
                 className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
                   activeSectorId === sector.id 
-                    ? 'bg-primary/20 text-primary font-medium border border-primary/30 shadow-[0_0_15px_rgba(20,184,166,0.15)]' 
-                    : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    ? 'bg-primary/20 text-primary font-semibold border border-primary/30' 
+                    : 'th-muted hover:bg-primary/5 hover:text-primary'
                 }`}
               >
                 {sector.name}
@@ -91,24 +91,24 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
           {!activeProcess ? (
             /* Sector Overview */
             <div className="p-8 overflow-y-auto h-full">
-              <h2 className="text-3xl font-bold text-white mb-2">{activeSector?.name}</h2>
-              <p className="text-textMuted mb-8">{activeSector?.description}</p>
+              <h2 className="text-3xl font-bold th-text mb-2">{activeSector?.name}</h2>
+              <p className="th-muted mb-8">{activeSector?.description}</p>
               
-              <h3 className="text-lg font-semibold text-white/90 mb-4">Processos Mapeados</h3>
+              <h3 className="text-lg font-semibold th-text mb-4">Processos Mapeados</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeSector?.processes.map(proc => (
                   <div 
                     key={proc.id}
                     onClick={() => setActiveProcessId(proc.id)}
-                    className="glass-card p-5 cursor-pointer group border border-white/5 hover:border-primary/30 hover:shadow-neon transition-all"
+                    className="th-card p-5 cursor-pointer group hover:border-primary/40 hover:shadow-md transition-all"
                   >
-                    <h4 className="text-lg font-bold text-white group-hover:text-primary transition-colors mb-2">
+                    <h4 className="text-lg font-bold th-text group-hover:text-primary transition-colors mb-2">
                       {proc.name}
                     </h4>
-                    <p className="text-sm text-textMuted mb-4 line-clamp-2">{proc.objective}</p>
+                    <p className="text-sm th-muted mb-4 line-clamp-2">{proc.objective}</p>
                     <div className="flex flex-wrap gap-2">
                       {proc.owners.slice(0, 2).map((owner, i) => (
-                        <span key={i} className="px-2 py-1 bg-white/5 rounded-md text-xs font-medium text-white/60">
+                        <span key={i} className="px-2 py-1 th-surface2 rounded-md text-xs font-medium th-muted">
                           {owner}
                         </span>
                       ))}
@@ -131,15 +131,15 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
             /* Process Detail View */
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Process Header */}
-              <div className="p-6 border-b border-white/10 bg-black/20">
+              <div className="p-6 border-b th-border th-surface2">
                 <button 
                   onClick={() => setActiveProcessId(null)}
-                  className="text-primary hover:text-secondary font-medium text-sm flex items-center mb-4 transition-colors"
+                  className="text-primary hover:text-primary/80 font-semibold text-sm flex items-center mb-4 transition-colors"
                 >
                   <ChevronRight className="rotate-180 mr-1" size={16} /> Voltar para Setor
                 </button>
-                <h2 className="text-2xl font-bold text-white mb-2">{activeProcess.name}</h2>
-                <p className="text-textMuted">{activeProcess.objective}</p>
+                <h2 className="text-2xl font-bold th-text mb-2">{activeProcess.name}</h2>
+                <p className="th-muted">{activeProcess.objective}</p>
               </div>
 
               {/* Process Content */}
@@ -148,24 +148,24 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
                 {/* Owners & KPIs */}
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <h4 className="text-xs font-bold text-white/30 uppercase tracking-wider mb-3 flex items-center">
-                      <Users size={16} className="mr-2" /> Responsáveis
+                    <h4 className="text-xs font-bold th-muted uppercase tracking-wider mb-3 flex items-center">
+                      <Users size={16} className="mr-2 text-primary" /> Responsáveis
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {activeProcess.owners.map((owner, i) => (
-                        <span key={i} className="px-3 py-1.5 bg-primary/10 text-primary font-medium rounded-lg text-sm border border-primary/20">
+                        <span key={i} className="px-3 py-1.5 bg-primary/10 text-primary font-semibold rounded-lg text-sm border border-primary/20">
                           {owner}
                         </span>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white/30 uppercase tracking-wider mb-3 flex items-center">
-                      <Target size={16} className="mr-2" /> KPIs
+                    <h4 className="text-xs font-bold th-muted uppercase tracking-wider mb-3 flex items-center">
+                      <Target size={16} className="mr-2 text-blue-500" /> KPIs
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {activeProcess.kpis.map((kpi, i) => (
-                        <span key={i} className="px-3 py-1.5 bg-blue-500/10 text-blue-400 font-medium rounded-lg text-sm border border-blue-500/20">
+                        <span key={i} className="px-3 py-1.5 bg-blue-500/10 text-blue-500 font-semibold rounded-lg text-sm border border-blue-500/20">
                           {kpi}
                         </span>
                       ))}
@@ -173,18 +173,18 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
                   </div>
                 </div>
 
-                <div className="h-[1px] bg-white/10 w-full"></div>
+                <div className="h-[1px] th-border w-full"></div>
 
                 {/* Workflow */}
                 <div>
-                  <h4 className="text-xs font-bold text-white/30 uppercase tracking-wider mb-4">Fluxo Base</h4>
-                  <div className="p-5 bg-black/30 rounded-2xl border border-white/5">
+                  <h4 className="text-xs font-bold th-muted uppercase tracking-wider mb-4">Fluxo Base</h4>
+                  <div className="p-5 th-surface2 rounded-2xl border th-border">
                     {activeProcess.flows.map((flow, idx) => (
-                      <div key={idx} className="flex flex-wrap items-center gap-2 text-sm text-white/80 font-medium">
+                      <div key={idx} className="flex flex-wrap items-center gap-2 text-sm th-text font-medium">
                         {flow.split('->').map((step, i, arr) => (
                           <React.Fragment key={i}>
-                            <span className="px-4 py-2 bg-white/5 rounded-xl border border-white/10 shadow-sm">{step.trim()}</span>
-                            {i < arr.length - 1 && <ChevronRight size={16} className="text-white/20" />}
+                            <span className="px-4 py-2 th-surface rounded-xl border th-border shadow-sm">{step.trim()}</span>
+                            {i < arr.length - 1 && <ChevronRight size={16} className="th-muted" />}
                           </React.Fragment>
                         ))}
                       </div>
@@ -196,15 +196,15 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Inputs & Outputs */}
                   <div className="space-y-4">
-                    <div className="p-5 bg-black/20 rounded-2xl border border-white/5">
-                      <h5 className="font-bold text-white/90 mb-3">Entradas</h5>
-                      <ul className="list-disc list-inside text-sm text-textMuted space-y-1">
+                    <div className="p-5 th-surface2 rounded-2xl border th-border">
+                      <h5 className="font-bold th-text mb-3">Entradas</h5>
+                      <ul className="list-disc list-inside text-sm th-muted space-y-1">
                         {activeProcess.inputs.map((input, i) => <li key={i}>{input}</li>)}
                       </ul>
                     </div>
-                    <div className="p-5 bg-black/20 rounded-2xl border border-white/5">
-                      <h5 className="font-bold text-white/90 mb-3">Saídas</h5>
-                      <ul className="list-disc list-inside text-sm text-textMuted space-y-1">
+                    <div className="p-5 th-surface2 rounded-2xl border th-border">
+                      <h5 className="font-bold th-text mb-3">Saídas</h5>
+                      <ul className="list-disc list-inside text-sm th-muted space-y-1">
                         {activeProcess.outputs.map((output, i) => <li key={i}>{output}</li>)}
                       </ul>
                     </div>
@@ -212,18 +212,18 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
 
                   {/* Tools & Automations */}
                   <div className="space-y-4">
-                    <div className="p-5 bg-black/20 rounded-2xl border border-white/5">
-                      <h5 className="font-bold text-white/90 mb-3 flex items-center">
-                        <Settings size={16} className="mr-2 text-white/40" /> Ferramentas e Integrações
+                    <div className="p-5 th-surface2 rounded-2xl border th-border">
+                      <h5 className="font-bold th-text mb-3 flex items-center">
+                        <Settings size={16} className="mr-2 th-muted" /> Ferramentas e Integrações
                       </h5>
                       <div className="flex flex-wrap gap-2 mb-4">
                         {activeProcess.tools.map((tool, i) => (
-                          <span key={i} className="px-2 py-1 bg-white/5 border border-white/10 rounded-md text-xs font-medium text-white/70">{tool}</span>
+                          <span key={i} className="px-2 py-1 th-surface border th-border rounded-md text-xs font-medium th-muted">{tool}</span>
                         ))}
                       </div>
-                      <div className="space-y-2 mt-4 pt-4 border-t border-white/10">
+                      <div className="space-y-2 mt-4 pt-4 border-t th-border">
                         {activeProcess.integrations.map((int, i) => (
-                          <div key={i} className="text-xs font-medium text-primary flex items-center">
+                          <div key={i} className="text-xs font-semibold text-primary flex items-center">
                             <LinkIcon size={12} className="mr-2" /> {int}
                           </div>
                         ))}
@@ -234,7 +234,7 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
                       <h5 className="font-bold text-primary mb-3 flex items-center">
                         <Key size={16} className="mr-2" /> Automações
                       </h5>
-                      <ul className="list-disc list-inside text-sm text-primary/80 space-y-1 font-medium">
+                      <ul className="list-disc list-inside text-sm text-primary space-y-1 font-medium">
                         {activeProcess.automations.map((auto, i) => <li key={i}>{auto}</li>)}
                       </ul>
                     </div>

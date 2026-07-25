@@ -37,7 +37,6 @@ const TasksView: React.FC = () => {
       const [tasksData, usersData] = await Promise.all([tasksRes.json(), usersRes.json()]);
       setTasks(tasksData);
       setUsers(usersData);
-      // Default to first user
       if (usersData.length > 0) {
         setNewTask(prev => ({ ...prev, assignee_id: String(usersData[0].id) }));
       }
@@ -94,38 +93,37 @@ const TasksView: React.FC = () => {
   };
 
   const statusColor = (status: string) => {
-    if (status === 'Concluído') return 'bg-green-500/20 text-green-400 border-green-500/30';
-    if (status === 'Em Andamento') return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-    return 'bg-white/10 text-white/60 border-white/20';
+    if (status === 'Concluído') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800';
+    if (status === 'Em Andamento') return 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-300 dark:border-amber-800';
+    return 'th-surface2 th-muted border-th-border';
   };
 
   return (
     <div className="p-6 bg-transparent flex-1 overflow-y-auto">
-      <h3 className="text-xl font-bold text-white mb-6">Kanban de Tarefas Operacionais</h3>
+      <h3 className="text-xl font-bold th-text mb-6">Kanban de Tarefas Operacionais</h3>
 
       {/* Formulario de Nova Tarefa */}
-      <div className="bg-white/5 p-5 rounded-2xl border border-white/10 mb-8 backdrop-blur-md">
-        <h4 className="text-sm font-bold text-white/60 mb-4">Nova Ordem de Serviço (OS)</h4>
+      <div className="th-card p-5 rounded-2xl border th-border mb-8 shadow-sm">
+        <h4 className="text-sm font-bold th-muted mb-4">Nova Ordem de Serviço (OS)</h4>
         <form onSubmit={handleAddTask} className="space-y-4">
           <div className="flex gap-4">
             <input
               type="text"
               placeholder="Título da Tarefa"
-              className="flex-1 px-4 py-2 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"
+              className="th-input flex-1"
               value={newTask.title}
               onChange={e => setNewTask({ ...newTask, title: e.target.value })}
               required
             />
-            {/* Dynamic assignee dropdown from database */}
             <select
-              className="w-52 px-4 py-2 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"
+              className="th-input w-52"
               value={newTask.assignee_id}
               onChange={e => setNewTask({ ...newTask, assignee_id: e.target.value })}
             >
               {users.length === 0
                 ? <option value="">Sem funcionários</option>
                 : users.map(u => (
-                    <option key={u.id} value={String(u.id)} className="bg-[#111]">
+                    <option key={u.id} value={String(u.id)} className="th-surface th-text">
                       {u.name} ({u.role})
                     </option>
                   ))
@@ -134,21 +132,21 @@ const TasksView: React.FC = () => {
           </div>
           <textarea
             placeholder="Escopo / Descrição detalhada..."
-            className="w-full px-4 py-2 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"
+            className="th-input w-full resize-none"
             rows={3}
             value={newTask.description}
             onChange={e => setNewTask({ ...newTask, description: e.target.value })}
           />
           <div className="flex justify-between items-center">
-            <label className="flex items-center space-x-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+            <label className="flex items-center space-x-2 px-4 py-2 th-surface2 border th-border rounded-xl cursor-pointer hover:bg-primary/10 transition-colors">
               <Upload size={16} className="text-primary" />
-              <span className="text-sm text-white/70 font-medium">Anexar Briefing</span>
+              <span className="text-sm th-text font-medium">Anexar Briefing</span>
               <input type="file" className="hidden" ref={fileInputRef} />
             </label>
             <button
               type="submit"
               disabled={!newTask.assignee_id}
-              className="px-6 py-2 bg-primary text-black rounded-xl text-sm font-bold shadow-neon hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-primary text-white rounded-xl text-sm font-bold shadow-md hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Emitir OS
             </button>
@@ -159,45 +157,45 @@ const TasksView: React.FC = () => {
       {/* Task Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {loading ? (
-          <p className="text-white/40 text-sm col-span-2">Carregando fila de tarefas...</p>
+          <p className="th-muted text-sm col-span-2">Carregando fila de tarefas...</p>
         ) : tasks.length === 0 ? (
-          <p className="text-white/40 text-sm col-span-2">A fila de operações está vazia.</p>
+          <p className="th-muted text-sm col-span-2">A fila de operações está vazia.</p>
         ) : (
           tasks.map(task => (
             <div
               key={task.id}
-              className="p-5 border border-white/10 bg-black/40 rounded-2xl hover:border-primary/30 transition-all group"
+              className="th-card p-5 rounded-2xl hover:border-primary/40 transition-all group"
             >
               <div className="flex justify-between items-start mb-2">
-                <h4 className="font-bold text-white/90 flex-1 mr-2">{task.title}</h4>
+                <h4 className="font-bold th-text flex-1 mr-2">{task.title}</h4>
                 <div className="flex items-center space-x-2 shrink-0">
                   <select
                     value={task.status}
                     onChange={e => updateStatus(task.id, e.target.value)}
                     className={`px-2 py-1 rounded-md text-xs font-bold border outline-none cursor-pointer appearance-none ${statusColor(task.status)}`}
                   >
-                    <option value="Pendente" className="bg-[#111] text-white">Pendente</option>
-                    <option value="Em Andamento" className="bg-[#111] text-white">Em Andamento</option>
-                    <option value="Concluído" className="bg-[#111] text-white">Concluído</option>
+                    <option value="Pendente" className="th-surface th-text">Pendente</option>
+                    <option value="Em Andamento" className="th-surface th-text">Em Andamento</option>
+                    <option value="Concluído" className="th-surface th-text">Concluído</option>
                   </select>
-                  <button onClick={() => deleteTask(task.id)} className="text-white/20 hover:text-red-400 transition-colors">
+                  <button onClick={() => deleteTask(task.id)} className="th-muted hover:text-rose-500 transition-colors">
                     <Trash2 size={16} />
                   </button>
                 </div>
               </div>
               {task.description && (
-                <p className="text-sm text-white/50 mb-4">{task.description}</p>
+                <p className="text-sm th-muted mb-4">{task.description}</p>
               )}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
-                <span className="text-xs font-medium text-white/40">
-                  Responsável: <span className="text-primary">{task.assignee_name || `ID ${task.assignee_id}`}</span>
+              <div className="flex items-center justify-between mt-4 pt-4 border-t th-border">
+                <span className="text-xs font-medium th-muted">
+                  Responsável: <span className="text-primary font-semibold">{task.assignee_name || `ID ${task.assignee_id}`}</span>
                 </span>
                 {task.file_url && (
                   <a
                     href={`http://localhost:3001${task.file_url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center text-xs font-medium text-secondary hover:text-primary transition-colors"
+                    className="flex items-center text-xs font-semibold text-primary hover:underline transition-colors"
                   >
                     <Paperclip size={14} className="mr-1" /> Ver Anexo
                   </a>

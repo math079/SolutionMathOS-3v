@@ -9,17 +9,17 @@ import { PlusCircle, X, DollarSign, User, Trash2 } from 'lucide-react';
 
 const STAGES = ['Novo Lead', 'Contato Feito', 'Proposta Enviada', 'Negociação', 'Ganho', 'Perdido'];
 const STAGE_COLORS: Record<string, string> = {
-  'Novo Lead':         'border-blue-500/40 bg-blue-500/5',
-  'Contato Feito':     'border-purple-500/40 bg-purple-500/5',
-  'Proposta Enviada':  'border-amber-500/40 bg-amber-500/5',
-  'Negociação':        'border-orange-500/40 bg-orange-500/5',
-  'Ganho':             'border-green-500/40 bg-green-500/5',
-  'Perdido':           'border-red-500/40 bg-red-500/5',
+  'Novo Lead':         'border-blue-500/30 bg-blue-500/5',
+  'Contato Feito':     'border-purple-500/30 bg-purple-500/5',
+  'Proposta Enviada':  'border-amber-500/30 bg-amber-500/5',
+  'Negociação':        'border-orange-500/30 bg-orange-500/5',
+  'Ganho':             'border-emerald-500/30 bg-emerald-500/5',
+  'Perdido':           'border-rose-500/30 bg-rose-500/5',
 };
 const STAGE_BADGE: Record<string, string> = {
-  'Novo Lead': 'text-blue-400', 'Contato Feito': 'text-purple-400',
-  'Proposta Enviada': 'text-amber-400', 'Negociação': 'text-orange-400',
-  'Ganho': 'text-green-400', 'Perdido': 'text-red-400',
+  'Novo Lead': 'text-blue-500', 'Contato Feito': 'text-purple-500',
+  'Proposta Enviada': 'text-amber-500', 'Negociação': 'text-orange-500',
+  'Ganho': 'text-emerald-500', 'Perdido': 'text-rose-500',
 };
 const fmt = (v: number) => `R$ ${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`;
 
@@ -39,23 +39,23 @@ const DealCard: React.FC<{ deal: Deal; onDelete: (id: number) => void }> = ({ de
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}
-      className="bg-[#0f0f13] border border-white/10 rounded-xl p-4 cursor-grab active:cursor-grabbing group hover:border-primary/30 transition-all">
+      className="th-card p-4 cursor-grab active:cursor-grabbing group hover:border-primary/40 transition-all shadow-sm">
       <div className="flex justify-between items-start mb-2">
-        <h4 className="font-bold text-white/90 text-sm leading-tight flex-1 pr-2">{deal.title}</h4>
+        <h4 className="font-bold th-text text-sm leading-tight flex-1 pr-2">{deal.title}</h4>
         <button onClick={(e) => { e.stopPropagation(); onDelete(deal.id); }}
-          className="text-white/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0">
+          className="th-muted hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0">
           <Trash2 size={13}/>
         </button>
       </div>
       {deal.client_name && (
-        <div className="text-xs text-white/40 mb-3">{deal.client_name}</div>
+        <div className="text-xs th-muted mb-3">{deal.client_name}</div>
       )}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1 text-primary font-bold text-sm">
           <DollarSign size={13}/> {fmt(deal.value)}
         </div>
         {deal.assignee_name && (
-          <div className="flex items-center gap-1 text-xs text-white/40">
+          <div className="flex items-center gap-1 text-xs th-muted">
             <User size={11}/> {deal.assignee_name.split(' ')[0]}
           </div>
         )}
@@ -69,11 +69,11 @@ const StageColumn: React.FC<{ stage: string; deals: Deal[]; onDelete: (id: numbe
   const total = deals.reduce((s, d) => s + d.value, 0);
   return (
     <div className={`flex flex-col w-60 shrink-0 border rounded-2xl overflow-hidden ${STAGE_COLORS[stage]}`}>
-      <div className="px-4 py-3 border-b border-white/10">
+      <div className="px-4 py-3 border-b th-border">
         <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${STAGE_BADGE[stage]}`}>{stage}</div>
         <div className="flex justify-between items-center">
-          <span className="text-white/40 text-xs">{deals.length} deal{deals.length !== 1 ? 's' : ''}</span>
-          <span className="text-white font-bold text-xs">{fmt(total)}</span>
+          <span className="th-muted text-xs font-medium">{deals.length} deal{deals.length !== 1 ? 's' : ''}</span>
+          <span className="th-text font-bold text-xs">{fmt(total)}</span>
         </div>
       </div>
       <SortableContext items={deals.map(d => `deal-${d.id}`)} strategy={verticalListSortingStrategy}>
@@ -170,17 +170,17 @@ const CRMKanban: React.FC = () => {
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b th-border shrink-0">
         <div className="flex items-center gap-6">
-          <h2 className="text-lg font-bold text-white">CRM — Pipeline Kanban</h2>
+          <h2 className="text-lg font-bold th-text">CRM — Pipeline Kanban</h2>
           <div className="flex gap-4 text-sm">
-            <span className="text-white/40">Pipeline: <span className="text-white font-bold">{fmt(totalPipeline)}</span></span>
-            <span className="text-white/40">Ganho: <span className="text-green-400 font-bold">{fmt(totalWon)}</span></span>
-            <span className="text-white/40">Deals: <span className="text-primary font-bold">{deals.length}</span></span>
+            <span className="th-muted">Pipeline: <span className="th-text font-bold">{fmt(totalPipeline)}</span></span>
+            <span className="th-muted">Ganho: <span className="text-emerald-500 font-bold">{fmt(totalWon)}</span></span>
+            <span className="th-muted">Deals: <span className="text-primary font-bold">{deals.length}</span></span>
           </div>
         </div>
         <button onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-black text-sm font-bold rounded-xl shadow-neon hover:bg-secondary transition-colors">
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl shadow-md hover:bg-primary/90 transition-colors">
           <PlusCircle size={16}/> Novo Deal
         </button>
       </div>
@@ -198,55 +198,75 @@ const CRMKanban: React.FC = () => {
           </div>
           <DragOverlay>
             {activeDeal && (
-              <div className="bg-[#0f0f13] border border-primary/50 rounded-xl p-4 shadow-neon w-56 opacity-95">
-                <div className="font-bold text-white text-sm mb-1">{activeDeal.title}</div>
-                <div className="text-primary font-bold text-sm">{fmt(activeDeal.value)}</div>
+              <div className="th-card p-4 shadow-2xl border border-primary opacity-90 w-60">
+                <h4 className="font-bold th-text text-sm">{activeDeal.title}</h4>
+                <div className="text-primary font-bold text-sm mt-2">{fmt(activeDeal.value)}</div>
               </div>
             )}
           </DragOverlay>
         </DndContext>
       </div>
 
-      {/* Add Deal Modal */}
+      {/* Modal Add Deal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#0f0f13] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="text-lg font-bold text-white">Novo Deal</h3>
-              <button onClick={() => setShowAdd(false)} className="text-white/40 hover:text-white"><X size={18}/></button>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="th-card w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b th-border">
+              <h3 className="font-bold th-text">Novo Deal / Oportunidade</h3>
+              <button onClick={() => setShowAdd(false)} className="th-muted hover:text-rose-500 transition-colors"><X size={18}/></button>
             </div>
-            <form onSubmit={handleAddDeal} className="space-y-4">
-              <input type="text" required placeholder="Título do Negócio" value={form.title}
-                onChange={e => setForm({...form, title: e.target.value})}
-                className="w-full px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"/>
-              <div className="flex gap-3">
-                <input type="number" placeholder="Valor (R$)" value={form.value}
-                  onChange={e => setForm({...form, value: e.target.value})}
-                  className="flex-1 px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"/>
-                <select value={form.stage} onChange={e => setForm({...form, stage: e.target.value})}
-                  className="flex-1 px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none">
-                  {STAGES.map(s => <option key={s} value={s} className="bg-[#111]">{s}</option>)}
+            <form onSubmit={handleAddDeal} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-medium th-muted mb-1">Título do Deal *</label>
+                <input required className="th-input"
+                  placeholder="Ex: Projeto E-commerce Marca X" value={form.title}
+                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}/>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium th-muted mb-1">Valor (R$)</label>
+                  <input type="number" step="100" className="th-input"
+                    placeholder="5000" value={form.value}
+                    onChange={e => setForm(f => ({ ...f, value: e.target.value }))}/>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium th-muted mb-1">Estágio</label>
+                  <select className="th-input" value={form.stage}
+                    onChange={e => setForm(f => ({ ...f, stage: e.target.value }))}>
+                    {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium th-muted mb-1">Cliente</label>
+                <select className="th-input" value={form.client_id}
+                  onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))}>
+                  <option value="">Selecionar Cliente...</option>
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-              <div className="flex gap-3">
-                <select value={form.client_id} onChange={e => setForm({...form, client_id: e.target.value})}
-                  className="flex-1 px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none">
-                  <option value="" className="bg-[#111]">Selecionar Cliente</option>
-                  {clients.map(c => <option key={c.id} value={c.id} className="bg-[#111]">{c.name}</option>)}
-                </select>
-                <select value={form.assignee_id} onChange={e => setForm({...form, assignee_id: e.target.value})}
-                  className="flex-1 px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none">
-                  <option value="" className="bg-[#111]">Responsável</option>
-                  {users.map(u => <option key={u.id} value={u.id} className="bg-[#111]">{u.name}</option>)}
+              <div>
+                <label className="block text-xs font-medium th-muted mb-1">Responsável</label>
+                <select className="th-input" value={form.assignee_id}
+                  onChange={e => setForm(f => ({ ...f, assignee_id: e.target.value }))}>
+                  <option value="">Selecionar Responsável...</option>
+                  {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
                 </select>
               </div>
-              <textarea placeholder="Notas / Contexto" value={form.notes}
-                onChange={e => setForm({...form, notes: e.target.value})} rows={2}
-                className="w-full px-4 py-2.5 bg-black/50 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none resize-none"/>
-              <button type="submit"
-                className="w-full py-3 bg-primary text-black font-bold rounded-xl shadow-neon hover:bg-secondary transition-colors">
-                Criar Deal no Pipeline
-              </button>
+              <div>
+                <label className="block text-xs font-medium th-muted mb-1">Observações</label>
+                <textarea rows={2} className="th-input"
+                  placeholder="Detalhes da proposta..." value={form.notes}
+                  onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}/>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setShowAdd(false)}
+                  className="px-4 py-2 text-sm th-muted hover:th-text transition-colors">Cancelar</button>
+                <button type="submit"
+                  className="px-5 py-2 bg-primary text-white text-sm font-bold rounded-xl shadow-md hover:bg-primary/90 transition-colors">
+                  Criar Deal
+                </button>
+              </div>
             </form>
           </div>
         </div>

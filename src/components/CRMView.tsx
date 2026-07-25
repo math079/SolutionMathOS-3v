@@ -17,12 +17,12 @@ const STATUSES = ['Lead', 'Contato Feito', 'Proposta Enviada', 'Negociação', '
 
 const statusStyle = (status: string) => {
   switch (status) {
-    case 'Fechado': return 'bg-green-500/20 text-green-400 border-green-500/30';
-    case 'Negociação': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-    case 'Proposta Enviada': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-    case 'Contato Feito': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-    case 'Perdido': return 'bg-red-500/20 text-red-400 border-red-500/30';
-    default: return 'bg-white/10 text-white/60 border-white/20';
+    case 'Fechado': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800';
+    case 'Negociação': return 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-300 dark:border-amber-800';
+    case 'Proposta Enviada': return 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border-blue-300 dark:border-blue-800';
+    case 'Contato Feito': return 'bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border-purple-300 dark:border-purple-800';
+    case 'Perdido': return 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border-rose-300 dark:border-rose-800';
+    default: return 'th-surface2 th-muted border-th-border';
   }
 };
 
@@ -84,7 +84,6 @@ const CRMView: React.FC = () => {
   const leads = clients.filter(c => c.status === 'Lead').length;
   const inProgress = clients.filter(c => ['Contato Feito', 'Proposta Enviada', 'Negociação'].includes(c.status)).length;
   const closed = clients.filter(c => c.status === 'Fechado').length;
-  const lost = clients.filter(c => c.status === 'Perdido').length;
   const convRate = total > 0 ? Math.round((closed / total) * 100) : 0;
 
   return (
@@ -94,11 +93,11 @@ const CRMView: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Top Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-          <h3 className="text-lg font-bold text-white">CRM — Pipeline de Vendas</h3>
+        <div className="flex items-center justify-between px-6 py-4 border-b th-border">
+          <h3 className="text-lg font-bold th-text">CRM — Pipeline de Vendas</h3>
           <button
             onClick={() => { setShowPanel(true); setSelectedClient(null); }}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-black text-sm font-bold rounded-xl shadow-neon hover:bg-secondary transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl shadow-md hover:bg-primary/90 transition-colors"
           >
             <PlusCircle size={16} /> Novo Lead
           </button>
@@ -107,14 +106,14 @@ const CRMView: React.FC = () => {
         {/* Metrics Row */}
         <div className="grid grid-cols-5 gap-3 px-6 py-4">
           {[
-            { label: 'Total', value: total, color: 'text-white' },
-            { label: 'Novos Leads', value: leads, color: 'text-blue-400' },
-            { label: 'Em Progresso', value: inProgress, color: 'text-amber-400' },
-            { label: 'Fechados', value: closed, color: 'text-green-400' },
+            { label: 'Total', value: total, color: 'th-text' },
+            { label: 'Novos Leads', value: leads, color: 'text-blue-500' },
+            { label: 'Em Progresso', value: inProgress, color: 'text-amber-500' },
+            { label: 'Fechados', value: closed, color: 'text-emerald-500' },
             { label: 'Conversão', value: `${convRate}%`, color: 'text-primary' },
           ].map((m, i) => (
-            <div key={i} className="bg-black/30 border border-white/5 rounded-xl px-4 py-3">
-              <div className="text-xs text-white/40 mb-1">{m.label}</div>
+            <div key={i} className="th-card px-4 py-3">
+              <div className="text-xs th-muted font-medium mb-1">{m.label}</div>
               <div className={`text-2xl font-bold ${m.color}`}>{m.value}</div>
             </div>
           ))}
@@ -122,35 +121,35 @@ const CRMView: React.FC = () => {
 
         {/* Table */}
         <div className="flex-1 overflow-y-auto px-6 pb-6">
-          <div className="bg-black/30 rounded-xl border border-white/5 overflow-hidden">
+          <div className="th-card overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="py-3 px-4 text-xs font-semibold text-white/40 uppercase tracking-wider">Contato</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-white/40 uppercase tracking-wider">Empresa</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-white/40 uppercase tracking-wider">Origem</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-white/40 uppercase tracking-wider">Status</th>
-                  <th className="py-3 px-4 text-xs font-semibold text-white/40 uppercase tracking-wider text-right">Ações</th>
+                <tr className="border-b th-border th-surface2">
+                  <th className="py-3 px-4 text-xs font-semibold th-muted uppercase tracking-wider">Contato</th>
+                  <th className="py-3 px-4 text-xs font-semibold th-muted uppercase tracking-wider">Empresa</th>
+                  <th className="py-3 px-4 text-xs font-semibold th-muted uppercase tracking-wider">Origem</th>
+                  <th className="py-3 px-4 text-xs font-semibold th-muted uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-4 text-xs font-semibold th-muted uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={5} className="py-8 text-center text-white/40">Sincronizando...</td></tr>
+                  <tr><td colSpan={5} className="py-8 text-center th-muted">Sincronizando...</td></tr>
                 ) : clients.length === 0 ? (
-                  <tr><td colSpan={5} className="py-8 text-center text-white/40">Nenhum lead no pipeline. Adicione o primeiro!</td></tr>
+                  <tr><td colSpan={5} className="py-8 text-center th-muted">Nenhum lead no pipeline. Adicione o primeiro!</td></tr>
                 ) : (
                   clients.map(client => (
                     <tr
                       key={client.id}
-                      className={`border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${selectedClient?.id === client.id ? 'bg-primary/5' : ''}`}
+                      className={`border-b th-border hover:bg-primary/5 transition-colors cursor-pointer ${selectedClient?.id === client.id ? 'bg-primary/10' : ''}`}
                       onClick={() => setSelectedClient(client)}
                     >
                       <td className="py-3 px-4">
-                        <div className="font-bold text-white/90 text-sm">{client.name}</div>
-                        <div className="text-xs text-white/40">{client.email}</div>
+                        <div className="font-bold th-text text-sm">{client.name}</div>
+                        <div className="text-xs th-muted">{client.email}</div>
                       </td>
-                      <td className="py-3 px-4 text-sm text-white/60">{client.company || '—'}</td>
-                      <td className="py-3 px-4 text-sm text-white/60">{client.source || '—'}</td>
+                      <td className="py-3 px-4 text-sm th-muted">{client.company || '—'}</td>
+                      <td className="py-3 px-4 text-sm th-muted">{client.source || '—'}</td>
                       <td className="py-3 px-4">
                         <select
                           value={client.status}
@@ -158,13 +157,13 @@ const CRMView: React.FC = () => {
                           onChange={e => updateStatus(client.id, e.target.value)}
                           className={`px-2 py-1 rounded-md text-xs font-bold border outline-none cursor-pointer appearance-none ${statusStyle(client.status)}`}
                         >
-                          {STATUSES.map(s => <option key={s} value={s} className="bg-[#111] text-white">{s}</option>)}
+                          {STATUSES.map(s => <option key={s} value={s} className="th-surface th-text">{s}</option>)}
                         </select>
                       </td>
                       <td className="py-3 px-4 text-right">
                         <button
                           onClick={e => { e.stopPropagation(); deleteClient(client.id); }}
-                          className="text-white/20 hover:text-red-400 transition-colors p-1"
+                          className="th-muted hover:text-rose-500 transition-colors p-1"
                         >
                           <Trash2 size={15} />
                         </button>
@@ -180,56 +179,56 @@ const CRMView: React.FC = () => {
 
       {/* ─── Detail Panel (right) when a client is selected ─── */}
       {selectedClient && !showPanel && (
-        <div className="w-72 border-l border-white/10 bg-black/30 p-5 overflow-y-auto flex flex-col">
+        <div className="w-72 border-l th-border th-surface p-5 overflow-y-auto flex flex-col">
           <div className="flex justify-between items-center mb-5">
-            <h4 className="font-bold text-white text-sm">Detalhes do Lead</h4>
-            <button onClick={() => setSelectedClient(null)} className="text-white/30 hover:text-white"><X size={16} /></button>
+            <h4 className="font-bold th-text text-sm">Detalhes do Lead</h4>
+            <button onClick={() => setSelectedClient(null)} className="th-muted hover:th-text"><X size={16} /></button>
           </div>
           <div className="space-y-4 text-sm flex-1">
             <div>
-              <div className="text-white/40 text-xs mb-1">Nome</div>
-              <div className="text-white font-semibold">{selectedClient.name}</div>
+              <div className="text-xs th-muted mb-1">Nome</div>
+              <div className="font-semibold th-text">{selectedClient.name}</div>
             </div>
             <div>
-              <div className="text-white/40 text-xs mb-1">Empresa</div>
-              <div className="text-white/80">{selectedClient.company || '—'}</div>
+              <div className="text-xs th-muted mb-1">Empresa</div>
+              <div className="th-text">{selectedClient.company || '—'}</div>
             </div>
-            <div className="flex items-center gap-2 text-white/70">
+            <div className="flex items-center gap-2 th-text">
               <Mail size={14} className="text-primary shrink-0" />
               <span className="truncate">{selectedClient.email}</span>
             </div>
             {selectedClient.phone && (
-              <div className="flex items-center gap-2 text-white/70">
+              <div className="flex items-center gap-2 th-text">
                 <Phone size={14} className="text-primary shrink-0" />
                 <span>{selectedClient.phone}</span>
               </div>
             )}
             {selectedClient.source && (
-              <div className="flex items-center gap-2 text-white/70">
+              <div className="flex items-center gap-2 th-text">
                 <Globe size={14} className="text-primary shrink-0" />
                 <span>{selectedClient.source}</span>
               </div>
             )}
             <div>
-              <div className="text-white/40 text-xs mb-1">Status</div>
+              <div className="text-xs th-muted mb-1">Status</div>
               <select
                 value={selectedClient.status}
                 onChange={e => updateStatus(selectedClient.id, e.target.value)}
                 className={`w-full px-3 py-1.5 rounded-lg text-xs font-bold border outline-none cursor-pointer ${statusStyle(selectedClient.status)}`}
               >
-                {STATUSES.map(s => <option key={s} value={s} className="bg-[#111] text-white">{s}</option>)}
+                {STATUSES.map(s => <option key={s} value={s} className="th-surface th-text">{s}</option>)}
               </select>
             </div>
             {selectedClient.notes && (
               <div>
-                <div className="text-white/40 text-xs mb-1 flex items-center gap-1"><FileText size={12}/> Observações</div>
-                <div className="text-white/70 bg-black/30 rounded-xl p-3 border border-white/5 text-xs leading-relaxed">{selectedClient.notes}</div>
+                <div className="text-xs th-muted mb-1 flex items-center gap-1"><FileText size={12}/> Observações</div>
+                <div className="th-surface2 rounded-xl p-3 border th-border text-xs leading-relaxed th-text">{selectedClient.notes}</div>
               </div>
             )}
           </div>
           <button
             onClick={() => deleteClient(selectedClient.id)}
-            className="mt-6 w-full py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 border border-red-500/20 rounded-xl transition-colors"
+            className="mt-6 w-full py-2 text-sm font-medium text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 rounded-xl transition-colors"
           >
             Remover Lead
           </button>
@@ -238,21 +237,21 @@ const CRMView: React.FC = () => {
 
       {/* ─── Add Lead Slide-in Panel ─── */}
       {showPanel && (
-        <div className="w-80 border-l border-white/10 bg-black/50 backdrop-blur-md p-5 overflow-y-auto flex flex-col">
+        <div className="w-80 border-l th-border th-surface p-5 overflow-y-auto flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h4 className="font-bold text-white">Capturar Novo Lead</h4>
-            <button onClick={() => setShowPanel(false)} className="text-white/30 hover:text-white transition-colors"><X size={16} /></button>
+            <h4 className="font-bold th-text">Capturar Novo Lead</h4>
+            <button onClick={() => setShowPanel(false)} className="th-muted hover:th-text transition-colors"><X size={16} /></button>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 flex-1">
             {/* Name */}
             <div>
-              <label className="text-xs font-semibold text-white/50 mb-1 block">Nome Completo *</label>
+              <label className="text-xs font-semibold th-muted mb-1 block">Nome Completo *</label>
               <div className="relative">
-                <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
                 <input
                   type="text" required placeholder="Ex: João Silva"
-                  className="w-full pl-8 pr-3 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"
+                  className="th-input pl-8"
                   value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                 />
               </div>
@@ -260,12 +259,12 @@ const CRMView: React.FC = () => {
 
             {/* Company */}
             <div>
-              <label className="text-xs font-semibold text-white/50 mb-1 block">Empresa</label>
+              <label className="text-xs font-semibold th-muted mb-1 block">Empresa</label>
               <div className="relative">
-                <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
                 <input
                   type="text" placeholder="Ex: Acme Corp"
-                  className="w-full pl-8 pr-3 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"
+                  className="th-input pl-8"
                   value={form.company} onChange={e => setForm({ ...form, company: e.target.value })}
                 />
               </div>
@@ -273,12 +272,12 @@ const CRMView: React.FC = () => {
 
             {/* Email */}
             <div>
-              <label className="text-xs font-semibold text-white/50 mb-1 block">Email *</label>
+              <label className="text-xs font-semibold th-muted mb-1 block">Email *</label>
               <div className="relative">
-                <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
                 <input
                   type="email" required placeholder="contato@empresa.com"
-                  className="w-full pl-8 pr-3 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"
+                  className="th-input pl-8"
                   value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
                 />
               </div>
@@ -286,12 +285,12 @@ const CRMView: React.FC = () => {
 
             {/* Phone */}
             <div>
-              <label className="text-xs font-semibold text-white/50 mb-1 block">Telefone / WhatsApp</label>
+              <label className="text-xs font-semibold th-muted mb-1 block">Telefone / WhatsApp</label>
               <div className="relative">
-                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
                 <input
                   type="text" placeholder="(11) 99999-9999"
-                  className="w-full pl-8 pr-3 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"
+                  className="th-input pl-8"
                   value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
                 />
               </div>
@@ -299,45 +298,45 @@ const CRMView: React.FC = () => {
 
             {/* Source */}
             <div>
-              <label className="text-xs font-semibold text-white/50 mb-1 block">Origem do Lead</label>
+              <label className="text-xs font-semibold th-muted mb-1 block">Origem do Lead</label>
               <div className="relative">
-                <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
                 <select
-                  className="w-full pl-8 pr-3 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none appearance-none"
+                  className="th-input pl-8"
                   value={form.source} onChange={e => setForm({ ...form, source: e.target.value })}
                 >
-                  {SOURCES.map(s => <option key={s} value={s} className="bg-[#111]">{s}</option>)}
+                  {SOURCES.map(s => <option key={s} value={s} className="th-surface th-text">{s}</option>)}
                 </select>
               </div>
             </div>
 
             {/* Status */}
             <div>
-              <label className="text-xs font-semibold text-white/50 mb-1 block">Status Inicial</label>
+              <label className="text-xs font-semibold th-muted mb-1 block">Status Inicial</label>
               <div className="relative">
-                <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
                 <select
-                  className="w-full pl-8 pr-3 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none appearance-none"
+                  className="th-input pl-8"
                   value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
                 >
-                  {STATUSES.map(s => <option key={s} value={s} className="bg-[#111]">{s}</option>)}
+                  {STATUSES.map(s => <option key={s} value={s} className="th-surface th-text">{s}</option>)}
                 </select>
               </div>
             </div>
 
             {/* Notes */}
             <div>
-              <label className="text-xs font-semibold text-white/50 mb-1 block">Observações / Contexto</label>
+              <label className="text-xs font-semibold th-muted mb-1 block">Observações / Contexto</label>
               <textarea
                 rows={3} placeholder="Interesse em sistema de gestão, budget de R$5k..."
-                className="w-full px-3 py-2.5 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none resize-none"
+                className="th-input resize-none"
                 value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
               />
             </div>
 
             <button
               type="submit" disabled={saving}
-              className="mt-auto w-full py-3 bg-primary text-black font-bold rounded-xl shadow-neon hover:bg-secondary transition-colors disabled:opacity-50"
+              className="mt-auto w-full py-3 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {saving ? 'Salvando...' : 'Registrar Lead no CRM'}
             </button>
