@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard, DollarSign, Kanban, Users, ClipboardList,
   Building2, Package, Calendar as CalendarIcon, Settings,
-  ChevronLeft, Bell, Search, LogOut, Zap
+  ChevronLeft, Bell, Search, LogOut, ShoppingBag
 } from 'lucide-react';
 import FinancialDashboard from './FinancialDashboard';
 import CRMKanban from './CRMKanban';
@@ -11,12 +11,14 @@ import TasksView from './TasksView';
 import HRView from './HRView';
 import ProductsView from './ProductsView';
 import AgendaCalendarView from './AgendaCalendarView';
+import StoreShell from './StoreShell';
+import ThemeToggle from './ThemeToggle';
 
 interface OS2ShellProps {
   onExitOS2: () => void;
 }
 
-type OS2View = 'home' | 'finance' | 'products' | 'crm-kanban' | 'crm-leads' | 'agenda' | 'tasks' | 'hr';
+type OS2View = 'home' | 'finance' | 'products' | 'crm-kanban' | 'crm-leads' | 'store' | 'agenda' | 'tasks' | 'hr';
 
 interface NavItem {
   id: OS2View;
@@ -29,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'home',        label: 'Visão Geral',        icon: <LayoutDashboard size={18}/>, group: 'Principal' },
   { id: 'finance',     label: 'Financeiro 2026',    icon: <DollarSign size={18}/>,      group: 'Principal' },
   { id: 'products',    label: 'Produtos & Ticket', icon: <Package size={18}/>,         group: 'Principal' },
+  { id: 'store',       label: 'Lojas / Varejo',     icon: <ShoppingBag size={18}/>,     group: 'Comercial' },
   { id: 'crm-kanban',  label: 'Pipeline Deals',      icon: <Kanban size={18}/>,          group: 'Comercial' },
   { id: 'crm-leads',   label: 'Leads & Contatos',    icon: <Users size={18}/>,           group: 'Comercial' },
   { id: 'agenda',      label: 'Agenda de Operações', icon: <CalendarIcon size={18}/>,   group: 'Operações' },
@@ -36,36 +39,44 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'hr',          label: 'Equipe (RH)',         icon: <Building2 size={18}/>,        group: 'Operações' },
 ];
 
-const OS2Home: React.FC = () => (
+const OS2Home: React.FC<{ onNavigate: (view: OS2View) => void }> = ({ onNavigate }) => (
   <div className="flex-1 p-8 overflow-y-auto">
-    <h2 className="text-3xl font-bold text-white mb-1">Bem-vindo ao OS 2.5 Enterprise</h2>
-    <p className="text-white/40 mb-8">Plataforma Empresarial Avançada — Solution Math (2026)</p>
+    <div className="flex items-center justify-between mb-8">
+      <div>
+        <h2 className="text-3xl font-bold th-text">Bem-vindo ao Solution Math OS 3.0</h2>
+        <p className="th-muted mt-1">Plataforma Empresarial Integrada com Módulo Lojas & PDV (2026)</p>
+      </div>
+      <button onClick={() => onNavigate('store')}
+        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-bold shadow-lg hover:bg-primary/90 transition-all active:scale-95">
+        <ShoppingBag size={18} /> Acessar Módulo Lojas & PDV
+      </button>
+    </div>
+
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
       {[
-        { label: 'MRR Atual (Julho/2026)', value: 'R$ 84.500', sub: '+15% vs mês ant.', color: 'text-green-400' },
+        { label: 'MRR Atual (Julho/2026)', value: 'R$ 84.500', sub: '+15% vs mês ant.', color: 'text-emerald-500' },
         { label: 'Pipeline Deals', value: 'R$ 251.000', sub: '8 deals ativos', color: 'text-primary' },
-        { label: 'Projeção Faturamento 2026', value: 'R$ 680.000', sub: 'Com base nas metas', color: 'text-amber-400' },
-        { label: 'Projetos Ativos', value: '12', sub: '3 em entrega final', color: 'text-blue-400' },
-        { label: 'Equipe Ativa (RH)', value: '4', sub: 'Membros cadastrados', color: 'text-purple-400' },
+        { label: 'Projeção Faturamento 2026', value: 'R$ 680.000', sub: 'Com base nas metas', color: 'text-amber-500' },
+        { label: 'Vendas Loja / PDV Hoje', value: 'PDV Ativo', sub: 'Estoque & auto-financeiro', color: 'text-blue-500' },
+        { label: 'Equipe Ativa (RH)', value: '4', sub: 'Membros cadastrados', color: 'text-violet-500' },
         { label: 'Ticket Médio de Produto', value: 'R$ 5.000', sub: 'Margem de 66%', color: 'text-primary' },
       ].map((kpi, i) => (
-        <div key={i} className="bg-black/30 border border-white/5 rounded-2xl p-6 hover:border-primary/20 transition-colors">
-          <div className="text-white/40 text-sm mb-2">{kpi.label}</div>
+        <div key={i} className="th-card p-6">
+          <div className="th-muted text-sm mb-2 font-medium">{kpi.label}</div>
           <div className={`text-3xl font-bold ${kpi.color} mb-1`}>{kpi.value}</div>
-          <div className="text-white/30 text-xs">{kpi.sub}</div>
+          <div className="th-muted text-xs">{kpi.sub}</div>
         </div>
       ))}
     </div>
 
-    <div className="mt-8 bg-primary/10 border border-primary/20 rounded-2xl p-6">
+    <div className="mt-8 th-card p-6 border-l-4 border-l-primary">
       <h3 className="text-primary font-bold mb-3 flex items-center gap-2">
         <DollarSign size={18}/> Resumo Executivo — Julho 2026
       </h3>
-      <p className="text-white/70 text-sm leading-relaxed">
-        A Solution Math encerrou o mês com faturamento de <strong className="text-white">R$ 84.500</strong>, 
-        sendo a maior contribuição do segmento de <strong className="text-primary">Sistemas Customizados (R$ 38.000)</strong> com ticket de R$ 5.000 e margem líquida de R$ 3.300 por produto. 
-        O canal de IA & Agentes cresceu 40% em relação ao mês anterior. 
-        As metas projetam alcançar <strong className="text-green-400">R$ 680.000 em faturamento total até Dezembro/2026</strong>.
+      <p className="th-text text-sm leading-relaxed">
+        A Solution Math encerrou o mês com faturamento de <strong className="th-text font-bold">R$ 84.500</strong>,
+        sendo a maior contribuição do segmento de <strong className="text-primary">Sistemas Customizados (R$ 38.000)</strong> com ticket de R$ 5.000 e margem líquida de R$ 3.300 por produto.
+        O novo módulo de <strong className="text-primary">Lojas & PDV</strong> agora integra vendas diretas e baixas de estoque diretamente no fluxo financeiro da empresa.
       </p>
     </div>
   </div>
@@ -79,50 +90,54 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2 }) => {
 
   const renderContent = () => {
     switch (activeView) {
-      case 'home':       return <OS2Home/>;
+      case 'home':       return <OS2Home onNavigate={setActiveView} />;
       case 'finance':    return <FinancialDashboard/>;
       case 'products':   return <ProductsView/>;
+      case 'store':      return <StoreShell onBack={() => setActiveView('home')} />;
       case 'crm-kanban': return <CRMKanban/>;
       case 'crm-leads':  return <CRMView/>;
       case 'agenda':     return <AgendaCalendarView/>;
       case 'tasks':      return <TasksView/>;
       case 'hr':         return <HRView/>;
-      default:           return <OS2Home/>;
+      default:           return <OS2Home onNavigate={setActiveView} />;
     }
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#080810] text-white overflow-hidden">
+    <div className="h-screen w-screen flex flex-col th-bg th-text overflow-hidden">
 
       {/* Top Bar */}
-      <div className="h-14 flex items-center justify-between px-4 border-b border-white/10 bg-black/40 backdrop-blur-xl shrink-0 z-20 print:hidden">
+      <div className="h-14 flex items-center justify-between px-4 th-topbar shrink-0 z-20 print:hidden">
         <div className="flex items-center gap-3">
           <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors">
+            className="p-2 rounded-lg hover:bg-primary/10 th-muted hover:th-text transition-colors">
             <ChevronLeft size={18} className={`transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`}/>
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-black font-black text-xs">SM</div>
-            <span className="font-bold text-white text-sm">Solution Math</span>
-            <span className="px-2 py-0.5 bg-primary/20 text-primary text-xs font-bold rounded-full border border-primary/30">OS 2.5 Enterprise</span>
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-white font-black text-xs">SM</div>
+            <span className="font-bold th-text text-sm">Solution Math</span>
+            <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full border border-primary/20">OS 3.0 Enterprise</span>
           </div>
         </div>
 
         <div className="flex-1 max-w-md mx-6">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30"/>
-            <input placeholder="Buscar módulo, produto, deal ou data..." 
-              className="w-full pl-8 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:border-primary focus:outline-none"/>
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted"/>
+            <input placeholder="Buscar módulo, produto, loja ou deal..."
+              className="th-input pl-8 text-sm"/>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors relative">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
+          <button className="p-2 rounded-lg hover:bg-primary/10 th-muted hover:th-text transition-colors relative">
             <Bell size={18}/>
             <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></div>
           </button>
           <button onClick={onExitOS2}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs text-white/50 hover:text-white border border-white/10 hover:border-white/20 rounded-lg transition-colors">
+            className="flex items-center gap-2 px-3 py-1.5 text-xs th-muted hover:th-text border th-border rounded-xl transition-colors">
             <LogOut size={14}/> Voltar ao OS 1
           </button>
         </div>
@@ -132,20 +147,18 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2 }) => {
       <div className="flex flex-1 overflow-hidden">
 
         {/* Sidebar */}
-        <div className={`${sidebarCollapsed ? 'w-14' : 'w-56'} transition-all duration-300 border-r border-white/10 bg-black/30 flex flex-col shrink-0 overflow-y-auto z-10 print:hidden`}>
+        <div className={`${sidebarCollapsed ? 'w-14' : 'w-56'} transition-all duration-300 th-sidebar flex flex-col shrink-0 overflow-y-auto z-10 print:hidden`}>
           <nav className="flex-1 p-3 space-y-4 pt-4">
             {groups.map(group => (
               <div key={group}>
                 {!sidebarCollapsed && (
-                  <div className="text-xs font-bold text-white/20 uppercase tracking-wider px-3 mb-2">{group}</div>
+                  <div className="text-xs font-bold th-muted uppercase tracking-wider px-3 mb-2 opacity-60">{group}</div>
                 )}
                 <div className="space-y-1">
                   {NAV_ITEMS.filter(n => n.group === group).map(item => (
                     <button key={item.id} onClick={() => setActiveView(item.id)}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
-                        activeView === item.id
-                          ? 'bg-primary/20 text-primary border border-primary/30 shadow-[0_0_10px_rgba(20,184,166,0.1)]'
-                          : 'text-white/50 hover:bg-white/5 hover:text-white'
+                        activeView === item.id ? 'nav-active font-semibold' : 'th-muted hover:bg-primary/5 hover:text-primary'
                       }`}
                       title={sidebarCollapsed ? item.label : undefined}
                     >
@@ -159,8 +172,8 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2 }) => {
           </nav>
 
           {/* Settings */}
-          <div className="p-3 border-t border-white/10">
-            <button className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/30 hover:bg-white/5 hover:text-white transition-all`}>
+          <div className="p-3 border-t th-border">
+            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm th-muted hover:bg-primary/5 hover:text-primary transition-all">
               <Settings size={18} className="shrink-0"/>
               {!sidebarCollapsed && <span>Configurações</span>}
             </button>
@@ -168,9 +181,7 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2 }) => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-[#080810] relative">
-          {/* Ambient glow */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] opacity-30 pointer-events-none print:hidden"></div>
+        <div className="flex-1 flex flex-col overflow-hidden th-bg relative">
           {renderContent()}
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { CompanyStructure } from '../data/structure';
 import { Users, DollarSign, Activity, Target, Zap } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 interface CEODashboardProps {
   companyData: CompanyStructure;
@@ -13,15 +14,18 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ companyData, onOpenDepartme
     <div className="w-full max-w-7xl mx-auto pb-20 mt-8">
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Solution Math OS</h1>
-          <p className="text-textMuted text-lg font-light">Visão Executiva & Controle Operacional</p>
+          <h1 className="text-4xl font-bold th-text mb-2 tracking-tight">Solution Math OS</h1>
+          <p className="th-muted text-lg font-light">Visão Executiva & Controle Operacional</p>
         </div>
-        <button
-          onClick={onEnterOS2}
-          className="flex items-center gap-2 px-5 py-2.5 bg-primary text-black font-bold rounded-xl shadow-neon hover:bg-secondary transition-all hover:scale-105 text-sm"
-        >
-          <Zap size={16}/> Entrar no OS 2.0
-        </button>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <button
+            onClick={onEnterOS2}
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-primary/90 transition-all hover:scale-105 text-sm"
+          >
+            <Zap size={16}/> Entrar no OS 3.0 Enterprise
+          </button>
+        </div>
       </div>
 
       {/* Quick Stats */}

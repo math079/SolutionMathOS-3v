@@ -89,6 +89,88 @@ const db = new sqlite3.Database(dbPath, (err) => {
         FOREIGN KEY (assignee_id) REFERENCES users (id)
       )`);
 
+      // ═══════════════════════════════════
+      // STORE MODULE TABLES
+      // ═══════════════════════════════════
+
+      // Store Products
+      db.run(`CREATE TABLE IF NOT EXISTS store_products (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        sku TEXT,
+        barcode TEXT,
+        category TEXT DEFAULT 'Geral',
+        cost_price REAL DEFAULT 0,
+        sell_price REAL NOT NULL DEFAULT 0,
+        stock_qty INTEGER DEFAULT 0,
+        stock_min INTEGER DEFAULT 5,
+        external_id TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      // Store Orders
+      db.run(`CREATE TABLE IF NOT EXISTS store_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER,
+        status TEXT DEFAULT 'Pago',
+        total REAL DEFAULT 0,
+        discount REAL DEFAULT 0,
+        payment_method TEXT DEFAULT 'Dinheiro',
+        notes TEXT,
+        source_financial_id INTEGER,
+        external_order_id TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (client_id) REFERENCES clients (id)
+      )`);
+
+      // Store Order Items
+      db.run(`CREATE TABLE IF NOT EXISTS store_order_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        qty INTEGER DEFAULT 1,
+        unit_price REAL DEFAULT 0,
+        total REAL DEFAULT 0,
+        FOREIGN KEY (order_id) REFERENCES store_orders (id),
+        FOREIGN KEY (product_id) REFERENCES store_products (id)
+      )`);
+
+      // Store Stock Movements
+      db.run(`CREATE TABLE IF NOT EXISTS store_stock_moves (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        qty INTEGER NOT NULL,
+        reason TEXT,
+        order_id INTEGER,
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (product_id) REFERENCES store_products (id)
+      )`);
+
+      // Add source_type/source_id to transactions for idempotency
+      db.run(`ALTER TABLE transactions ADD COLUMN source_type TEXT`, () => {});
+      db.run(`ALTER TABLE transactions ADD COLUMN source_id INTEGER`, () => {});
+
+      // ── Seed Store Products ──
+      db.get("SELECT count(*) as count FROM store_products", (err, row) => {
+        if (!err && row.count === 0) {
+          const sampleProducts = [
+            ['Camiseta Básica Premium', 'CAM-001', 'Vestuário', 29.90, 89.90, 50, 10],
+            ['Tênis Runner Pro', 'TEN-002', 'Calçados', 89.00, 249.90, 20, 5],
+            ['Mochila Urban 25L', 'MOC-003', 'Acessórios', 45.00, 149.90, 15, 3],
+            ['Calça Cargo Slim', 'CAL-004', 'Vestuário', 55.00, 169.90, 30, 8],
+            ['Boné Aba Curva', 'BON-005', 'Acessórios', 18.00, 59.90, 40, 10],
+            ['Jaqueta Corta-Vento', 'JAQ-006', 'Vestuário', 120.00, 349.90, 8, 3],
+          ];
+          sampleProducts.forEach(([name, sku, category, cost, price, stock, min]) => {
+            db.run(
+              `INSERT INTO store_products (name, sku, category, cost_price, sell_price, stock_qty, stock_min) VALUES (?,?,?,?,?,?,?)`,
+              [name, sku, category, cost, price, stock, min]
+            );
+          });
+        }
+      });
+
       // ── Seed Users ──
       db.get("SELECT count(*) as count FROM users", (err, row) => {
         if (!err && row.count <= 3) {

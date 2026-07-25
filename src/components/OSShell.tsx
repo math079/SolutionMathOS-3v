@@ -67,7 +67,7 @@ const OSShell: React.FC<OSShellProps> = ({ companyData, onEnterOS2 }) => {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative bg-[#0a0a0a] text-white font-sans">
+    <div className="h-screen w-screen overflow-hidden relative th-bg th-text font-sans">
       
       {/* Sci-fi abstract background elements */}
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/20 rounded-full blur-[120px] opacity-40 -translate-y-1/2 translate-x-1/3 pointer-events-none z-0"></div>

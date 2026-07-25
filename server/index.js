@@ -417,4 +417,224 @@ app.delete('/api/tasks/:id', (req, res) => {
   });
 });
 
+
+// ════════════════════════════════════════════
+// STORE — PRODUCTS
+// ════════════════════════════════════════════
+app.get('/api/store/products', (req, res) => {
+  db.all("SELECT * FROM store_products ORDER BY name ASC", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/store/products', (req, res) => {
+  const { name, sku, category, cost_price, sell_price, stock_qty, stock_min } = req.body;
+  if (!name || !sell_price) return res.status(400).json({ error: 'name e sell_price são obrigatórios' });
+  db.run(
+    `INSERT INTO store_products (name, sku, category, cost_price, sell_price, stock_qty, stock_min)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [name, sku || '', category || 'Geral', parseFloat(cost_price) || 0,
+     parseFloat(sell_price), parseInt(stock_qty) || 0, parseInt(stock_min) || 5],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, name, sku, category, cost_price, sell_price, stock_qty, stock_min });
+    }
+  );
+});
+
+app.put('/api/store/products/:id', (req, res) => {
+  const { name, sku, category, cost_price, sell_price, stock_qty, stock_min } = req.body;
+  db.run(
+    `UPDATE store_products SET
+      name = COALESCE(?, name), sku = COALESCE(?, sku), category = COALESCE(?, category),
+      cost_price = COALESCE(?, cost_price), sell_price = COALESCE(?, sell_price),
+      stock_qty = COALESCE(?, stock_qty), stock_min = COALESCE(?, stock_min)
+     WHERE id = ?`,
+    [name||null, sku||null, category||null,
+     cost_price !== undefined ? parseFloat(cost_price) : null,
+     sell_price !== undefined ? parseFloat(sell_price) : null,
+     stock_qty !== undefined ? parseInt(stock_qty) : null,
+     stock_min !== undefined ? parseInt(stock_min) : null,
+     req.params.id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    }
+  );
+});
+
+app.delete('/api/store/products/:id', (req, res) => {
+  db.run(`DELETE FROM store_products WHERE id=?`, [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// ════════════════════════════════════════════
+// STORE — ORDERS (PDV finaliza uma venda)
+// ════════════════════════════════════════════
+app.get('/api/store/orders', (req, res) => {
+  db.all(`
+    SELECT so.*, c.name as client_name,
+           (SELECT COUNT(*) FROM store_order_items WHERE order_id = so.id) as item_count
+    FROM store_orders so
+    LEFT JOIN clients c ON so.client_id = c.id
+    ORDER BY so.created_at DESC
+  `, [], (err, orders) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(orders);
+  });
+});
+
+app.get('/api/store/orders/:id/items', (req, res) => {
+  db.all(`
+    SELECT soi.*, sp.name as product_name, sp.sku
+    FROM store_order_items soi
+    JOIN store_products sp ON soi.product_id = sp.id
+    WHERE soi.order_id = ?
+  `, [req.params.id], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/store/orders', (req, res) => {
+  const { client_id, items, discount, payment_method, notes } = req.body;
+  // items: [{ product_id, qty, unit_price }]
+  if (!items || items.length === 0) return res.status(400).json({ error: 'Nenhum item no pedido' });
+
+  const discountVal = parseFloat(discount) || 0;
+  const itemsTotal  = items.reduce((s, i) => s + (i.unit_price * i.qty), 0);
+  const total       = Math.max(0, itemsTotal - discountVal);
+  const currentMonth = '2026-07';
+  const today        = new Date().toISOString().split('T')[0];
+
+  db.run(
+    `INSERT INTO store_orders (client_id, status, total, discount, payment_method, notes)
+     VALUES (?, 'Pago', ?, ?, ?, ?)`,
+    [client_id || null, total, discountVal, payment_method || 'Dinheiro', notes || ''],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      const orderId = this.lastID;
+
+      // Insert order items + deduct stock
+      const insertItem = db.prepare(
+        `INSERT INTO store_order_items (order_id, product_id, qty, unit_price, total)
+         VALUES (?, ?, ?, ?, ?)`
+      );
+      const deductStock = db.prepare(
+        `UPDATE store_products SET stock_qty = MAX(0, stock_qty - ?) WHERE id = ?`
+      );
+      const insertMove = db.prepare(
+        `INSERT INTO store_stock_moves (product_id, type, qty, reason, order_id)
+         VALUES (?, 'out', ?, 'Venda PDV', ?)`
+      );
+
+      items.forEach(item => {
+        insertItem.run(orderId, item.product_id, item.qty, item.unit_price, item.unit_price * item.qty);
+        deductStock.run(item.qty, item.product_id);
+        insertMove.run(item.product_id, item.qty, orderId);
+      });
+      insertItem.finalize();
+      deductStock.finalize();
+      insertMove.finalize();
+
+      // Auto-launch to Financial Dashboard (idempotency: source_type + source_id)
+      db.get(
+        `SELECT id FROM transactions WHERE source_type='store_order' AND source_id=?`,
+        [orderId],
+        (err2, existing) => {
+          if (!existing) {
+            db.run(
+              `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
+               VALUES (?, ?, 'income', 'Loja', ?, 'store_order', ?)`,
+              [`Venda PDV #${orderId}`, total, currentMonth, orderId]
+            );
+          }
+        }
+      );
+
+      res.json({ id: orderId, total, status: 'Pago', payment_method, item_count: items.length });
+    }
+  );
+});
+
+app.put('/api/store/orders/:id/status', (req, res) => {
+  const { status } = req.body;
+  db.run(`UPDATE store_orders SET status=? WHERE id=?`, [status, req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// ════════════════════════════════════════════
+// STORE — STOCK
+// ════════════════════════════════════════════
+app.get('/api/store/stock/moves', (req, res) => {
+  db.all(`
+    SELECT sm.*, sp.name as product_name
+    FROM store_stock_moves sm
+    JOIN store_products sp ON sm.product_id = sp.id
+    ORDER BY sm.created_at DESC LIMIT 100
+  `, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/store/stock/adjust', (req, res) => {
+  const { product_id, qty, reason } = req.body;
+  const qtyNum = parseInt(qty);
+  if (!product_id || isNaN(qtyNum)) return res.status(400).json({ error: 'product_id e qty são obrigatórios' });
+
+  const moveType = qtyNum > 0 ? 'in' : 'adjust';
+  db.run(
+    `UPDATE store_products SET stock_qty = MAX(0, stock_qty + ?) WHERE id = ?`,
+    [qtyNum, product_id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      db.run(
+        `INSERT INTO store_stock_moves (product_id, type, qty, reason) VALUES (?, ?, ?, ?)`,
+        [product_id, moveType, Math.abs(qtyNum), reason || 'Ajuste manual']
+      );
+      res.json({ success: true });
+    }
+  );
+});
+
+// ════════════════════════════════════════════
+// STORE — DASHBOARD
+// ════════════════════════════════════════════
+app.get('/api/store/dashboard', (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
+  const month = today.substring(0, 7);
+
+  Promise.all([
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COALESCE(SUM(total),0) as value FROM store_orders WHERE date(created_at) = ? AND status != 'Cancelado'`, [today], (e, r) => e ? reject(e) : resolve(r?.value || 0))
+    ),
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COALESCE(SUM(total),0) as value FROM store_orders WHERE strftime('%Y-%m', created_at) = ? AND status != 'Cancelado'`, [month], (e, r) => e ? reject(e) : resolve(r?.value || 0))
+    ),
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COALESCE(AVG(total),0) as value FROM store_orders WHERE strftime('%Y-%m', created_at) = ? AND status != 'Cancelado'`, [month], (e, r) => e ? reject(e) : resolve(r?.value || 0))
+    ),
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COUNT(*) as value FROM store_orders WHERE date(created_at) = ? AND status != 'Cancelado'`, [today], (e, r) => e ? reject(e) : resolve(r?.value || 0))
+    ),
+    new Promise((resolve, reject) =>
+      db.all(`SELECT sp.name, SUM(soi.qty) as total_sold FROM store_order_items soi JOIN store_products sp ON soi.product_id = sp.id GROUP BY soi.product_id ORDER BY total_sold DESC LIMIT 5`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    ),
+    new Promise((resolve, reject) =>
+      db.all(`SELECT * FROM store_products WHERE stock_qty <= stock_min ORDER BY stock_qty ASC`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    ),
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COUNT(*) as value FROM store_orders WHERE strftime('%Y-%m', created_at) = ? AND status != 'Cancelado'`, [month], (e, r) => e ? reject(e) : resolve(r?.value || 0))
+    ),
+  ]).then(([salesDay, salesMonth, ticketAvg, ordersDay, topProducts, lowStock, ordersMonth]) => {
+    res.json({ salesDay, salesMonth, ticketAvg, ordersDay, ordersMonth, topProducts, lowStock });
+  }).catch(err => res.status(500).json({ error: err.message }));
+});
+
 app.listen(port, () => console.log(`Solution Math OS Backend running on http://localhost:${port}`));
