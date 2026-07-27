@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Menu, X, ArrowRight, CheckCircle2, Star, Shield,
   BarChart3, Users, Package, CreditCard, Calendar, Kanban,
@@ -202,9 +203,9 @@ const LandingPage: React.FC = () => {
 
           {/* Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <a href="/login" className="text-gray-600 hover:text-blue-600 text-sm font-medium transition-colors">
+            <Link to="/login" className="text-gray-600 hover:text-blue-600 text-sm font-medium transition-colors">
               Entrar
-            </a>
+            </Link>
             <a
               href="#contact"
               className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-px"
@@ -228,7 +229,7 @@ const LandingPage: React.FC = () => {
               </a>
             ))}
             <div className="pt-3 mt-3 border-t border-gray-100 flex flex-col gap-2">
-              <a href="/login" className="text-center border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium">Entrar</a>
+              <Link to="/login" className="text-center border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium">Entrar</Link>
               <a href="#contact" className="text-center bg-blue-600 text-white py-2.5 rounded-xl text-sm font-bold">Começar agora</a>
             </div>
           </div>
@@ -788,9 +789,9 @@ const LandingPage: React.FC = () => {
                 ))}
               </ul>
               <div className="mt-5">
-                <a href="/login" className="inline-flex items-center gap-1.5 text-gray-400 hover:text-blue-400 text-sm transition-colors">
+                <Link to="/login" className="inline-flex items-center gap-1.5 text-gray-400 hover:text-blue-400 text-sm transition-colors">
                   <Lock className="w-3.5 h-3.5" /> Área do cliente
-                </a>
+                </Link>
               </div>
             </div>
           </div>

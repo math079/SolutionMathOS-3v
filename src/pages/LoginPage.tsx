@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Zap, Lock, User, ArrowRight, Shield } from 'lucide-react';
 
@@ -45,10 +45,10 @@ const LoginPage: React.FC = () => {
       <div className="w-full max-w-md relative z-10">
 
         {/* Back to landing */}
-        <a href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-teal-400 text-sm mb-8 transition-colors group">
+        <Link to="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-teal-400 text-sm mb-8 transition-colors group">
           <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />
           Voltar para o site
-        </a>
+        </Link>
 
         {/* Card */}
         <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl shadow-black/40">
