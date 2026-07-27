@@ -1,15 +1,17 @@
 import React from 'react';
 import { CompanyStructure } from '../data/structure';
-import { Users, DollarSign, Activity, Target, Zap } from 'lucide-react';
+import { Users, DollarSign, Activity, Target, Zap, LogOut } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 interface CEODashboardProps {
   companyData: CompanyStructure;
   onOpenDepartment: (deptId: string) => void;
   onEnterOS2: () => void;
+  onLogout?: () => void;
 }
 
-const CEODashboard: React.FC<CEODashboardProps> = ({ companyData, onOpenDepartment, onEnterOS2 }) => {
+
+const CEODashboard: React.FC<CEODashboardProps> = ({ companyData, onOpenDepartment, onEnterOS2, onLogout }) => {
   return (
     <div className="w-full max-w-7xl mx-auto pb-20 mt-8">
       <div className="mb-8 flex items-start justify-between">
@@ -19,6 +21,14 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ companyData, onOpenDepartme
         </div>
         <div className="flex items-center gap-3">
           <ThemeToggle />
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/50 rounded-xl transition-all hover:bg-red-500/10"
+            >
+              <LogOut size={14}/> Sair
+            </button>
+          )}
           <button
             onClick={onEnterOS2}
             className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-primary/90 transition-all hover:scale-105 text-sm"

@@ -16,6 +16,7 @@ import ThemeToggle from './ThemeToggle';
 
 interface OS2ShellProps {
   onExitOS2: () => void;
+  onLogout?: () => void;
 }
 
 type OS2View = 'home' | 'finance' | 'products' | 'crm-kanban' | 'crm-leads' | 'store' | 'agenda' | 'tasks' | 'hr';
@@ -82,7 +83,7 @@ const OS2Home: React.FC<{ onNavigate: (view: OS2View) => void }> = ({ onNavigate
   </div>
 );
 
-const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2 }) => {
+const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2, onLogout }) => {
   const [activeView, setActiveView] = useState<OS2View>('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -138,8 +139,14 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2 }) => {
           </button>
           <button onClick={onExitOS2}
             className="flex items-center gap-2 px-3 py-1.5 text-xs th-muted hover:th-text border th-border rounded-xl transition-colors">
-            <LogOut size={14}/> Voltar ao OS 1
+            <ChevronLeft size={14}/> OS 1
           </button>
+          {onLogout && (
+            <button onClick={onLogout}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs text-red-400 hover:text-red-300 border border-red-500/30 rounded-xl transition-colors hover:bg-red-500/10">
+              <LogOut size={14}/> Sair
+            </button>
+          )}
         </div>
       </div>
 

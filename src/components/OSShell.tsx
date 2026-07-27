@@ -7,6 +7,7 @@ import DepartmentWindow from './DepartmentWindow';
 interface OSShellProps {
   companyData: CompanyStructure;
   onEnterOS2: () => void;
+  onLogout?: () => void;
 }
 
 export interface WindowState {
@@ -17,7 +18,7 @@ export interface WindowState {
   zIndex: number;
 }
 
-const OSShell: React.FC<OSShellProps> = ({ companyData, onEnterOS2 }) => {
+const OSShell: React.FC<OSShellProps> = ({ companyData, onEnterOS2, onLogout }) => {
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
   const [highestZIndex, setHighestZIndex] = useState(10);
@@ -78,7 +79,7 @@ const OSShell: React.FC<OSShellProps> = ({ companyData, onEnterOS2 }) => {
         
         {/* Desktop Background Content */}
         <div className="absolute inset-0 p-8 pt-4 overflow-auto">
-          <CEODashboard companyData={companyData} onOpenDepartment={openDepartment} onEnterOS2={onEnterOS2} />
+          <CEODashboard companyData={companyData} onOpenDepartment={openDepartment} onEnterOS2={onEnterOS2} onLogout={onLogout} />
         </div>
 
         {/* Windows Rendering */}
