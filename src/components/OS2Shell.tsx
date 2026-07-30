@@ -3,7 +3,7 @@ import {
   LayoutDashboard, DollarSign, Kanban, Users, ClipboardList,
   Building2, Package, Calendar as CalendarIcon, Settings,
   ChevronLeft, Bell, Search, LogOut, ShoppingBag, ShieldCheck,
-  FileSpreadsheet, LifeBuoy, Bot
+  FileSpreadsheet, LifeBuoy, Bot, Zap
 } from 'lucide-react';
 import FinancialDashboard from './FinancialDashboard';
 import CRMKanban from './CRMKanban';
@@ -18,13 +18,14 @@ import { AuditLogsView } from './AuditLogsView';
 import { ReportsView } from './ReportsView';
 import { HelpdeskView } from './HelpdeskView';
 import { AIChatView, LyraFloatingButton } from './AIChatView';
+import { WorkflowsView } from './WorkflowsView';
 
 interface OS2ShellProps {
   onExitOS2: () => void;
   onLogout?: () => void;
 }
 
-type OS2View = 'home' | 'finance' | 'products' | 'crm-kanban' | 'crm-leads' | 'store' | 'agenda' | 'tasks' | 'hr' | 'reports' | 'helpdesk' | 'audit' | 'ai-chat';
+type OS2View = 'home' | 'finance' | 'products' | 'crm-kanban' | 'crm-leads' | 'store' | 'agenda' | 'tasks' | 'hr' | 'reports' | 'helpdesk' | 'audit' | 'ai-chat' | 'workflows';
 
 interface NavItem {
   id: OS2View;
@@ -44,6 +45,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'tasks',       label: 'Tarefas (OS)',        icon: <ClipboardList size={18}/>,   group: 'Operações' },
   { id: 'hr',          label: 'Equipe (RH)',         icon: <Building2 size={18}/>,        group: 'Operações' },
   { id: 'reports',     label: 'Relatórios PDF',     icon: <FileSpreadsheet size={18}/>, group: 'Gestão' },
+  { id: 'workflows',   label: 'Workflows & Automações', icon: <Zap size={18}/>,        group: 'Gestão' },
   { id: 'helpdesk',    label: 'Suporte & Helpdesk',  icon: <LifeBuoy size={18}/>,        group: 'Gestão' },
   { id: 'audit',       label: 'Logs de Segurança',   icon: <ShieldCheck size={18}/>,     group: 'Gestão' },
   { id: 'ai-chat',     label: 'IA Assistente',        icon: <Bot size={18}/>,             group: 'Gestão' },
@@ -110,6 +112,7 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2, onLogout }) => {
       case 'tasks':      return <TasksView/>;
       case 'hr':         return <HRView/>;
       case 'reports':    return <ReportsView/>;
+      case 'workflows':  return <WorkflowsView onOpenLyra={() => setActiveView('ai-chat')} />;
       case 'helpdesk':   return <HelpdeskView/>;
       case 'audit':      return <AuditLogsView/>;
       case 'ai-chat':    return <AIChatView/>;

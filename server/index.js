@@ -774,6 +774,54 @@ app.get('/api/reports/inventory', (req, res) => {
 });
 
 // ════════════════════════════════════════════
+// WORKFLOWS & AUTOMATIONS API
+// ════════════════════════════════════════════
+app.get('/api/workflows', (req, res) => {
+  db.all("SELECT * FROM workflows ORDER BY id DESC", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const formatted = (rows || []).map(r => ({
+      ...r,
+      actions: JSON.parse(r.actions_json || '[]')
+    }));
+    res.json(formatted);
+  });
+});
+
+app.post('/api/workflows', (req, res) => {
+  const { name, description, trigger_event, condition_rules, actions } = req.body;
+  const actions_json = JSON.stringify(actions || []);
+
+  db.run(
+    `INSERT INTO workflows (name, description, trigger_event, condition_rules, actions_json, status, executions_count) VALUES (?, ?, ?, ?, ?, 'Ativo', 0)`,
+    [name, description || '', trigger_event, condition_rules || '', actions_json],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({
+        id: this.lastID, name, description, trigger_event, condition_rules, actions, status: 'Ativo', executions_count: 0, created_at: new Date().toISOString()
+      });
+    }
+  );
+});
+
+app.put('/api/workflows/:id/toggle', (req, res) => {
+  db.get("SELECT status FROM workflows WHERE id = ?", [req.params.id], (err, row) => {
+    if (err || !row) return res.status(404).json({ error: 'Workflow não encontrado.' });
+    const newStatus = row.status === 'Ativo' ? 'Pausado' : 'Ativo';
+    db.run("UPDATE workflows SET status = ?, updated_at = datetime('now') WHERE id = ?", [newStatus, req.params.id], (err2) => {
+      if (err2) return res.status(500).json({ error: err2.message });
+      res.json({ success: true, status: newStatus });
+    });
+  });
+});
+
+app.delete('/api/workflows/:id', (req, res) => {
+  db.run("DELETE FROM workflows WHERE id = ?", [req.params.id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// ════════════════════════════════════════════
 // AUDIT LOGS API (Regra 13 — somente admin)
 // ════════════════════════════════════════════
 app.get('/api/audit-logs', (req, res) => {

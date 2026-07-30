@@ -353,6 +353,63 @@ const db = new sqlite3.Database(dbPath, (err) => {
           });
         }
       });
+
+      // ═══════════════════════════════════
+      // WORKFLOWS / AUTOMATION TABLES
+      // ═══════════════════════════════════
+      db.run(`CREATE TABLE IF NOT EXISTS workflows (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        trigger_event TEXT NOT NULL,
+        condition_rules TEXT,
+        actions_json TEXT NOT NULL,
+        status TEXT DEFAULT 'Ativo',
+        executions_count INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      // Seed Workflows
+      db.get("SELECT count(*) as count FROM workflows", (err, row) => {
+        if (!err && row && row.count === 0) {
+          const sampleWorkflows = [
+            [
+              'Notificação de Pedido de Alto Valor',
+              'Envia notificação via WhatsApp para o vendedor responsável quando um pedido ultrapassa R$ 10.000',
+              'Pedido Aprovado',
+              'Valor do pedido > R$ 10.000',
+              JSON.stringify(['Localizar vendedor responsável', 'Enviar mensagem WhatsApp', 'Registrar log de auditoria', 'Criar tarefa de acompanhamento em 24h']),
+              'Ativo',
+              14
+            ],
+            [
+              'Alerta de Estoque Crítico',
+              'Dispara e-mail automático para o setor de compras quando o estoque de um produto atinge a quantidade mínima',
+              'Estoque Mínimo Atingido',
+              'Quantidade em estoque <= Estoque mínimo',
+              JSON.stringify(['Identificar fornecedor padrão', 'Gerar ordem de compra em rascunho', 'Notificar gerente de compras via sistema']),
+              'Ativo',
+              32
+            ],
+            [
+              'Boas-Vindas a Novos Leads no CRM',
+              'Agenda tarefa automática para a equipe de vendas entrar em contato em até 2 horas após o cadastro de um novo lead',
+              'Novo Lead Cadastrado',
+              'Origem = Landing Page ou Formulário',
+              JSON.stringify(['Atribuir ao vendedor da fila rodízio', 'Criar tarefa com prioridade Alta', 'Enviar mensagem de boas-vindas']),
+              'Ativo',
+              89
+            ]
+          ];
+          sampleWorkflows.forEach(([name, desc, trig, cond, actions, status, execs]) => {
+            db.run(
+              `INSERT INTO workflows (name, description, trigger_event, condition_rules, actions_json, status, executions_count) VALUES (?,?,?,?,?,?,?)`,
+              [name, desc, trig, cond, actions, status, execs]
+            );
+          });
+        }
+      });
     });
   }
 });
