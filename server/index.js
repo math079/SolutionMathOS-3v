@@ -4,12 +4,35 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const db = require('./db');
+const { chatCompletion, getSystemContext } = require('./ai');
+const {
+  rateLimitMiddleware,
+  securityHeadersMiddleware,
+  authMiddleware,
+  rbacMiddleware,
+  auditMiddleware,
+  sanitizeResponse,
+  createAuditLog,
+  getAuditLogs,
+} = require('./security');
 
 const app = express();
 const port = 3001;
 
-app.use(cors());
-app.use(express.json());
+// ════════════════════════════════════════════
+// SECURITY MIDDLEWARE STACK
+// Regras 2, 3, 5, 7, 13 do Prompt de Segurança
+// ════════════════════════════════════════════
+app.use(securityHeadersMiddleware);  // Headers de segurança (Regra 3)
+app.use(rateLimitMiddleware);         // Rate limiting (Regra 7)
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'x-auth-user', 'x-auth-role'],
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(authMiddleware);              // Autenticação (Regra 5)
+app.use(auditMiddleware);             // Auditoria (Regra 13)
 
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
@@ -635,6 +658,211 @@ app.get('/api/store/dashboard', (req, res) => {
   ]).then(([salesDay, salesMonth, ticketAvg, ordersDay, topProducts, lowStock, ordersMonth]) => {
     res.json({ salesDay, salesMonth, ticketAvg, ordersDay, ordersMonth, topProducts, lowStock });
   }).catch(err => res.status(500).json({ error: err.message }));
+});
+
+// ════════════════════════════════════════════
+// HELPDESK / TICKETS API
+// ════════════════════════════════════════════
+app.get('/api/tickets', (req, res) => {
+  db.all("SELECT * FROM tickets ORDER BY id DESC", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+app.post('/api/tickets', (req, res) => {
+  const { title, description, category, priority, user_name, assigned_to } = req.body;
+  db.run(
+    `INSERT INTO tickets (title, description, category, priority, status, user_name, assigned_to) VALUES (?, ?, ?, ?, 'Aberto', ?, ?)`,
+    [title, description || '', category || 'Geral', priority || 'Média', user_name || 'Cliente', assigned_to || 'Não atribuído'],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({
+        id: this.lastID, title, description, category: category||'Geral',
+        priority: priority||'Média', status: 'Aberto', user_name: user_name||'Cliente',
+        assigned_to: assigned_to||'Não atribuído', created_at: new Date().toISOString()
+      });
+    }
+  );
+});
+
+app.put('/api/tickets/:id', (req, res) => {
+  const { status, assigned_to, priority } = req.body;
+  db.run(
+    `UPDATE tickets SET status = COALESCE(?, status), assigned_to = COALESCE(?, assigned_to), priority = COALESCE(?, priority), updated_at = datetime('now') WHERE id = ?`,
+    [status||null, assigned_to||null, priority||null, req.params.id],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    }
+  );
+});
+
+app.get('/api/tickets/:id/replies', (req, res) => {
+  db.all("SELECT * FROM ticket_replies WHERE ticket_id = ? ORDER BY id ASC", [req.params.id], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+app.post('/api/tickets/:id/replies', (req, res) => {
+  const { author, role, message } = req.body;
+  db.run(
+    `INSERT INTO ticket_replies (ticket_id, author, role, message) VALUES (?, ?, ?, ?)`,
+    [req.params.id, author || 'Atendente', role || 'funcionario', message],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      // Atualizar ticket para "Em Atendimento" se estiver Aberto
+      db.run(`UPDATE tickets SET status = 'Em Atendimento', updated_at = datetime('now') WHERE id = ? AND status = 'Aberto'`, [req.params.id]);
+      res.json({ id: this.lastID, ticket_id: req.params.id, author, role, message, created_at: new Date().toISOString() });
+    }
+  );
+});
+
+// ════════════════════════════════════════════
+// ADVANCED REPORTS API
+// ════════════════════════════════════════════
+app.get('/api/reports/financial', (req, res) => {
+  Promise.all([
+    new Promise((resolve, reject) =>
+      db.all(`SELECT month, type, SUM(amount) as total FROM transactions GROUP BY month, type ORDER BY month ASC`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    ),
+    new Promise((resolve, reject) =>
+      db.all(`SELECT category, type, SUM(amount) as total FROM transactions GROUP BY category, type ORDER BY total DESC`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    ),
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = 'income'`, [], (e, r) => e ? reject(e) : resolve(r?.total || 0))
+    ),
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = 'expense'`, [], (e, r) => e ? reject(e) : resolve(r?.total || 0))
+    )
+  ]).then(([monthlyBreakdown, categoryBreakdown, totalIncome, totalExpense]) => {
+    res.json({ monthlyBreakdown, categoryBreakdown, totalIncome, totalExpense, netProfit: totalIncome - totalExpense });
+  }).catch(err => res.status(500).json({ error: err.message }));
+});
+
+app.get('/api/reports/sales', (req, res) => {
+  Promise.all([
+    new Promise((resolve, reject) =>
+      db.all(`SELECT date(created_at) as day, COUNT(*) as orders, SUM(total) as revenue FROM store_orders WHERE status != 'Cancelado' GROUP BY date(created_at) ORDER BY day DESC LIMIT 30`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    ),
+    new Promise((resolve, reject) =>
+      db.all(`SELECT sp.name, sp.sku, SUM(soi.qty) as qty_sold, SUM(soi.price * soi.qty) as total_revenue FROM store_order_items soi JOIN store_products sp ON soi.product_id = sp.id GROUP BY soi.product_id ORDER BY total_revenue DESC LIMIT 10`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    ),
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COUNT(*) as count, COALESCE(SUM(total),0) as total, COALESCE(AVG(total),0) as avg_ticket FROM store_orders WHERE status != 'Cancelado'`, [], (e, r) => e ? reject(e) : resolve(r || {}))
+    )
+  ]).then(([dailySales, topSellingProducts, summary]) => {
+    res.json({ dailySales, topSellingProducts, summary });
+  }).catch(err => res.status(500).json({ error: err.message }));
+});
+
+app.get('/api/reports/inventory', (req, res) => {
+  Promise.all([
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COUNT(*) as total_items, COALESCE(SUM(stock_qty * price), 0) as total_value, COALESCE(SUM(stock_qty * cost_price), 0) as total_cost FROM store_products`, [], (e, r) => e ? reject(e) : resolve(r || {}))
+    ),
+    new Promise((resolve, reject) =>
+      db.all(`SELECT * FROM store_products WHERE stock_qty <= stock_min ORDER BY stock_qty ASC`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    ),
+    new Promise((resolve, reject) =>
+      db.all(`SELECT category, COUNT(*) as count, SUM(stock_qty * price) as category_value FROM store_products GROUP BY category ORDER BY category_value DESC`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    )
+  ]).then(([totals, lowStockProducts, categorySummary]) => {
+    res.json({ totals, lowStockProducts, categorySummary });
+  }).catch(err => res.status(500).json({ error: err.message }));
+});
+
+// ════════════════════════════════════════════
+// AUDIT LOGS API (Regra 13 — somente admin)
+// ════════════════════════════════════════════
+app.get('/api/audit-logs', (req, res) => {
+  const role = req.authUser?.role;
+  if (role !== 'admin') {
+    return res.status(403).json({ error: 'Acesso negado. Somente administradores podem visualizar logs de auditoria.' });
+  }
+  const logs = getAuditLogs(req.query);
+  res.json(logs);
+});
+
+// ════════════════════════════════════════════
+// HEALTH CHECK (Regra 9 — nunca expor internos)
+// ════════════════════════════════════════════
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ════════════════════════════════════════════
+// AUTH ENDPOINTS (Login/Logout com auditoria)
+// ════════════════════════════════════════════
+app.post('/api/auth/login', (req, res) => {
+  const { username } = req.body || {};
+  createAuditLog({
+    action: 'LOGIN_ATTEMPT',
+    username: username || 'unknown',
+    ip: req.ip,
+    resource: '/api/auth/login',
+    method: 'POST',
+  });
+  // Autenticação real deve ser feita no frontend via AuthContext
+  res.json({ status: 'received' });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  createAuditLog({
+    action: 'LOGOUT',
+    username: req.authUser?.username || 'unknown',
+    ip: req.ip,
+    resource: '/api/auth/logout',
+    method: 'POST',
+  });
+  res.json({ status: 'logged_out' });
+});
+
+// ════════════════════════════════════════════
+// AI ASSISTANT CHAT API (OpenRouter Integration)
+// ════════════════════════════════════════════
+app.post('/api/ai/chat', async (req, res) => {
+  const { messages } = req.body || {};
+
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'Lista de mensagens inválida.' });
+  }
+
+  try {
+    // 1. Busca estatísticas do sistema para enriquecer o contexto
+    const systemContext = await getSystemContext(db);
+
+    // 2. Chama a API do OpenRouter via módulo ai.js
+    const reply = await chatCompletion(messages, systemContext);
+
+    // 3. Registrar auditoria do uso da IA
+    createAuditLog({
+      action: 'AI_ASSISTANT_QUERY',
+      username: req.authUser?.username || 'user',
+      ip: req.ip,
+      resource: '/api/ai/chat',
+      method: 'POST',
+    });
+
+    res.json({ reply });
+  } catch (err) {
+    console.error('[AI CHAT ERROR]', err.message);
+    res.status(500).json({
+      error: 'Não foi possível se comunicar com o assistente de IA no momento. Tente novamente em instantes.'
+    });
+  }
+});
+
+// 404 handler — nunca revelar estrutura interna (Regra 3)
+app.use((req, res) => {
+  res.status(404).json({ error: 'Recurso n\u00e3o encontrado.' });
+});
+
+// Error handler — nunca vazar stack traces (Regra 3)
+app.use((err, req, res, _next) => {
+  console.error('[ERROR]', err.message);
+  res.status(500).json({ error: 'Erro interno do servidor.' });
 });
 
 app.listen(port, () => console.log(`Solution Math OS Backend running on http://localhost:${port}`));

@@ -127,8 +127,23 @@ const NAV_LINKS = [
 ];
 
 /* ═══════════════════════════════════════════
-   SUB-COMPONENTS
+   SUB-COMPONENTS & HELPERS
 ═══════════════════════════════════════════ */
+
+const scrollToId = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+  e.preventDefault();
+  if (id === '#') return;
+  const element = document.querySelector(id);
+  if (element) {
+    const headerOffset = 80;
+    const elementPosition = element.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.scrollY - headerOffset;
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth'
+    });
+  }
+};
 
 const FAQItem: React.FC<{ q: string; a: string }> = ({ q, a }) => {
   const [open, setOpen] = useState(false);
@@ -195,7 +210,7 @@ const LandingPage: React.FC = () => {
           {/* Nav links */}
           <nav className="hidden md:flex items-center gap-7">
             {NAV_LINKS.map(l => (
-              <a key={l.label} href={l.href} className="text-gray-600 hover:text-blue-600 text-sm font-medium transition-colors">
+              <a key={l.label} href={l.href} onClick={(e) => scrollToId(e, l.href)} className="text-gray-600 hover:text-blue-600 text-sm font-medium transition-colors">
                 {l.label}
               </a>
             ))}
@@ -208,6 +223,7 @@ const LandingPage: React.FC = () => {
             </Link>
             <a
               href="#contact"
+              onClick={(e) => scrollToId(e, '#contact')}
               className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-px"
             >
               Começar agora
@@ -224,13 +240,13 @@ const LandingPage: React.FC = () => {
         {menuOpen && (
           <div className="md:hidden bg-white border-t border-gray-100 px-5 py-4 space-y-1 shadow-lg">
             {NAV_LINKS.map(l => (
-              <a key={l.label} href={l.href} onClick={() => setMenuOpen(false)} className="block py-2.5 text-gray-700 font-medium text-sm">
+              <a key={l.label} href={l.href} onClick={(e) => { setMenuOpen(false); scrollToId(e, l.href); }} className="block py-2.5 text-gray-700 font-medium text-sm">
                 {l.label}
               </a>
             ))}
             <div className="pt-3 mt-3 border-t border-gray-100 flex flex-col gap-2">
               <Link to="/login" className="text-center border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium">Entrar</Link>
-              <a href="#contact" className="text-center bg-blue-600 text-white py-2.5 rounded-xl text-sm font-bold">Começar agora</a>
+              <a href="#contact" onClick={(e) => { setMenuOpen(false); scrollToId(e, '#contact'); }} className="text-center bg-blue-600 text-white py-2.5 rounded-xl text-sm font-bold">Começar agora</a>
             </div>
           </div>
         )}
@@ -274,6 +290,7 @@ const LandingPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-3 mb-10">
                 <a
                   href="#contact"
+                  onClick={(e) => scrollToId(e, '#contact')}
                   className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-7 py-4 rounded-xl transition-all shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 text-sm"
                 >
                   Agendar demonstração gratuita
@@ -281,6 +298,7 @@ const LandingPage: React.FC = () => {
                 </a>
                 <a
                   href="#plans"
+                  onClick={(e) => scrollToId(e, '#plans')}
                   className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 hover:border-blue-300 text-gray-700 font-semibold px-7 py-4 rounded-xl transition-all hover:bg-blue-50 text-sm"
                 >
                   Ver planos e preços
@@ -580,6 +598,7 @@ const LandingPage: React.FC = () => {
                 <div className="px-7 pb-7">
                   <a
                     href="#contact"
+                    onClick={(e) => scrollToId(e, '#contact')}
                     className={`w-full flex items-center justify-center gap-2 font-bold py-3.5 rounded-xl transition-all text-sm
                       ${plan.highlight
                         ? 'bg-white text-blue-600 hover:bg-blue-50'
@@ -646,7 +665,7 @@ const LandingPage: React.FC = () => {
                 Se dentro de 7 dias você não ver valor real no sistema, devolvemos 100% do valor da mensalidade. Sem perguntas, sem burocracia, sem enrolação. O risco é todo nosso.
               </p>
             </div>
-            <a href="#contact" className="flex-shrink-0 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-7 py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 text-sm whitespace-nowrap">
+            <a href="#contact" onClick={(e) => scrollToId(e, '#contact')} className="flex-shrink-0 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-7 py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 text-sm whitespace-nowrap">
               Começar com garantia
               <ArrowRight className="w-4 h-4" />
             </a>
@@ -777,7 +796,7 @@ const LandingPage: React.FC = () => {
               <h4 className="text-white font-semibold text-sm mb-4">Produto</h4>
               <ul className="space-y-2.5">
                 {['Funcionalidades', 'Como funciona', 'Planos', 'FAQ'].map(l => (
-                  <li key={l}><a href="#" className="text-gray-400 hover:text-blue-400 text-sm transition-colors">{l}</a></li>
+                  <li key={l}><a href="#" onClick={(e) => e.preventDefault()} className="text-gray-400 hover:text-blue-400 text-sm transition-colors">{l}</a></li>
                 ))}
               </ul>
             </div>
@@ -785,7 +804,7 @@ const LandingPage: React.FC = () => {
               <h4 className="text-white font-semibold text-sm mb-4">Empresa</h4>
               <ul className="space-y-2.5">
                 {['Sobre nós', 'Contato', 'Política de Privacidade', 'Termos de Uso', 'LGPD'].map(l => (
-                  <li key={l}><a href="#" className="text-gray-400 hover:text-blue-400 text-sm transition-colors">{l}</a></li>
+                  <li key={l}><a href="#" onClick={(e) => e.preventDefault()} className="text-gray-400 hover:text-blue-400 text-sm transition-colors">{l}</a></li>
                 ))}
               </ul>
               <div className="mt-5">
@@ -799,9 +818,9 @@ const LandingPage: React.FC = () => {
           <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-gray-600 text-xs">
             <p>© 2025 Solution Math. Todos os direitos reservados. CNPJ: 00.000.000/0001-00</p>
             <div className="flex items-center gap-5">
-              <a href="#" className="hover:text-blue-400 transition-colors">Privacidade</a>
-              <a href="#" className="hover:text-blue-400 transition-colors">Termos</a>
-              <a href="#" className="hover:text-blue-400 transition-colors">LGPD</a>
+              <a href="#" onClick={(e) => e.preventDefault()} className="hover:text-blue-400 transition-colors">Privacidade</a>
+              <a href="#" onClick={(e) => e.preventDefault()} className="hover:text-blue-400 transition-colors">Termos</a>
+              <a href="#" onClick={(e) => e.preventDefault()} className="hover:text-blue-400 transition-colors">LGPD</a>
             </div>
           </div>
         </div>

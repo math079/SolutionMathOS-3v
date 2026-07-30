@@ -312,6 +312,47 @@ const db = new sqlite3.Database(dbPath, (err) => {
           });
         }
       });
+      // ═══════════════════════════════════
+      // HELPDESK / TICKETS MODULE TABLES
+      // ═══════════════════════════════════
+      db.run(`CREATE TABLE IF NOT EXISTS tickets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        category TEXT DEFAULT 'Geral',
+        priority TEXT DEFAULT 'Média',
+        status TEXT DEFAULT 'Aberto',
+        user_name TEXT DEFAULT 'Cliente',
+        assigned_to TEXT DEFAULT 'Não atribuído',
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      db.run(`CREATE TABLE IF NOT EXISTS ticket_replies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ticket_id INTEGER NOT NULL,
+        author TEXT NOT NULL,
+        role TEXT DEFAULT 'funcionario',
+        message TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (ticket_id) REFERENCES tickets (id)
+      )`);
+
+      // Seed Tickets
+      db.get("SELECT count(*) as count FROM tickets", (err, row) => {
+        if (!err && row && row.count === 0) {
+          const sampleTickets = [
+            ['Dúvida na emissão de nota fiscal no PDV', 'Não estou conseguindo configurar o certificado digital para emissão automática.', 'Fiscal', 'Alta', 'Em Atendimento', 'Mercado Aurora', 'Carlos Silva'],
+            ['Erro ao importar planilha de produtos', 'Ao fazer upload do arquivo XLSX com 500 itens, o sistema retorna erro na linha 42.', 'Estoque', 'Média', 'Aberto', 'Pet Shop Vida Animal', 'Não atribuído'],
+            ['Solicitação de novo usuário gerente', 'Precisamos liberar acesso de Gerente para o novo supervisor de vendas.', 'Acessos', 'Baixa', 'Resolvido', 'Distribuidora Bebidas', 'Ana Souza'],
+            ['Lentidão no carregamento do relatório DRE', 'O relatório mensal está demorando mais de 10 segundos para gerar.', 'Desempenho', 'Urgente', 'Aberto', 'Autopeças União', 'Não atribuído']
+          ];
+          sampleTickets.forEach(([title, desc, cat, prio, status, user, assigned]) => {
+            db.run(`INSERT INTO tickets (title, description, category, priority, status, user_name, assigned_to) VALUES (?,?,?,?,?,?,?)`,
+              [title, desc, cat, prio, status, user, assigned]);
+          });
+        }
+      });
     });
   }
 });
