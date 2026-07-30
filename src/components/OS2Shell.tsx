@@ -17,7 +17,7 @@ import ThemeToggle from './ThemeToggle';
 import { AuditLogsView } from './AuditLogsView';
 import { ReportsView } from './ReportsView';
 import { HelpdeskView } from './HelpdeskView';
-import { AIChatView } from './AIChatView';
+import { AIChatView, LyraFloatingButton } from './AIChatView';
 
 interface OS2ShellProps {
   onExitOS2: () => void;
@@ -203,6 +203,7 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2, onLogout }) => {
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden th-bg relative">
           {renderContent()}
+          {activeView !== 'ai-chat' && <LyraFloatingButton currentModule={activeView} />}
         </div>
       </div>
     </div>
