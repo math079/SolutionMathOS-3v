@@ -55,11 +55,14 @@ const LoginPage: React.FC = () => {
 
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-teal-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-teal-500/30">
-              <Zap className="w-8 h-8 text-white" />
+            <div className="relative mb-4">
+              <img src="/logo.jpg" alt="Solution Math Logo" className="w-16 h-16 rounded-full object-cover shadow-xl shadow-teal-500/20 border-2 border-teal-400/40 p-0.5" />
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-teal-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
+                <span className="w-2 h-2 bg-white rounded-full animate-ping"></span>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-white">Solution Math OS</h1>
-            <p className="text-slate-400 text-sm mt-1">Acesse sua conta</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Solution Math OS</h1>
+            <p className="text-slate-400 text-sm mt-1 font-medium">Plataforma Empresarial Integrada 3.0</p>
           </div>
 
           {/* Form */}

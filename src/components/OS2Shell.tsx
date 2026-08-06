@@ -190,7 +190,7 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2, onLogout }) => {
             <ChevronLeft size={18} className={`transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`}/>
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-white font-black text-xs">SM</div>
+            <img src="/logo.jpg" alt="Solution Math Logo" className="w-8 h-8 rounded-full object-cover border border-primary/30 shadow-sm" />
             <span className="font-bold th-text text-sm">Solution Math</span>
             <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full border border-primary/20">OS 3.0 Enterprise</span>
           </div>

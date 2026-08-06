@@ -130,7 +130,7 @@ const NAV_LINKS = [
    SUB-COMPONENTS & HELPERS
 ═══════════════════════════════════════════ */
 
-const scrollToId = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+const scrollToId = (e: React.MouseEvent<HTMLElement>, id: string) => {
   e.preventDefault();
   if (id === '#') return;
   const element = document.querySelector(id);
@@ -172,6 +172,12 @@ const LandingPage: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
   const [scrolled, setScrolled] = useState(false);
+  const [activeHeroTab, setActiveHeroTab] = useState<'dashboard' | 'pdv' | 'crm' | 'lyra'>('dashboard');
+
+  // ROI Calculator State
+  const [calcSegment, setCalcSegment] = useState('Mercado / Mercearia');
+  const [calcRevenue, setCalcRevenue] = useState('30k_100k');
+  const [calcUsers, setCalcUsers] = useState('4_10');
 
   // Form State
   const [formData, setFormData] = useState({
@@ -266,13 +272,12 @@ const LandingPage: React.FC = () => {
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md border-b border-gray-100' : 'bg-white/95 backdrop-blur-sm'}`}>
         <div className="max-w-7xl mx-auto px-5 h-[68px] flex items-center justify-between">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/30">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
+          <a href="/" className="flex items-center gap-3 flex-shrink-0 group">
+            <img src="/logo.jpg" alt="Solution Math Logo" className="w-10 h-10 rounded-full object-cover border-2 border-blue-600/30 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform" />
             <div>
-              <span className="font-bold text-gray-900 text-base leading-none">Solution Math </span>
-              <span className="font-bold text-blue-600 text-base leading-none">OS</span>
+              <span className="font-extrabold text-gray-900 text-base leading-none">Solution Math </span>
+              <span className="font-extrabold text-blue-600 text-base leading-none">OS</span>
+              <span className="block text-[10px] text-gray-400 font-semibold tracking-wider uppercase mt-0.5">Sistemas Empresariais</span>
             </div>
           </a>
 
@@ -388,94 +393,124 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Right — Dashboard mockup */}
+            {/* Right — Real System Interface Mockup */}
             <div className="relative hidden lg:block">
-              <div className="relative bg-white rounded-3xl shadow-2xl shadow-blue-900/15 border border-gray-200/80 overflow-hidden">
+              {/* Feature Tabs Selector */}
+              <div className="flex items-center gap-2 mb-3 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl border border-gray-200/80 shadow-sm overflow-x-auto">
+                {[
+                  { id: 'dashboard', label: '📊 Visão Geral', badge: 'MRR R$ 84.5K' },
+                  { id: 'pdv', label: '🛒 Lojas & PDV', badge: 'Estoque Auto' },
+                  { id: 'crm', label: '💼 Pipeline Deals', badge: 'Kanban 2026' },
+                  { id: 'lyra', label: '🤖 IA Lyra', badge: 'Memória V2' },
+                ].map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveHeroTab(t.id as any)}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                      activeHeroTab === t.id
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative bg-slate-900 rounded-3xl shadow-2xl shadow-blue-900/25 border-2 border-slate-800 overflow-hidden group">
                 {/* Browser chrome */}
-                <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-red-400" />
-                  <span className="w-3 h-3 rounded-full bg-amber-400" />
-                  <span className="w-3 h-3 rounded-full bg-green-400" />
-                  <div className="ml-3 flex-1 bg-white rounded-md border border-gray-200 h-6 flex items-center px-3">
-                    <span className="text-gray-400 text-xs">app.solutionmath.com.br</span>
+                <div className="bg-slate-950 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-red-500/80 inline-block" />
+                    <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
+                    <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
+                    <div className="ml-2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1 flex items-center gap-2 text-xs text-slate-300 font-mono">
+                      <span className="text-emerald-400 font-bold">https://</span>
+                      <span>app.solutionmath.com.br</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                      OS 3.0 Enterprise
+                    </span>
                   </div>
                 </div>
-                {/* Mock dashboard */}
-                <div className="p-5 bg-gray-50">
-                  {/* Header bar */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <Zap className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <span className="text-xs font-bold text-gray-700">Solution Math OS</span>
-                    </div>
-                    <div className="w-7 h-7 bg-blue-100 rounded-full" />
-                  </div>
-                  {/* KPI cards */}
-                  <div className="grid grid-cols-3 gap-2.5 mb-4">
-                    {[
-                      { label: 'Faturamento', value: 'R$84.5K', color: 'text-blue-600', bg: 'bg-blue-50' },
-                      { label: 'Pipeline', value: 'R$251K', color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                      { label: 'Clientes', value: '248', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    ].map(k => (
-                      <div key={k.label} className={`${k.bg} rounded-xl p-3`}>
-                        <p className="text-gray-500 text-[10px] mb-1">{k.label}</p>
-                        <p className={`font-extrabold text-sm ${k.color}`}>{k.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Fake chart bar */}
-                  <div className="bg-white rounded-xl p-3 border border-gray-100 mb-3">
-                    <p className="text-gray-500 text-[10px] mb-2">Receita — últimos 6 meses</p>
-                    <div className="flex items-end gap-1.5 h-14">
-                      {[40, 55, 48, 65, 72, 85].map((h, i) => (
-                        <div key={i} className="flex-1 rounded-t-sm" style={{ height: `${h}%`, background: i === 5 ? '#2563EB' : '#BFDBFE' }} />
-                      ))}
-                    </div>
-                  </div>
-                  {/* Pipeline */}
-                  <div className="bg-white rounded-xl p-3 border border-gray-100">
-                    <p className="text-gray-500 text-[10px] mb-2">Pipeline de Vendas</p>
-                    <div className="space-y-1.5">
-                      {[
-                        { name: 'Pet Shop Aurora', val: 'R$12.000', stage: 'Proposta', color: 'bg-amber-400' },
-                        { name: 'Mercado Central', val: 'R$8.500', stage: 'Negociação', color: 'bg-blue-500' },
-                        { name: 'Autopeças União', val: 'R$5.000', stage: 'Fechamento', color: 'bg-emerald-500' },
-                      ].map(d => (
-                        <div key={d.name} className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${d.color}`} />
-                            <span className="text-[10px] text-gray-700 font-medium">{d.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-gray-500">{d.stage}</span>
-                            <span className="text-[10px] font-bold text-gray-800">{d.val}</span>
-                          </div>
+
+                {/* Real Software Image Frame */}
+                <div className="relative overflow-hidden bg-slate-950">
+                  <img
+                    src="/system-preview.png"
+                    alt="Solution Math OS 3.0 Real Interface"
+                    className="w-full h-auto object-cover transform transition-transform duration-500 group-hover:scale-[1.01]"
+                  />
+
+                  {/* Hotspot overlay based on tab selection */}
+                  {activeHeroTab === 'dashboard' && (
+                    <div className="absolute top-4 left-4 right-4 bg-slate-950/85 backdrop-blur-md border border-blue-500/40 rounded-2xl p-4 text-white shadow-2xl animate-fade-in flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <img src="/logo.jpg" className="w-8 h-8 rounded-full border border-blue-400/40" />
+                        <div>
+                          <p className="text-xs font-bold text-blue-300">Resumo Executivo Integrado</p>
+                          <p className="text-sm font-black text-white">MRR Julho 2026: R$ 84.500 (+15%)</p>
                         </div>
-                      ))}
+                      </div>
+                      <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold rounded-lg">
+                        Ao Vivo no Sistema
+                      </span>
                     </div>
-                  </div>
+                  )}
+
+                  {activeHeroTab === 'pdv' && (
+                    <div className="absolute bottom-4 left-4 right-4 bg-slate-950/85 backdrop-blur-md border border-emerald-500/40 rounded-2xl p-4 text-white shadow-2xl animate-fade-in flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-emerald-400">Módulo Lojas & PDV Varejo 2026</p>
+                        <p className="text-sm font-medium text-slate-200">Baixa automática de estoque & auto-financeiro instantâneo</p>
+                      </div>
+                      <span className="px-3 py-1 bg-blue-600 text-white font-bold text-xs rounded-lg shadow">
+                        Plano Growth / Enterprise
+                      </span>
+                    </div>
+                  )}
+
+                  {activeHeroTab === 'crm' && (
+                    <div className="absolute top-1/3 left-6 bg-slate-950/90 backdrop-blur-md border border-amber-500/40 rounded-2xl p-3.5 text-white shadow-2xl animate-fade-in max-w-xs">
+                      <p className="text-xs font-bold text-amber-400 mb-1">Pipeline Deals Ativos</p>
+                      <p className="text-sm font-bold text-white">R$ 251.000 em negociação</p>
+                      <p className="text-[11px] text-slate-400 mt-1">Funil visual de propostas & automação de contatos</p>
+                    </div>
+                  )}
+
+                  {activeHeroTab === 'lyra' && (
+                    <div className="absolute bottom-6 right-6 bg-slate-900/90 backdrop-blur-md border border-purple-500/40 rounded-2xl p-4 text-white shadow-2xl animate-fade-in max-w-sm">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-ping" />
+                        <span className="text-xs font-bold text-purple-300">IA Assistente Lyra 3.0</span>
+                      </div>
+                      <p className="text-xs text-slate-200 leading-relaxed">
+                        "Analisei seu estoque: 3 produtos com margem alta precisam de reposição para o final de semana."
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-              {/* Floating badge */}
-              <div className="absolute -bottom-4 -left-6 bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-3 flex items-center gap-2.5">
-                <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
+
+              {/* Floating trust badge bottom-left */}
+              <div className="absolute -bottom-5 -left-6 bg-white rounded-2xl shadow-2xl border border-gray-200 px-4 py-3 flex items-center gap-3">
+                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 font-bold">
+                  <TrendingUp className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 font-medium">Crescimento</p>
-                  <p className="text-sm font-extrabold text-gray-900">+38% este mês</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Crescimento Médio</p>
+                  <p className="text-sm font-extrabold text-gray-900">+38% no 1º mês</p>
                 </div>
               </div>
-              {/* Another floating badge */}
-              <div className="absolute -top-4 -right-5 bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-3 flex items-center gap-2.5">
-                <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-blue-600" />
-                </div>
+
+              {/* Floating trust badge top-right */}
+              <div className="absolute -top-5 -right-5 bg-white rounded-2xl shadow-2xl border border-gray-200 px-4 py-3 flex items-center gap-3">
+                <img src="/logo.jpg" alt="Solution Math Badge" className="w-9 h-9 rounded-full object-cover border-2 border-blue-500/30 shadow-sm" />
                 <div>
-                  <p className="text-[10px] text-gray-400 font-medium">Uptime</p>
-                  <p className="text-sm font-extrabold text-gray-900">99.8%</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">SLA Corporativo</p>
+                  <p className="text-sm font-extrabold text-blue-700">99.8% Disponibilidade</p>
                 </div>
               </div>
             </div>
@@ -496,6 +531,198 @@ const LandingPage: React.FC = () => {
                 <div className="text-blue-200 text-xs mt-0.5">{s.label}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ INTERACTIVE ROI & PLAN CALCULATOR WIDGET ══ */}
+      <section className="py-20 bg-gradient-to-b from-gray-50 to-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-5">
+          <div className="bg-white rounded-3xl p-8 md:p-12 shadow-2xl shadow-blue-900/10 border-2 border-blue-100 relative overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="text-center max-w-2xl mx-auto mb-10 relative z-10">
+              <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-extrabold px-4 py-1.5 rounded-full mb-3 border border-blue-200 uppercase tracking-wider">
+                💡 Calculadora de ROI & Plano Ideal
+              </span>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight mb-2">
+                Simule a economia real para o seu comércio.
+              </h2>
+              <p className="text-gray-500 text-sm">
+                Selecione os dados do seu negócio abaixo e veja qual o plano ideal e a estimativa de retorno mensal.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+              {/* Left Inputs (7 cols) */}
+              <div className="lg:col-span-7 space-y-6">
+
+                {/* 1. Segment */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2.5">
+                    1. Qual o segmento da sua empresa?
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { label: 'Mercado / Mercearia', emoji: '🛒' },
+                      { label: 'Pet Shop', emoji: '🐾' },
+                      { label: 'Autopeças / Mat. Const.', emoji: '🔧' },
+                      { label: 'Distribuidora / Varejo', emoji: '🚚' },
+                      { label: 'Prestador de Serviços', emoji: '💼' },
+                      { label: 'Outro comércio', emoji: '🏢' },
+                    ].map(s => (
+                      <button
+                        key={s.label}
+                        type="button"
+                        onClick={() => setCalcSegment(s.label)}
+                        className={`p-3 rounded-xl border text-xs font-bold text-left transition-all flex items-center gap-2 ${
+                          calcSegment === s.label
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                            : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
+                        }`}
+                      >
+                        <span className="text-base">{s.emoji}</span>
+                        <span className="truncate">{s.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Revenue */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2.5">
+                    2. Faturamento estimado mensal:
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[
+                      { id: 'ate_30k', label: 'Até R$ 30k' },
+                      { id: '30k_100k', label: 'R$ 30k a 100k' },
+                      { id: '100k_300k', label: 'R$ 100k a 300k' },
+                      { id: 'acima_300k', label: '+ R$ 300k' },
+                    ].map(r => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setCalcRevenue(r.id)}
+                        className={`py-3 px-2 rounded-xl border text-xs font-bold text-center transition-all ${
+                          calcRevenue === r.id
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                            : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
+                        }`}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Users */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2.5">
+                    3. Quantos colaboradores vão utilizar?
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: '1_3', label: '1 a 3 usuários' },
+                      { id: '4_10', label: '4 a 10 usuários' },
+                      { id: 'mais_10', label: '+ 10 usuários' },
+                    ].map(u => (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onClick={() => setCalcUsers(u.id)}
+                        className={`py-3 px-2 rounded-xl border text-xs font-bold text-center transition-all ${
+                          calcUsers === u.id
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                            : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
+                        }`}
+                      >
+                        {u.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Right Result Card (5 cols) */}
+              <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 to-blue-950 rounded-3xl p-7 text-white border-2 border-slate-800 shadow-xl">
+                {(() => {
+                  let recommendedPlan = 'Growth';
+                  let priceText = 'R$ 347/mês';
+                  let hoursSaved = '28 horas/mês';
+                  let moneySaved = 'R$ 1.450/mês';
+                  let badgeText = 'MAIS POPULAR ⭐';
+
+                  if (calcRevenue === 'ate_30k' && calcUsers === '1_3') {
+                    recommendedPlan = 'Start';
+                    priceText = 'R$ 197/mês';
+                    hoursSaved = '16 horas/mês';
+                    moneySaved = 'R$ 680/mês';
+                    badgeText = 'ESSENCIAL 🔵';
+                  } else if (calcRevenue === 'acima_300k' || calcUsers === 'mais_10') {
+                    recommendedPlan = 'Enterprise';
+                    priceText = 'Sob Consulta (Sob Medida)';
+                    hoursSaved = '45+ horas/mês';
+                    moneySaved = 'R$ 3.900/mês';
+                    badgeText = 'EXCLUSIVO 👑';
+                  }
+
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 bg-amber-400 text-slate-950 rounded-full">
+                          {badgeText}
+                        </span>
+                        <span className="text-xs text-slate-400 font-medium">Recomendação Automática</span>
+                      </div>
+
+                      <h4 className="text-xs text-blue-300 font-bold uppercase tracking-wider mb-1">Plano Recomendado</h4>
+                      <div className="text-3xl font-black text-white mb-1">
+                        Plano {recommendedPlan}
+                      </div>
+                      <div className="text-sm font-semibold text-blue-200 mb-6">
+                        {priceText}
+                      </div>
+
+                      <div className="space-y-3 mb-6 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-400">⏱️ Tempo Salvo em Gestão:</span>
+                          <span className="font-bold text-emerald-400">{hoursSaved}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-400">💰 Prevenção de Perdas:</span>
+                          <span className="font-bold text-emerald-400">{moneySaved}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-400">🚀 Prazo de Implantação:</span>
+                          <span className="font-bold text-blue-300">Até 48 horas</span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            business_type: calcSegment,
+                            plan_interest: recommendedPlan
+                          }));
+                          scrollToId(e, '#contact');
+                        }}
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-blue-600/30 text-xs flex items-center justify-center gap-2"
+                      >
+                        Solicitar Demonstração para {calcSegment.split(' ')[0]}
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+
+            </div>
           </div>
         </div>
       </section>
@@ -897,11 +1124,12 @@ const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-5 py-14">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
             <div className="md:col-span-2">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-white" />
+              <div className="flex items-center gap-3 mb-4">
+                <img src="/logo.jpg" alt="Solution Math Logo" className="w-10 h-10 rounded-full object-cover border border-white/20 shadow-md" />
+                <div>
+                  <span className="font-extrabold text-white text-lg leading-none block">Solution Math OS</span>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Tecnologia Empresarial</span>
                 </div>
-                <span className="font-bold text-white text-lg">Solution Math OS</span>
               </div>
               <p className="text-gray-500 text-sm leading-relaxed max-w-xs mb-5">
                 ERP + CRM para pequenos e médios comércios brasileiros. Simples de usar, poderoso para crescer.
