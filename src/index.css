@@ -89,7 +89,6 @@
   .th-text     { color: var(--color-text); }
   .th-muted    { color: var(--color-text-muted); }
 
-  /* ── Input base (works in both themes) ── */
   .th-input {
     background-color: var(--color-surface2);
     border: 1px solid var(--color-border);
@@ -100,6 +99,9 @@
     width: 100%;
     outline: none;
     transition: border-color 0.15s;
+  }
+  .th-input-search {
+    padding-left: 2.5rem !important;
   }
   .th-input:focus {
     border-color: #14b8a6;

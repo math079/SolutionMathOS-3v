@@ -127,20 +127,20 @@ export const AuditLogsView: React.FC = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-900/60 p-6 rounded-2xl border border-gray-800 backdrop-blur-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 th-surface p-6 rounded-2xl border th-border shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-xl font-bold th-text flex items-center gap-2">
               Logs de Auditoria & Segurança
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                 14 Regras Ativas
               </span>
             </h1>
-            <p className="text-xs text-gray-400">
-              Monitoramento em tempo real de acessos, auterações críticas e eventos do sistema.
+            <p className="text-xs th-muted">
+              Monitoramento em tempo real de acessos, alterações críticas e eventos do sistema.
             </p>
           </div>
         </div>
@@ -149,7 +149,7 @@ export const AuditLogsView: React.FC = () => {
           <button
             onClick={fetchLogs}
             disabled={loading}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold border border-gray-700 transition-colors"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl th-surface2 hover:bg-blue-500/10 th-text text-xs font-semibold border th-border transition-colors"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Atualizar
@@ -168,7 +168,7 @@ export const AuditLogsView: React.FC = () => {
 
       {/* Warning/Error if not admin */}
       {error && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm">
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-500 text-sm">
           <Lock className="w-5 h-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -177,18 +177,18 @@ export const AuditLogsView: React.FC = () => {
       {/* Filter and Search Bar */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:w-96">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
           <input
             type="text"
             placeholder="Buscar por IP, usuário, ação ou recurso..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+            className="w-full th-input th-input-search text-sm th-text placeholder:th-muted focus:outline-none focus:border-blue-500"
           />
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
-          <Filter className="w-4 h-4 text-gray-400 mr-1" />
+          <Filter className="w-4 h-4 th-muted mr-1" />
           {[
             { id: 'ALL', label: 'Todos' },
             { id: 'DENIED', label: 'Bloqueios/Negações' },
@@ -201,7 +201,7 @@ export const AuditLogsView: React.FC = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                 actionFilter === f.id
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                  : 'bg-gray-800/80 text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+                  : 'th-surface2 th-muted hover:th-text border th-border'
               }`}
             >
               {f.label}
@@ -211,10 +211,10 @@ export const AuditLogsView: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+      <div className="th-surface border th-border rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-300">
-            <thead className="bg-gray-950 text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-800">
+          <table className="w-full text-left text-sm th-text">
+            <thead className="th-surface2 th-muted text-xs font-semibold uppercase tracking-wider border-b th-border">
               <tr>
                 <th className="py-3.5 px-4">Data / Hora</th>
                 <th className="py-3.5 px-4">Evento / Ação</th>
@@ -224,31 +224,31 @@ export const AuditLogsView: React.FC = () => {
                 <th className="py-3.5 px-4">Recurso / Endpoint</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800/60">
+            <tbody className="divide-y th-border">
               {filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-500 text-sm">
+                  <td colSpan={6} className="text-center py-12 th-muted text-sm">
                     {loading ? 'Carregando eventos...' : 'Nenhum log encontrado para os filtros selecionados.'}
                   </td>
                 </tr>
               ) : (
                 filteredLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-800/40 transition-colors">
-                    <td className="py-3 px-4 text-xs font-mono text-gray-400 whitespace-nowrap">
+                  <tr key={log.id} className="hover:th-surface2 transition-colors">
+                    <td className="py-3 px-4 text-xs font-mono th-muted whitespace-nowrap">
                       {new Date(log.timestamp).toLocaleString('pt-BR')}
                     </td>
                     <td className="py-3 px-4">{getActionBadge(log.action)}</td>
-                    <td className="py-3 px-4 font-medium text-gray-200">
-                      {log.username || <span className="text-gray-500 italic">Anônimo</span>}
+                    <td className="py-3 px-4 font-medium th-text">
+                      {log.username || <span className="th-muted italic">Anônimo</span>}
                     </td>
-                    <td className="py-3 px-4 text-xs text-gray-400 uppercase">
+                    <td className="py-3 px-4 text-xs th-muted uppercase">
                       {log.role || '-'}
                     </td>
-                    <td className="py-3 px-4 text-xs font-mono text-gray-400">
+                    <td className="py-3 px-4 text-xs font-mono th-muted">
                       {log.ip || '127.0.0.1'}
                     </td>
-                    <td className="py-3 px-4 text-xs font-mono text-gray-300">
-                      <span className="text-blue-400 font-bold mr-1.5">{log.method || 'GET'}</span>
+                    <td className="py-3 px-4 text-xs font-mono th-text">
+                      <span className="text-blue-500 font-bold mr-1.5">{log.method || 'GET'}</span>
                       {log.resource || '/'}
                     </td>
                   </tr>
@@ -259,9 +259,9 @@ export const AuditLogsView: React.FC = () => {
         </div>
 
         {/* Footer info */}
-        <div className="bg-gray-950 p-4 border-t border-gray-800 flex items-center justify-between text-xs text-gray-400">
+        <div className="th-surface2 p-4 border-t th-border flex items-center justify-between text-xs th-muted">
           <div className="flex items-center gap-2">
-            <Terminal className="w-4 h-4 text-gray-500" />
+            <Terminal className="w-4 h-4 th-muted" />
             <span>Exibindo <strong>{filteredLogs.length}</strong> de <strong>{logs.length}</strong> eventos gravados na sessão.</span>
           </div>
           <span>Limpeza automática ativada (1.000 eventos max)</span>

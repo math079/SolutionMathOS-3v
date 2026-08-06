@@ -220,11 +220,11 @@ const HRView: React.FC = () => {
       {/* Filter and Search Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 th-card p-4">
         <div className="relative flex-1 max-w-md">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
           <input
             type="text"
             placeholder="Buscar por nome, cargo ou e-mail..."
-            className="th-input pl-9"
+            className="th-input th-input-search"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />

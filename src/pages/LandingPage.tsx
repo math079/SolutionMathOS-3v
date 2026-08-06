@@ -173,6 +173,75 @@ const LandingPage: React.FC = () => {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
   const [scrolled, setScrolled] = useState(false);
 
+  // Form State
+  const [formData, setFormData] = useState({
+    name: '',
+    whatsapp: '',
+    business_type: '',
+    plan_interest: '',
+  });
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [redirectUrl, setRedirectUrl] = useState('');
+
+  const generateWhatsAppLink = (name: string, businessType: string, plan: string) => {
+    const emojis: Record<string, string> = {
+      'Mercado / Mercearia': '🛒',
+      'Hortifruti': '🥦',
+      'Pet Shop': '🐾',
+      'Autopeças': '🔧',
+      'Papelaria': '📚',
+      'Materiais de Construção': '🏗️',
+      'Distribuidora': '🚚',
+      'Outro comércio': '💼',
+    };
+    const emoji = emojis[businessType] || '💼';
+    const planName = plan || 'Growth';
+    const segment = businessType || 'meu negócio';
+
+    const text = `Olá, Solution Math! ${emoji}\n\nMeu nome é *${name}* e tenho um(a) *${segment}*.\n\nVi as funcionalidades do Solution Math OS e estou muito interessado no *Plano ${planName}*.\n\nGostaria de agendar uma demonstração gratuita de 30 minutos para ver na prática como o sistema vai me ajudar a organizar estoque, financeiro e clientes.\n\nPodemos conversar agora?`;
+    
+    return `https://wa.me/5511939157368?text=${encodeURIComponent(text)}`;
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim() || !formData.whatsapp.trim()) {
+      setFormError('Por favor, preencha seu nome e número de WhatsApp.');
+      return;
+    }
+
+    setFormSubmitting(true);
+    setFormError('');
+
+    const waLink = generateWhatsAppLink(formData.name, formData.business_type, formData.plan_interest);
+    setRedirectUrl(waLink);
+
+    try {
+      await fetch('http://localhost:3001/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          whatsapp: formData.whatsapp,
+          business_type: formData.business_type,
+          plan_interest: formData.plan_interest,
+          utm_source: 'landing_page_form'
+        })
+      });
+    } catch (err) {
+      console.warn('Erro ao salvar lead no backend, mas procedendo com WhatsApp:', err);
+    } finally {
+      setFormSubmitting(false);
+      setFormSubmitted(true);
+      // Redireciona para o WhatsApp após 1.5s
+      setTimeout(() => {
+        window.open(waLink, '_blank');
+      }, 1500);
+    }
+  };
+
   // FIX: Enable scroll for landing page (body has overflow:hidden from OS)
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -546,12 +615,12 @@ const LandingPage: React.FC = () => {
                   {/* Price */}
                   {plan.monthlyPrice ? (
                     <>
-                      <div className="flex items-end gap-1 mb-1">
-                        <span className={`text-sm font-medium mb-2 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>R$</span>
+                      <div className="flex items-baseline gap-0.5 mb-1">
+                        <span className={`text-base font-semibold ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>R$</span>
                         <span className={`text-5xl font-black leading-none ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>
                           {billing === 'monthly' ? plan.monthlyPrice : plan.annualMonthlyPrice}
                         </span>
-                        <span className={`text-sm mb-1.5 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>/mês</span>
+                        <span className={`text-sm ml-1 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>/mês</span>
                       </div>
                       {billing === 'annual' && (
                         <p className={`text-xs mb-1 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>
@@ -722,47 +791,101 @@ const LandingPage: React.FC = () => {
 
               {/* Right — Form */}
               <div className="bg-white p-10 md:p-14">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Agende sua demonstração</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nome completo</label>
-                    <input type="text" placeholder="Seu nome" className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-4 py-3 text-sm outline-none transition-colors" />
+                {formSubmitted ? (
+                  <div className="text-center py-6 space-y-4">
+                    <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 animate-bounce">
+                      <CheckCircle2 className="w-10 h-10" />
+                    </div>
+                    <h3 className="text-2xl font-extrabold text-gray-900">Cadastro realizado!</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed max-w-sm mx-auto">
+                      Redirecionando para o WhatsApp Business da Solution Math com a sua mensagem personalizada...
+                    </p>
+                    <div className="pt-4">
+                      <a
+                        href={redirectUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-600/30 text-sm"
+                      >
+                        Abrir WhatsApp Agora
+                        <ArrowRight className="w-4 h-4" />
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">WhatsApp</label>
-                    <input type="tel" placeholder="(11) 99999-9999" className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-4 py-3 text-sm outline-none transition-colors" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tipo de negócio</label>
-                    <select className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-4 py-3 text-sm outline-none transition-colors text-gray-700">
-                      <option value="">Selecione seu segmento</option>
-                      <option>Mercado / Mercearia</option>
-                      <option>Hortifruti</option>
-                      <option>Pet Shop</option>
-                      <option>Autopeças</option>
-                      <option>Papelaria</option>
-                      <option>Materiais de Construção</option>
-                      <option>Distribuidora</option>
-                      <option>Outro comércio</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Plano de interesse</label>
-                    <select className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-4 py-3 text-sm outline-none transition-colors text-gray-700">
-                      <option value="">Qual plano te interessa?</option>
-                      <option>Start — R$197/mês</option>
-                      <option>Growth — R$347/mês</option>
-                      <option>Enterprise — Sob consulta</option>
-                    </select>
-                  </div>
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 text-sm mt-2">
-                    Quero minha demonstração gratuita
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                  <p className="text-gray-400 text-xs text-center">
-                    Ao enviar, você concorda com nossa Política de Privacidade. Não enviamos spam.
-                  </p>
-                </div>
+                ) : (
+                  <form onSubmit={handleFormSubmit} className="space-y-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-6">Agende sua demonstração</h3>
+                    {formError && (
+                      <div className="p-3 rounded-xl bg-red-50 text-red-600 text-xs font-semibold border border-red-100">
+                        {formError}
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nome completo *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Seu nome completo"
+                        value={formData.name}
+                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">WhatsApp *</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="(11) 99391-57368"
+                        value={formData.whatsapp}
+                        onChange={e => setFormData({ ...formData, whatsapp: e.target.value })}
+                        className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tipo de negócio</label>
+                      <select
+                        value={formData.business_type}
+                        onChange={e => setFormData({ ...formData, business_type: e.target.value })}
+                        className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-4 py-3 text-sm outline-none transition-colors text-gray-700"
+                      >
+                        <option value="">Selecione seu segmento</option>
+                        <option value="Mercado / Mercearia">Mercado / Mercearia 🛒</option>
+                        <option value="Hortifruti">Hortifruti 🥦</option>
+                        <option value="Pet Shop">Pet Shop 🐾</option>
+                        <option value="Autopeças">Autopeças 🔧</option>
+                        <option value="Papelaria">Papelaria 📚</option>
+                        <option value="Materiais de Construção">Materiais de Construção 🏗️</option>
+                        <option value="Distribuidora">Distribuidora 🚚</option>
+                        <option value="Outro comércio">Outro comércio 💼</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Plano de interesse</label>
+                      <select
+                        value={formData.plan_interest}
+                        onChange={e => setFormData({ ...formData, plan_interest: e.target.value })}
+                        className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-4 py-3 text-sm outline-none transition-colors text-gray-700"
+                      >
+                        <option value="">Qual plano te interessa?</option>
+                        <option value="Start">Start — R$197/mês</option>
+                        <option value="Growth">Growth — R$347/mês (Mais Popular)</option>
+                        <option value="Enterprise">Enterprise — Sob consulta</option>
+                      </select>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={formSubmitting}
+                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 text-sm mt-2"
+                    >
+                      {formSubmitting ? 'Cadastrando...' : 'Quero minha demonstração gratuita'}
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                    <p className="text-gray-400 text-xs text-center">
+                      Ao enviar, você concorda com nossa Política de Privacidade. Não enviamos spam.
+                    </p>
+                  </form>
+                )}
               </div>
             </div>
           </div>

@@ -868,10 +868,96 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // ════════════════════════════════════════════
+// LEADS (Landing Page Funnel)
+// ════════════════════════════════════════════
+
+// POST /api/leads — public route (no auth required for landing page)
+app.post('/api/leads', (req, res) => {
+  const { name, whatsapp, business_type, plan_interest, utm_source } = req.body || {};
+  if (!name || !whatsapp) {
+    return res.status(400).json({ error: 'Nome e WhatsApp são obrigatórios.' });
+  }
+  db.run(
+    `INSERT INTO leads (name, whatsapp, business_type, plan_interest, utm_source) VALUES (?, ?, ?, ?, ?)`,
+    [name.trim(), whatsapp.trim(), business_type || '', plan_interest || '', utm_source || ''],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true, id: this.lastID });
+    }
+  );
+});
+
+// GET /api/leads — admin only
+app.get('/api/leads', (req, res) => {
+  if (req.authUser?.role !== 'admin') return res.status(403).json({ error: 'Acesso negado.' });
+  db.all('SELECT * FROM leads ORDER BY created_at DESC', [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// GET /api/leads/count-new — admin only (for badge)
+app.get('/api/leads/count-new', (req, res) => {
+  if (req.authUser?.role !== 'admin') return res.status(403).json({ error: 'Acesso negado.' });
+  db.get(`SELECT COUNT(*) as count FROM leads WHERE status='Novo'`, [], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ count: row?.count || 0 });
+  });
+});
+
+// PUT /api/leads/:id — admin only
+app.put('/api/leads/:id', (req, res) => {
+  if (req.authUser?.role !== 'admin') return res.status(403).json({ error: 'Acesso negado.' });
+  const { status, notes, whatsapp_sent } = req.body || {};
+  db.run(
+    `UPDATE leads SET status=COALESCE(?,status), notes=COALESCE(?,notes), whatsapp_sent=COALESCE(?,whatsapp_sent) WHERE id=?`,
+    [status, notes, whatsapp_sent, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    }
+  );
+});
+
+// DELETE /api/leads/:id — admin only
+app.delete('/api/leads/:id', (req, res) => {
+  if (req.authUser?.role !== 'admin') return res.status(403).json({ error: 'Acesso negado.' });
+  db.run('DELETE FROM leads WHERE id=?', [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// ════════════════════════════════════════════
+// AI CONVERSATION HISTORY (Lyra Memory)
+// ════════════════════════════════════════════
+
+// GET /api/ai/history/:userId — get last 40 messages for a user
+app.get('/api/ai/history/:userId', (req, res) => {
+  const userId = req.params.userId;
+  db.all(
+    `SELECT role, content, created_at FROM ai_conversations WHERE user_id=? ORDER BY created_at ASC LIMIT 40`,
+    [userId],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    }
+  );
+});
+
+// DELETE /api/ai/history/:userId — clear history
+app.delete('/api/ai/history/:userId', (req, res) => {
+  db.run('DELETE FROM ai_conversations WHERE user_id=?', [req.params.userId], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// ════════════════════════════════════════════
 // AI ASSISTANT CHAT API (OpenRouter Integration)
 // ════════════════════════════════════════════
 app.post('/api/ai/chat', async (req, res) => {
-  const { messages } = req.body || {};
+  const { messages, userId } = req.body || {};
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'Lista de mensagens inválida.' });
@@ -881,10 +967,43 @@ app.post('/api/ai/chat', async (req, res) => {
     // 1. Busca estatísticas do sistema para enriquecer o contexto
     const systemContext = await getSystemContext(db);
 
-    // 2. Chama a API do OpenRouter via módulo ai.js
-    const reply = await chatCompletion(messages, systemContext);
+    // 2. Busca histórico persistido do usuário (se userId fornecido)
+    let persistedHistory = [];
+    if (userId) {
+      persistedHistory = await new Promise((resolve) => {
+        db.all(
+          `SELECT role, content FROM ai_conversations WHERE user_id=? ORDER BY created_at ASC LIMIT 30`,
+          [userId],
+          (err, rows) => resolve(err ? [] : rows)
+        );
+      });
+    }
 
-    // 3. Registrar auditoria do uso da IA
+    // 3. Chama a API do OpenRouter com histórico persistido
+    const reply = await chatCompletion(messages, systemContext, persistedHistory);
+
+    // 4. Salva a última mensagem do usuário e a resposta no histórico
+    if (userId) {
+      const lastUserMsg = messages[messages.length - 1];
+      if (lastUserMsg && lastUserMsg.role === 'user') {
+        db.run(
+          `INSERT INTO ai_conversations (user_id, role, content) VALUES (?, ?, ?)`,
+          [userId, 'user', lastUserMsg.content]
+        );
+      }
+      db.run(
+        `INSERT INTO ai_conversations (user_id, role, content) VALUES (?, ?, ?)`,
+        [userId, 'assistant', reply]
+      );
+
+      // Manter somente os últimos 100 registros por usuário para não inflar o banco
+      db.run(
+        `DELETE FROM ai_conversations WHERE user_id=? AND id NOT IN (SELECT id FROM ai_conversations WHERE user_id=? ORDER BY id DESC LIMIT 100)`,
+        [userId, userId]
+      );
+    }
+
+    // 5. Registrar auditoria do uso da IA
     createAuditLog({
       action: 'AI_ASSISTANT_QUERY',
       username: req.authUser?.username || 'user',

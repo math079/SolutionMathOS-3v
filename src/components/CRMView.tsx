@@ -248,10 +248,10 @@ const CRMView: React.FC = () => {
             <div>
               <label className="text-xs font-semibold th-muted mb-1 block">Nome Completo *</label>
               <div className="relative">
-                <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
+                <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
                 <input
                   type="text" required placeholder="Ex: João Silva"
-                  className="th-input pl-8"
+                  className="th-input th-input-search"
                   value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                 />
               </div>
@@ -261,10 +261,10 @@ const CRMView: React.FC = () => {
             <div>
               <label className="text-xs font-semibold th-muted mb-1 block">Empresa</label>
               <div className="relative">
-                <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
+                <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
                 <input
                   type="text" placeholder="Ex: Acme Corp"
-                  className="th-input pl-8"
+                  className="th-input th-input-search"
                   value={form.company} onChange={e => setForm({ ...form, company: e.target.value })}
                 />
               </div>
@@ -274,10 +274,10 @@ const CRMView: React.FC = () => {
             <div>
               <label className="text-xs font-semibold th-muted mb-1 block">Email *</label>
               <div className="relative">
-                <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
+                <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
                 <input
                   type="email" required placeholder="contato@empresa.com"
-                  className="th-input pl-8"
+                  className="th-input th-input-search"
                   value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
                 />
               </div>
@@ -287,10 +287,10 @@ const CRMView: React.FC = () => {
             <div>
               <label className="text-xs font-semibold th-muted mb-1 block">Telefone / WhatsApp</label>
               <div className="relative">
-                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
+                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
                 <input
                   type="text" placeholder="(11) 99999-9999"
-                  className="th-input pl-8"
+                  className="th-input th-input-search"
                   value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
                 />
               </div>
@@ -300,9 +300,9 @@ const CRMView: React.FC = () => {
             <div>
               <label className="text-xs font-semibold th-muted mb-1 block">Origem do Lead</label>
               <div className="relative">
-                <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
+                <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
                 <select
-                  className="th-input pl-8"
+                  className="th-input th-input-search"
                   value={form.source} onChange={e => setForm({ ...form, source: e.target.value })}
                 >
                   {SOURCES.map(s => <option key={s} value={s} className="th-surface th-text">{s}</option>)}
@@ -314,9 +314,9 @@ const CRMView: React.FC = () => {
             <div>
               <label className="text-xs font-semibold th-muted mb-1 block">Status Inicial</label>
               <div className="relative">
-                <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted" />
+                <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
                 <select
-                  className="th-input pl-8"
+                  className="th-input th-input-search"
                   value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
                 >
                   {STATUSES.map(s => <option key={s} value={s} className="th-surface th-text">{s}</option>)}

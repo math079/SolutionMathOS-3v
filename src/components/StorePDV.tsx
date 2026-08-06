@@ -104,10 +104,10 @@ const StorePDV: React.FC = () => {
 
         {/* Search */}
         <div className="relative">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 th-muted" />
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
           <input
             ref={searchRef}
-            className="th-input pl-10"
+            className="th-input th-input-search"
             placeholder="Buscar produto (ex: Camiseta, CAM-001)..."
             value={query}
             onChange={e => setQuery(e.target.value)}

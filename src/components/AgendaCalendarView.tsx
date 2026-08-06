@@ -26,13 +26,33 @@ const AgendaCalendarView: React.FC = () => {
   const [events, setEvents]       = useState<AgendaEvent[]>([]);
   const [users, setUsers]         = useState<User[]>([]);
   const [loading, setLoading]     = useState(true);
-  const [selectedDate, setSelectedDate] = useState('2026-07-23');
+  const todayFormatted = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(todayFormatted);
   const [showModal, setShowModal] = useState(false);
 
   const [form, setForm] = useState({
-    title: '', date: '2026-07-23', time: '10:00',
+    title: '', date: todayFormatted, time: '10:00',
     category: 'Projeto', assignee_id: '', status: 'Agendado'
   });
+
+  const getQuickDates = () => {
+    const today = new Date();
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+    const formatLabel = (d: Date) => d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    const dayAfter = new Date(today); dayAfter.setDate(today.getDate() + 2);
+    const in3Days = new Date(today); in3Days.setDate(today.getDate() + 3);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    return [
+      { date: formatDate(today), label: `Hoje (${today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })})` },
+      { date: formatDate(tomorrow), label: `Amanhã (${formatLabel(tomorrow)})` },
+      { date: formatDate(dayAfter), label: formatLabel(dayAfter) },
+      { date: formatDate(in3Days), label: formatLabel(in3Days) },
+      { date: formatDate(endOfMonth), label: `Fim do Mês (${formatDate(endOfMonth).split('-').reverse().join('/')})` },
+    ];
+  };
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -133,20 +153,15 @@ const AgendaCalendarView: React.FC = () => {
 
         {/* Quick Date Pills */}
         <div className="flex flex-wrap items-center gap-2">
-          {[
-            { date: '2026-07-22', label: 'Hoje (22/07/2026)' },
-            { date: '2026-07-23', label: 'Amanhã (23/07/2026)' },
-            { date: '2026-07-24', label: 'Sexta (24/07/2026)' },
-            { date: '2026-07-25', label: 'Sábado (25/07/2026)' },
-            { date: '2026-07-28', label: 'Terça (28/07/2026)' },
-            { date: '2026-07-31', label: 'Fim do Mês (31/07/2026)' },
-          ].map(d => (
+          {getQuickDates().map(d => (
             <button
               key={d.date}
               onClick={() => setSelectedDate(d.date)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
                 selectedDate === d.date
                   ? 'bg-primary text-white border-primary shadow-sm'
+                  : d.date === todayFormatted
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30'
                   : 'th-surface2 th-muted border-th-border hover:text-primary'
               }`}
             >

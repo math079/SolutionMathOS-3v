@@ -117,19 +117,19 @@ export const WorkflowsView: React.FC<{ onOpenLyra?: () => void }> = ({ onOpenLyr
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-purple-950/20 p-6 rounded-2xl border border-purple-500/20 backdrop-blur-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 th-surface p-6 rounded-2xl border th-border shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+          <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-500">
             <Zap className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-xl font-bold th-text flex items-center gap-2">
               Central de Workflows & Automações
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-500 border border-purple-500/30">
                 Lyra Workflow Builder
               </span>
             </h1>
-            <p className="text-xs text-purple-200/70">
+            <p className="text-xs th-muted">
               Gerencie gatilhos, regras e automações inteligentes para economizar tempo no Solution Math OS.
             </p>
           </div>
@@ -139,7 +139,7 @@ export const WorkflowsView: React.FC<{ onOpenLyra?: () => void }> = ({ onOpenLyr
           {onOpenLyra && (
             <button
               onClick={onOpenLyra}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/80 text-purple-200 border border-purple-500/30 text-xs font-semibold transition-all shadow-md"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl th-surface2 hover:bg-purple-500/10 th-text border border-purple-500/30 text-xs font-semibold transition-all shadow-sm"
             >
               <LyraAvatar size="sm" />
               Pedir para Lyra Criar
@@ -158,36 +158,36 @@ export const WorkflowsView: React.FC<{ onOpenLyra?: () => void }> = ({ onOpenLyr
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="bg-gray-900/80 border border-gray-800 p-5 rounded-2xl">
-          <div className="text-xs text-gray-400 font-medium mb-1">Workflows Ativos</div>
-          <div className="text-2xl font-black text-emerald-400">{activeCount} automações</div>
+        <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
+          <div className="text-xs th-muted font-medium mb-1">Workflows Ativos</div>
+          <div className="text-2xl font-black text-emerald-500">{activeCount} automações</div>
         </div>
 
-        <div className="bg-gray-900/80 border border-gray-800 p-5 rounded-2xl">
-          <div className="text-xs text-gray-400 font-medium mb-1">Total de Workflows</div>
-          <div className="text-2xl font-black text-purple-400">{workflows.length} cadastrados</div>
+        <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
+          <div className="text-xs th-muted font-medium mb-1">Total de Workflows</div>
+          <div className="text-2xl font-black text-purple-500">{workflows.length} cadastrados</div>
         </div>
 
-        <div className="bg-gray-900/80 border border-gray-800 p-5 rounded-2xl">
-          <div className="text-xs text-gray-400 font-medium mb-1">Execuções Realizadas</div>
-          <div className="text-2xl font-black text-blue-400">{totalExecutions} acionamentos</div>
+        <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
+          <div className="text-xs th-muted font-medium mb-1">Execuções Realizadas</div>
+          <div className="text-2xl font-black text-blue-500">{totalExecutions} acionamentos</div>
         </div>
       </div>
 
       {/* Search */}
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full md:w-96">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
           <input
             type="text"
             placeholder="Buscar por nome, gatilho ou ação..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-sm text-gray-200 placeholder-gray-500 outline-none focus:border-purple-500/50"
+            className="w-full th-input th-input-search text-sm th-text placeholder:th-muted outline-none focus:border-purple-500"
           />
         </div>
 
-        <button onClick={fetchWorkflows} className="p-2.5 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-gray-400 hover:text-gray-200">
+        <button onClick={fetchWorkflows} className="p-2.5 th-surface2 hover:bg-purple-500/10 border th-border rounded-xl th-muted hover:th-text">
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
@@ -195,59 +195,59 @@ export const WorkflowsView: React.FC<{ onOpenLyra?: () => void }> = ({ onOpenLyr
       {/* Workflows List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {loading ? (
-          <div className="col-span-2 text-center py-16 text-gray-500 text-sm">Carregando automações...</div>
+          <div className="col-span-2 text-center py-16 th-muted text-sm">Carregando automações...</div>
         ) : filteredWorkflows.length === 0 ? (
-          <div className="col-span-2 text-center py-16 text-gray-500 text-sm bg-gray-900/40 rounded-2xl border border-gray-800">
+          <div className="col-span-2 text-center py-16 th-muted text-sm th-surface rounded-2xl border th-border">
             Nenhum workflow cadastrado. Clique em <strong>Novo Workflow</strong> ou solicite à Lyra!
           </div>
         ) : (
           filteredWorkflows.map((w) => (
             <div
               key={w.id}
-              className={`p-6 rounded-2xl border transition-all flex flex-col justify-between space-y-4 ${
+              className={`p-6 rounded-2xl border transition-all flex flex-col justify-between space-y-4 shadow-sm ${
                 w.status === 'Ativo'
-                  ? 'bg-gray-900/90 border-purple-500/30 shadow-lg shadow-purple-950/20'
-                  : 'bg-gray-950/60 border-gray-800 opacity-60'
+                  ? 'th-surface border-purple-500/40 shadow-md'
+                  : 'th-surface border th-border opacity-75'
               }`}
             >
               <div>
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3 mb-2">
-                  <span className="text-xs font-mono text-purple-400 font-bold">WF-{w.id}</span>
+                  <span className="text-xs font-mono text-purple-500 font-bold">WF-{w.id}</span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleToggle(w.id)}
                       className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-colors ${
                         w.status === 'Ativo'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                          : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                       }`}
                     >
                       {w.status === 'Ativo' ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
                       {w.status}
                     </button>
-                    <button onClick={() => handleDelete(w.id)} className="p-1 text-gray-500 hover:text-red-400 transition-colors">
+                    <button onClick={() => handleDelete(w.id)} className="p-1 th-muted hover:text-red-500 transition-colors">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                <h3 className="font-bold text-white text-base mb-1">{w.name}</h3>
-                <p className="text-xs text-gray-400 leading-relaxed mb-4">{w.description || 'Sem descrição.'}</p>
+                <h3 className="font-bold th-text text-base mb-1">{w.name}</h3>
+                <p className="text-xs th-muted leading-relaxed mb-4">{w.description || 'Sem descrição.'}</p>
 
                 {/* Badges: Trigger & Condition */}
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="font-semibold text-purple-400 w-16">Gatilho:</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-200 border border-purple-500/20 font-medium">
+                    <span className="font-semibold text-purple-500 w-16">Gatilho:</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 font-medium">
                       ⚡ {w.trigger_event}
                     </span>
                   </div>
 
                   {w.condition_rules && (
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="font-semibold text-gray-400 w-16">Condição:</span>
-                      <span className="px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 font-medium">
+                      <span className="font-semibold th-muted w-16">Condição:</span>
+                      <span className="px-2.5 py-1 rounded-lg th-surface2 th-text border th-border font-medium">
                         🔍 {w.condition_rules}
                       </span>
                     </div>
@@ -255,12 +255,12 @@ export const WorkflowsView: React.FC<{ onOpenLyra?: () => void }> = ({ onOpenLyr
                 </div>
 
                 {/* Actions list */}
-                <div className="bg-gray-950/80 p-3.5 rounded-xl border border-gray-800/80 space-y-2">
-                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Ações Executadas:</span>
+                <div className="th-surface2 p-3.5 rounded-xl border th-border space-y-2">
+                  <span className="text-[11px] font-bold th-muted uppercase tracking-wider block">Ações Executadas:</span>
                   <div className="space-y-1.5">
                     {w.actions.map((act, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-xs text-gray-300">
-                        <ArrowRight className="w-3 h-3 text-purple-400 shrink-0" />
+                      <div key={idx} className="flex items-center gap-2 text-xs th-text">
+                        <ArrowRight className="w-3 h-3 text-purple-500 shrink-0" />
                         <span>{act}</span>
                       </div>
                     ))}
@@ -269,7 +269,7 @@ export const WorkflowsView: React.FC<{ onOpenLyra?: () => void }> = ({ onOpenLyr
               </div>
 
               {/* Footer */}
-              <div className="pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs text-gray-500">
+              <div className="pt-3 border-t th-border flex items-center justify-between text-xs th-muted">
                 <span>Executado <strong>{w.executions_count || 0}</strong> vezes</span>
                 <span>Criado em {new Date(w.created_at).toLocaleDateString('pt-BR')}</span>
               </div>
@@ -281,43 +281,43 @@ export const WorkflowsView: React.FC<{ onOpenLyra?: () => void }> = ({ onOpenLyr
       {/* Create Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-purple-500/20 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Zap className="w-5 h-5 text-purple-400" />
+          <div className="th-surface border th-border rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <h2 className="text-lg font-bold th-text flex items-center gap-2">
+              <Zap className="w-5 h-5 text-purple-500" />
               Criar Novo Workflow de Automação
             </h2>
 
             <form onSubmit={handleCreate} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Nome do Workflow</label>
+                <label className="block text-xs font-medium th-muted mb-1">Nome do Workflow</label>
                 <input
                   type="text"
                   required
                   placeholder="Ex: Notificação de Pedido Alto Valor"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-200 outline-none focus:border-purple-500"
+                  className="w-full px-3.5 py-2 th-input text-sm th-text placeholder:th-muted"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Descrição</label>
+                <label className="block text-xs font-medium th-muted mb-1">Descrição</label>
                 <input
                   type="text"
                   placeholder="Ex: Envia WhatsApp para o vendedor quando pedido > R$ 10.000"
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-200 outline-none focus:border-purple-500"
+                  className="w-full px-3.5 py-2 th-input text-sm th-text placeholder:th-muted"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Gatilho (Trigger)</label>
+                  <label className="block text-xs font-medium th-muted mb-1">Gatilho (Trigger)</label>
                   <select
                     value={triggerEvent}
                     onChange={e => setTriggerEvent(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-200 outline-none"
+                    className="w-full px-3 py-2 th-input text-xs th-text"
                   >
                     <option>Pedido Aprovado</option>
                     <option>Estoque Mínimo Atingido</option>
@@ -328,25 +328,25 @@ export const WorkflowsView: React.FC<{ onOpenLyra?: () => void }> = ({ onOpenLyr
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Condição Regra</label>
+                  <label className="block text-xs font-medium th-muted mb-1">Condição Regra</label>
                   <input
                     type="text"
                     placeholder="Ex: Valor > 10000"
                     value={conditionRules}
                     onChange={e => setConditionRules(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-200 outline-none"
+                    className="w-full px-3.5 py-2 th-input text-xs th-text placeholder:th-muted"
                   />
                 </div>
               </div>
 
               {/* Actions Input */}
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Ações do Workflow</label>
+                <label className="block text-xs font-medium th-muted mb-1">Ações do Workflow</label>
                 <div className="space-y-2 mb-2">
                   {actionList.map((act, i) => (
-                    <div key={i} className="flex items-center justify-between px-3 py-1.5 bg-gray-950 rounded-lg text-xs text-gray-300 border border-gray-800">
+                    <div key={i} className="flex items-center justify-between px-3 py-1.5 th-surface2 rounded-lg text-xs th-text border th-border">
                       <span>• {act}</span>
-                      <button type="button" onClick={() => handleRemoveAction(i)} className="text-gray-500 hover:text-red-400 text-xs">Remover</button>
+                      <button type="button" onClick={() => handleRemoveAction(i)} className="th-muted hover:text-red-500 text-xs">Remover</button>
                     </div>
                   ))}
                 </div>
@@ -357,23 +357,23 @@ export const WorkflowsView: React.FC<{ onOpenLyra?: () => void }> = ({ onOpenLyr
                     placeholder="Adicionar nova ação..."
                     value={newActionInput}
                     onChange={e => setNewActionInput(e.target.value)}
-                    className="flex-1 px-3 py-1.5 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-200 outline-none"
+                    className="flex-1 px-3 py-1.5 th-input text-xs th-text placeholder:th-muted"
                   />
                   <button
                     type="button"
                     onClick={handleAddAction}
-                    className="px-3 py-1.5 bg-purple-900/60 hover:bg-purple-800 text-purple-200 rounded-xl text-xs font-semibold"
+                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold"
                   >
                     + Adicionar
                   </button>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-gray-800">
+              <div className="flex justify-end gap-3 pt-3 border-t th-border">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-400 hover:text-gray-200"
+                  className="px-4 py-2 text-xs font-semibold th-muted hover:th-text"
                 >
                   Cancelar
                 </button>

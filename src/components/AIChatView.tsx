@@ -62,6 +62,7 @@ interface LyraChatProps {
 
 export const LyraChat: React.FC<LyraChatProps> = ({ onClose, expanded, onToggleExpand, currentModule }) => {
   const { user } = useAuth();
+  const userId = user?.username || 'user';
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -74,6 +75,38 @@ export const LyraChat: React.FC<LyraChatProps> = ({ onClose, expanded, onToggleE
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load persistent conversation history from SQLite on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const res = await fetch(`http://localhost:3001/api/ai/history/${userId}`);
+        if (res.ok) {
+          const rows = await res.json();
+          if (Array.isArray(rows) && rows.length > 0) {
+            const loadedMsgs: Message[] = rows.map((r: any, idx: number) => ({
+              id: `hist-${idx}-${Date.now()}`,
+              role: r.role,
+              content: r.content,
+              timestamp: new Date(r.created_at || Date.now())
+            }));
+            setMessages([
+              {
+                id: 'welcome',
+                role: 'assistant',
+                content: `Olá! Sou a **Lyra**, sua assistente oficial. (Memória ativada - histórico carregado)`,
+                timestamp: new Date(),
+              },
+              ...loadedMsgs
+            ]);
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar memória da Lyra:', err);
+      }
+    };
+    loadHistory();
+  }, [userId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -108,7 +141,7 @@ export const LyraChat: React.FC<LyraChatProps> = ({ onClose, expanded, onToggleE
           'x-auth-user': user?.username || 'user',
           'x-auth-role': user?.role || 'client',
         },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, userId }),
       });
 
       const data = await res.json();
@@ -133,11 +166,16 @@ export const LyraChat: React.FC<LyraChatProps> = ({ onClose, expanded, onToggleE
     }
   };
 
-  const clearChat = () => {
+  const clearChat = async () => {
+    try {
+      await fetch(`http://localhost:3001/api/ai/history/${userId}`, { method: 'DELETE' });
+    } catch (e) {
+      console.warn('Erro ao limpar memória:', e);
+    }
     setMessages([{
       id: 'welcome',
       role: 'assistant',
-      content: `Conversa reiniciada! Como posso ajudar você hoje?`,
+      content: `Memória limpa! Nova conversa iniciada. Como posso ajudar você hoje?`,
       timestamp: new Date(),
     }]);
   };
@@ -310,6 +348,7 @@ export const LyraFloatingButton: React.FC<LyraFloatingButtonProps> = ({ currentM
 // ── Embedded Full Page View (HUB Visual com Painel Oficial) ──────────────────
 export const AIChatView: React.FC = () => {
   const { user } = useAuth();
+  const userId = user?.username || 'user';
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -321,6 +360,38 @@ export const AIChatView: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load persistent conversation history from SQLite on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const res = await fetch(`http://localhost:3001/api/ai/history/${userId}`);
+        if (res.ok) {
+          const rows = await res.json();
+          if (Array.isArray(rows) && rows.length > 0) {
+            const loadedMsgs: Message[] = rows.map((r: any, idx: number) => ({
+              id: `hist-full-${idx}-${Date.now()}`,
+              role: r.role,
+              content: r.content,
+              timestamp: new Date(r.created_at || Date.now())
+            }));
+            setMessages([
+              {
+                id: 'welcome',
+                role: 'assistant',
+                content: `Olá! Sou a **Lyra**, sua assistente oficial. (Memória ativada - histórico carregado)`,
+                timestamp: new Date(),
+              },
+              ...loadedMsgs
+            ]);
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar memória da Lyra:', err);
+      }
+    };
+    loadHistory();
+  }, [userId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -351,7 +422,7 @@ export const AIChatView: React.FC = () => {
           'x-auth-user': user?.username || 'user',
           'x-auth-role': user?.role || 'client',
         },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, userId }),
       });
 
       const data = await res.json();

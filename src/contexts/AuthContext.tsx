@@ -6,10 +6,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 // ════════════════════════════════════════════
 
 export type UserRole = 'admin' | 'gerente' | 'vendedor' | 'funcionario' | 'client';
+export type SaaSPlan = 'start' | 'growth' | 'enterprise';
 
 interface AuthUser {
   username: string;
   role: UserRole;
+  plan: SaaSPlan;
   name: string;
   sessionId: string;
   loginAt: string;
@@ -65,10 +67,15 @@ function meetsRoleRequirement(userRole: UserRole, requiredRole: UserRole): boole
 // ════════════════════════════════════════════
 
 const CREDENTIALS = [
-  { username: 'admin',    password: 'Admin@123',    role: 'admin'       as UserRole, name: 'Administrador' },
-  { username: 'cliente',  password: 'Cliente@123',  role: 'client'      as UserRole, name: 'Cliente Demo'  },
-  { username: 'vendedor', password: 'Vend@123',     role: 'vendedor'    as UserRole, name: 'Vendedor Demo' },
-  { username: 'gerente',  password: 'Ger@123',      role: 'gerente'     as UserRole, name: 'Gerente Demo'  },
+  { username: 'admin',      password: 'Admin@123',      role: 'admin'       as UserRole, plan: 'enterprise' as SaaSPlan, name: 'Administrador (Enterprise Master)' },
+  { username: 'cliente',    password: 'Cliente@123',    role: 'client'      as UserRole, plan: 'start'      as SaaSPlan, name: 'Cliente Demo'  },
+  { username: 'vendedor',   password: 'Vend@123',       role: 'vendedor'    as UserRole, plan: 'growth'     as SaaSPlan, name: 'Vendedor Demo' },
+  { username: 'gerente',    password: 'Ger@123',        role: 'gerente'     as UserRole, plan: 'growth'     as SaaSPlan, name: 'Gerente Demo'  },
+
+  // ══ LOGINS DE TESTE POR PLANO SAAS ══
+  { username: 'start',      password: 'Start@123',      role: 'client'      as UserRole, plan: 'start'      as SaaSPlan, name: 'Assinante Plano Start' },
+  { username: 'growth',     password: 'Growth@123',     role: 'gerente'     as UserRole, plan: 'growth'     as SaaSPlan, name: 'Assinante Plano Growth' },
+  { username: 'enterprise', password: 'Enterprise@123', role: 'gerente'     as UserRole, plan: 'enterprise' as SaaSPlan, name: 'Assinante Plano Enterprise' },
 ];
 
 // ════════════════════════════════════════════
@@ -181,6 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const authUser: AuthUser = {
       username: found.username,
       role: found.role,
+      plan: found.plan || 'growth',
       name: found.name,
       sessionId: generateSessionId(),
       loginAt: new Date().toISOString(),

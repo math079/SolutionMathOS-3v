@@ -70,14 +70,14 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* Screen Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-900/60 p-6 rounded-2xl border border-gray-800 backdrop-blur-md print:hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 th-surface p-6 rounded-2xl border th-border shadow-sm print:hidden">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500">
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Central de Relatórios Executivos</h1>
-            <p className="text-xs text-gray-400">
+            <h1 className="text-xl font-bold th-text">Central de Relatórios Executivos</h1>
+            <p className="text-xs th-muted">
               Análise consolidada de desempenho financeiro, vendas e movimentação de estoque.
             </p>
           </div>
@@ -95,13 +95,13 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-gray-800 space-x-4 print:hidden">
+      <div className="flex border-b th-border space-x-4 print:hidden">
         <button
           onClick={() => setActiveTab('financial')}
           className={`pb-3 text-sm font-semibold flex items-center gap-2 transition-colors border-b-2 ${
             activeTab === 'financial'
-              ? 'border-blue-500 text-blue-400'
-              : 'border-transparent text-gray-400 hover:text-gray-200'
+              ? 'border-blue-500 text-blue-500'
+              : 'border-transparent th-muted hover:th-text'
           }`}
         >
           <DollarSign className="w-4 h-4" />
@@ -112,8 +112,8 @@ export const ReportsView: React.FC = () => {
           onClick={() => setActiveTab('sales')}
           className={`pb-3 text-sm font-semibold flex items-center gap-2 transition-colors border-b-2 ${
             activeTab === 'sales'
-              ? 'border-blue-500 text-blue-400'
-              : 'border-transparent text-gray-400 hover:text-gray-200'
+              ? 'border-blue-500 text-blue-500'
+              : 'border-transparent th-muted hover:th-text'
           }`}
         >
           <ShoppingCart className="w-4 h-4" />
@@ -124,8 +124,8 @@ export const ReportsView: React.FC = () => {
           onClick={() => setActiveTab('inventory')}
           className={`pb-3 text-sm font-semibold flex items-center gap-2 transition-colors border-b-2 ${
             activeTab === 'inventory'
-              ? 'border-blue-500 text-blue-400'
-              : 'border-transparent text-gray-400 hover:text-gray-200'
+              ? 'border-blue-500 text-blue-500'
+              : 'border-transparent th-muted hover:th-text'
           }`}
         >
           <Package className="w-4 h-4" />
@@ -134,7 +134,7 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-gray-500 text-sm">Carregando dados consolidados...</div>
+        <div className="text-center py-16 th-muted text-sm">Carregando dados consolidados...</div>
       ) : (
         <>
           {/* TAB 1: FINANCIAL */}
@@ -142,61 +142,61 @@ export const ReportsView: React.FC = () => {
             <div className="space-y-6">
               {/* Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
+                <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
                   <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs text-gray-400 font-medium">Total de Entradas</span>
-                    <span className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg"><ArrowUpRight className="w-4 h-4" /></span>
+                    <span className="text-xs th-muted font-medium">Total de Entradas</span>
+                    <span className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg"><ArrowUpRight className="w-4 h-4" /></span>
                   </div>
-                  <div className="text-2xl font-black text-emerald-400">
+                  <div className="text-2xl font-black text-emerald-500">
                     R$ {(financialData.totalIncome || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
+                <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
                   <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs text-gray-400 font-medium">Total de Saídas</span>
-                    <span className="p-2 bg-red-500/10 text-red-400 rounded-lg"><ArrowDownRight className="w-4 h-4" /></span>
+                    <span className="text-xs th-muted font-medium">Total de Saídas</span>
+                    <span className="p-2 bg-red-500/10 text-red-500 rounded-lg"><ArrowDownRight className="w-4 h-4" /></span>
                   </div>
-                  <div className="text-2xl font-black text-red-400">
+                  <div className="text-2xl font-black text-red-500">
                     R$ {(financialData.totalExpense || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
+                <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
                   <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs text-gray-400 font-medium">Resultado Líquido</span>
-                    <span className="p-2 bg-blue-500/10 text-blue-400 rounded-lg"><TrendingUp className="w-4 h-4" /></span>
+                    <span className="text-xs th-muted font-medium">Resultado Líquido</span>
+                    <span className="p-2 bg-blue-500/10 text-blue-500 rounded-lg"><TrendingUp className="w-4 h-4" /></span>
                   </div>
-                  <div className={`text-2xl font-black ${financialData.netProfit >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                  <div className={`text-2xl font-black ${financialData.netProfit >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
                     R$ {(financialData.netProfit || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                 </div>
               </div>
 
               {/* DRE Category Breakdown */}
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-blue-400" />
+              <div className="th-surface border th-border rounded-2xl p-6 space-y-4 shadow-sm">
+                <h3 className="text-base font-bold th-text flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-blue-500" />
                   Detalhamento por Categoria
                 </h3>
 
-                <table className="w-full text-left text-sm text-gray-300">
-                  <thead className="bg-gray-950 text-gray-400 text-xs font-semibold uppercase border-b border-gray-800">
+                <table className="w-full text-left text-sm th-text">
+                  <thead className="th-surface2 th-muted text-xs font-semibold uppercase border-b th-border">
                     <tr>
                       <th className="py-3 px-4">Categoria</th>
                       <th className="py-3 px-4">Tipo</th>
                       <th className="py-3 px-4 text-right">Valor Total (R$)</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-800">
+                  <tbody className="divide-y th-border">
                     {financialData.categoryBreakdown.map((cat, idx) => (
-                      <tr key={idx} className="hover:bg-gray-800/40">
-                        <td className="py-3 px-4 font-medium text-gray-200">{cat.category}</td>
+                      <tr key={idx} className="hover:th-surface2 transition-colors">
+                        <td className="py-3 px-4 font-medium th-text">{cat.category}</td>
                         <td className="py-3 px-4 text-xs">
                           {cat.type === 'income' ? (
-                            <span className="text-emerald-400 font-bold">Receita</span>
+                            <span className="text-emerald-500 font-bold">Receita</span>
                           ) : (
-                            <span className="text-red-400 font-bold">Despesa</span>
+                            <span className="text-red-500 font-bold">Despesa</span>
                           )}
                         </td>
                         <td className="py-3 px-4 text-right font-bold font-mono">
@@ -214,37 +214,37 @@ export const ReportsView: React.FC = () => {
           {activeTab === 'sales' && salesData && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
-                  <div className="text-xs text-gray-400 font-medium mb-1">Faturamento Total do PDV</div>
-                  <div className="text-2xl font-black text-emerald-400">
+                <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
+                  <div className="text-xs th-muted font-medium mb-1">Faturamento Total do PDV</div>
+                  <div className="text-2xl font-black text-emerald-500">
                     R$ {(salesData.summary.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
-                  <div className="text-xs text-gray-400 font-medium mb-1">Total de Pedidos</div>
-                  <div className="text-2xl font-black text-blue-400">
+                <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
+                  <div className="text-xs th-muted font-medium mb-1">Total de Pedidos</div>
+                  <div className="text-2xl font-black text-blue-500">
                     {salesData.summary.count || 0} pedidos
                   </div>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
-                  <div className="text-xs text-gray-400 font-medium mb-1">Ticket Médio por Venda</div>
-                  <div className="text-2xl font-black text-indigo-400">
+                <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
+                  <div className="text-xs th-muted font-medium mb-1">Ticket Médio por Venda</div>
+                  <div className="text-2xl font-black text-indigo-500">
                     R$ {(salesData.summary.avg_ticket || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                 </div>
               </div>
 
               {/* Top Selling Products */}
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-indigo-400" />
+              <div className="th-surface border th-border rounded-2xl p-6 space-y-4 shadow-sm">
+                <h3 className="text-base font-bold th-text flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-indigo-500" />
                   Top 10 Produtos Mais Vendidos
                 </h3>
 
-                <table className="w-full text-left text-sm text-gray-300">
-                  <thead className="bg-gray-950 text-gray-400 text-xs font-semibold uppercase border-b border-gray-800">
+                <table className="w-full text-left text-sm th-text">
+                  <thead className="th-surface2 th-muted text-xs font-semibold uppercase border-b th-border">
                     <tr>
                       <th className="py-3 px-4">Produto</th>
                       <th className="py-3 px-4">SKU</th>
@@ -252,18 +252,18 @@ export const ReportsView: React.FC = () => {
                       <th className="py-3 px-4 text-right">Receita Total</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-800">
+                  <tbody className="divide-y th-border">
                     {salesData.topSellingProducts.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="text-center py-6 text-gray-500">Nenhuma venda registrada até o momento.</td>
+                        <td colSpan={4} className="text-center py-6 th-muted">Nenhuma venda registrada até o momento.</td>
                       </tr>
                     ) : (
                       salesData.topSellingProducts.map((p, idx) => (
-                        <tr key={idx} className="hover:bg-gray-800/40">
-                          <td className="py-3 px-4 font-bold text-gray-200">{p.name}</td>
-                          <td className="py-3 px-4 text-xs font-mono text-gray-400">{p.sku || '-'}</td>
-                          <td className="py-3 px-4 text-center font-bold text-blue-400">{p.qty_sold}</td>
-                          <td className="py-3 px-4 text-right font-bold text-emerald-400 font-mono">
+                        <tr key={idx} className="hover:th-surface2 transition-colors">
+                          <td className="py-3 px-4 font-bold th-text">{p.name}</td>
+                          <td className="py-3 px-4 text-xs font-mono th-muted">{p.sku || '-'}</td>
+                          <td className="py-3 px-4 text-center font-bold text-blue-500">{p.qty_sold}</td>
+                          <td className="py-3 px-4 text-right font-bold text-emerald-500 font-mono">
                             R$ {p.total_revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </td>
                         </tr>
@@ -279,23 +279,23 @@ export const ReportsView: React.FC = () => {
           {activeTab === 'inventory' && inventoryData && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
-                  <div className="text-xs text-gray-400 font-medium mb-1">Total de Itens no Catálogo</div>
-                  <div className="text-2xl font-black text-white">
+                <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
+                  <div className="text-xs th-muted font-medium mb-1">Total de Itens no Catálogo</div>
+                  <div className="text-2xl font-black th-text">
                     {inventoryData.totals.total_items || 0} produtos
                   </div>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
-                  <div className="text-xs text-gray-400 font-medium mb-1">Valor Imobilizado (Preço Venda)</div>
-                  <div className="text-2xl font-black text-emerald-400">
+                <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
+                  <div className="text-xs th-muted font-medium mb-1">Valor Imobilizado (Preço Venda)</div>
+                  <div className="text-2xl font-black text-emerald-500">
                     R$ {(inventoryData.totals.total_value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 p-5 rounded-2xl">
-                  <div className="text-xs text-gray-400 font-medium mb-1">Alerta de Estoque Baixo</div>
-                  <div className="text-2xl font-black text-amber-400">
+                <div className="th-surface border th-border p-5 rounded-2xl shadow-sm">
+                  <div className="text-xs th-muted font-medium mb-1">Alerta de Estoque Baixo</div>
+                  <div className="text-2xl font-black text-amber-500">
                     {inventoryData.lowStockProducts.length} itens críticos
                   </div>
                 </div>
@@ -303,14 +303,14 @@ export const ReportsView: React.FC = () => {
 
               {/* Low Stock Warning Table */}
               {inventoryData.lowStockProducts.length > 0 && (
-                <div className="bg-gray-900 border border-amber-500/20 rounded-2xl p-6 space-y-4">
-                  <h3 className="text-base font-bold text-amber-400 flex items-center gap-2">
+                <div className="th-surface border border-amber-500/30 rounded-2xl p-6 space-y-4 shadow-sm">
+                  <h3 className="text-base font-bold text-amber-500 flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4" />
                     Produtos com Alerta de Estoque Baixo
                   </h3>
 
-                  <table className="w-full text-left text-sm text-gray-300">
-                    <thead className="bg-gray-950 text-gray-400 text-xs font-semibold uppercase border-b border-gray-800">
+                  <table className="w-full text-left text-sm th-text">
+                    <thead className="th-surface2 th-muted text-xs font-semibold uppercase border-b th-border">
                       <tr>
                         <th className="py-3 px-4">Produto</th>
                         <th className="py-3 px-4">Categoria</th>
@@ -318,13 +318,13 @@ export const ReportsView: React.FC = () => {
                         <th className="py-3 px-4 text-center">Qtd Mínima</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-800">
+                    <tbody className="divide-y th-border">
                       {inventoryData.lowStockProducts.map((item) => (
-                        <tr key={item.id} className="hover:bg-gray-800/40">
-                          <td className="py-3 px-4 font-bold text-gray-200">{item.name}</td>
-                          <td className="py-3 px-4 text-xs text-gray-400">{item.category || '-'}</td>
-                          <td className="py-3 px-4 text-center font-bold text-red-400">{item.stock_qty}</td>
-                          <td className="py-3 px-4 text-center text-gray-400">{item.stock_min}</td>
+                        <tr key={item.id} className="hover:th-surface2 transition-colors">
+                          <td className="py-3 px-4 font-bold th-text">{item.name}</td>
+                          <td className="py-3 px-4 text-xs th-muted">{item.category || '-'}</td>
+                          <td className="py-3 px-4 text-center font-bold text-red-500">{item.stock_qty}</td>
+                          <td className="py-3 px-4 text-center th-muted">{item.stock_min}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -338,3 +338,5 @@ export const ReportsView: React.FC = () => {
     </div>
   );
 };
+
+export default ReportsView;

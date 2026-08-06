@@ -176,16 +176,30 @@ async function getSystemContext(db) {
 
 /**
  * Envia mensagens para a API do OpenRouter
+ * @param {Array} messages - mensagens da sessão atual
+ * @param {string} systemContextData - dados do sistema em tempo real
+ * @param {Array} persistedHistory - histórico salvo do banco (últimas N mensagens)
  */
-async function chatCompletion(messages, systemContextData = '') {
-  const fullSystemPrompt = SYSTEM_PROMPT + (systemContextData ? `\n${systemContextData}` : '');
+async function chatCompletion(messages, systemContextData = '', persistedHistory = []) {
+  const fullSystemPrompt = SYSTEM_PROMPT + 
+    '\n\n## Memória\nVocê tem memória persistente das conversas anteriores deste usuário. Use o histórico fornecido para continuar fluxos, automações ou contextos anteriores naturalmente.' +
+    (systemContextData ? `\n${systemContextData}` : '');
+
+  // Mescla histórico persistido + mensagens da sessão atual (sem duplicar)
+  const historyMessages = persistedHistory.map(m => ({
+    role: m.role === 'user' ? 'user' : 'assistant',
+    content: m.content
+  }));
+
+  const sessionMessages = messages.map(m => ({
+    role: m.role === 'user' ? 'user' : 'assistant',
+    content: m.content
+  }));
 
   const formattedMessages = [
     { role: 'system', content: fullSystemPrompt },
-    ...messages.map(m => ({
-      role: m.role === 'user' ? 'user' : 'assistant',
-      content: m.content
-    }))
+    ...historyMessages,
+    ...sessionMessages
   ];
 
   const response = await fetch(OPENROUTER_URL, {

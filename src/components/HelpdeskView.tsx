@@ -172,25 +172,25 @@ export const HelpdeskView: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Resolvido':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Resolvido</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Resolvido</span>;
       case 'Em Atendimento':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">Em Atendimento</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">Em Atendimento</span>;
       default:
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Aberto</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">Aberto</span>;
     }
   };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-900/60 p-6 rounded-2xl border border-gray-800 backdrop-blur-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 th-surface p-6 rounded-2xl border th-border shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
             <LifeBuoy className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Central de Suporte & Helpdesk</h1>
-            <p className="text-xs text-gray-400">Gestão de chamados internos, dúvidas de clientes e suporte técnico.</p>
+            <h1 className="text-xl font-bold th-text">Central de Suporte & Helpdesk</h1>
+            <p className="text-xs th-muted">Gestão de chamados internos, dúvidas de clientes e suporte técnico.</p>
           </div>
         </div>
 
@@ -206,13 +206,13 @@ export const HelpdeskView: React.FC = () => {
       {/* Filters */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
           <input
             type="text"
             placeholder="Buscar chamados..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+            className="w-full th-input th-input-search text-sm th-text placeholder:th-muted focus:outline-none focus:border-blue-500"
           />
         </div>
 
@@ -229,7 +229,7 @@ export const HelpdeskView: React.FC = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                 statusFilter === s.id
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                  : 'bg-gray-800/80 text-gray-400 hover:text-gray-200'
+                  : 'th-surface2 th-muted hover:th-text border th-border'
               }`}
             >
               {s.label}
@@ -243,9 +243,9 @@ export const HelpdeskView: React.FC = () => {
         {/* Tickets List */}
         <div className={`space-y-3 ${selectedTicket ? 'lg:col-span-5' : 'lg:col-span-12'}`}>
           {loading ? (
-            <div className="text-center py-12 text-gray-500 text-sm">Carregando chamados...</div>
+            <div className="text-center py-12 th-muted text-sm">Carregando chamados...</div>
           ) : filteredTickets.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 text-sm bg-gray-900/40 rounded-2xl border border-gray-800">
+            <div className="text-center py-12 th-muted text-sm th-surface rounded-2xl border th-border">
               Nenhum chamado encontrado.
             </div>
           ) : (
@@ -255,28 +255,28 @@ export const HelpdeskView: React.FC = () => {
                 onClick={() => handleSelectTicket(t)}
                 className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                   selectedTicket?.id === t.id
-                    ? 'bg-gray-800/80 border-blue-500/50 shadow-lg shadow-blue-500/10'
-                    : 'bg-gray-900/60 border-gray-800 hover:border-gray-700 hover:bg-gray-900'
+                    ? 'bg-blue-500/10 border-blue-500 shadow-md'
+                    : 'th-surface border th-border hover:border-blue-500/40 hover:shadow-md'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
-                  <span className="text-xs font-mono text-blue-400 font-bold">#{t.id}</span>
+                  <span className="text-xs font-mono text-blue-500 font-bold">#{t.id}</span>
                   <div className="flex items-center gap-2">
                     {getPriorityBadge(t.priority)}
                     {getStatusBadge(t.status)}
                   </div>
                 </div>
 
-                <h3 className="font-bold text-gray-200 text-sm mb-1 leading-snug line-clamp-1">{t.title}</h3>
-                <p className="text-xs text-gray-400 line-clamp-2 mb-3">{t.description || 'Sem descrição.'}</p>
+                <h3 className="font-bold th-text text-sm mb-1 leading-snug line-clamp-1">{t.title}</h3>
+                <p className="text-xs th-muted line-clamp-2 mb-3">{t.description || 'Sem descrição.'}</p>
 
-                <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-800/60 pt-2.5">
-                  <span className="flex items-center gap-1.5 text-gray-400">
+                <div className="flex items-center justify-between text-xs th-muted border-t th-border pt-2.5">
+                  <span className="flex items-center gap-1.5 th-muted">
                     <User className="w-3.5 h-3.5" />
                     {t.user_name}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Tag className="w-3 h-3 text-blue-400" />
+                    <Tag className="w-3 h-3 text-blue-500" />
                     {t.category}
                   </span>
                 </div>
@@ -287,18 +287,18 @@ export const HelpdeskView: React.FC = () => {
 
         {/* Selected Ticket Thread */}
         {selectedTicket && (
-          <div className="lg:col-span-7 bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col justify-between h-[650px]">
+          <div className="lg:col-span-7 th-surface border th-border rounded-2xl p-6 flex flex-col justify-between h-[650px] shadow-sm">
             {/* Thread Header */}
             <div>
-              <div className="flex items-start justify-between gap-4 border-b border-gray-800 pb-4 mb-4">
+              <div className="flex items-start justify-between gap-4 border-b th-border pb-4 mb-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-mono text-blue-400 font-bold">Chamado #{selectedTicket.id}</span>
+                    <span className="text-xs font-mono text-blue-500 font-bold">Chamado #{selectedTicket.id}</span>
                     {getStatusBadge(selectedTicket.status)}
                     {getPriorityBadge(selectedTicket.priority)}
                   </div>
-                  <h2 className="text-lg font-bold text-white leading-tight">{selectedTicket.title}</h2>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <h2 className="text-lg font-bold th-text leading-tight">{selectedTicket.title}</h2>
+                  <p className="text-xs th-muted mt-1">
                     Aberto por <strong>{selectedTicket.user_name}</strong> • Categoria: <strong>{selectedTicket.category}</strong>
                   </p>
                 </div>
@@ -314,7 +314,7 @@ export const HelpdeskView: React.FC = () => {
                   )}
                   <button
                     onClick={() => setSelectedTicket(null)}
-                    className="text-gray-400 hover:text-gray-200 text-xs px-2 py-1"
+                    className="th-muted hover:th-text text-xs px-2 py-1"
                   >
                     Fechar
                   </button>
@@ -322,27 +322,27 @@ export const HelpdeskView: React.FC = () => {
               </div>
 
               {/* Description */}
-              <div className="bg-gray-950/80 p-4 rounded-xl border border-gray-800 text-xs text-gray-300 mb-4">
-                <span className="text-gray-500 font-bold block mb-1">Descrição Inicial:</span>
+              <div className="th-surface2 p-4 rounded-xl border th-border text-xs th-text mb-4">
+                <span className="th-muted font-bold block mb-1">Descrição Inicial:</span>
                 {selectedTicket.description}
               </div>
 
               {/* Replies list */}
               <div className="space-y-3 max-h-[340px] overflow-y-auto pr-2">
                 {replies.length === 0 ? (
-                  <div className="text-center py-6 text-xs text-gray-500 italic">Nenhuma resposta gravada ainda.</div>
+                  <div className="text-center py-6 text-xs th-muted italic">Nenhuma resposta gravada ainda.</div>
                 ) : (
                   replies.map(r => (
                     <div
                       key={r.id}
                       className={`p-3.5 rounded-xl border text-xs ${
                         r.role === 'admin' || r.role === 'gerente'
-                          ? 'bg-blue-950/30 border-blue-800/40 text-blue-100 ml-4'
-                          : 'bg-gray-800/50 border-gray-700 text-gray-200 mr-4'
+                          ? 'bg-blue-500/10 border-blue-500/30 th-text ml-4'
+                          : 'th-surface2 border th-border th-text mr-4'
                       }`}
                     >
-                      <div className="flex justify-between text-[11px] text-gray-400 font-medium mb-1">
-                        <span className="font-bold text-blue-400">{r.author} ({r.role})</span>
+                      <div className="flex justify-between text-[11px] th-muted font-medium mb-1">
+                        <span className="font-bold text-blue-500">{r.author} ({r.role})</span>
                         <span>{new Date(r.created_at).toLocaleString('pt-BR')}</span>
                       </div>
                       <p className="leading-relaxed">{r.message}</p>
@@ -353,13 +353,13 @@ export const HelpdeskView: React.FC = () => {
             </div>
 
             {/* Reply Form */}
-            <form onSubmit={handleSendReply} className="mt-4 pt-4 border-t border-gray-800 flex gap-2">
+            <form onSubmit={handleSendReply} className="mt-4 pt-4 border-t th-border flex gap-2">
               <input
                 type="text"
                 placeholder="Escreva uma resposta para o chamado..."
                 value={replyText}
                 onChange={e => setReplyText(e.target.value)}
-                className="flex-1 px-4 py-2.5 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                className="flex-1 px-4 py-2.5 th-input text-sm th-text placeholder:th-muted"
               />
               <button
                 type="submit"
@@ -376,29 +376,29 @@ export const HelpdeskView: React.FC = () => {
       {/* Modal Novo Chamado */}
       {showNewModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <h2 className="text-lg font-bold text-white">Abrir Novo Chamado de Suporte</h2>
+          <div className="th-surface border th-border rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <h2 className="text-lg font-bold th-text">Abrir Novo Chamado de Suporte</h2>
 
             <form onSubmit={handleCreateTicket} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Título do problema</label>
+                <label className="block text-xs font-medium th-muted mb-1">Título do problema</label>
                 <input
                   type="text"
                   required
                   placeholder="Ex: Erro ao emitir comprovante no PDV"
                   value={newTitle}
                   onChange={e => setNewTitle(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-200 outline-none focus:border-blue-500"
+                  className="w-full px-3.5 py-2 th-input text-sm th-text placeholder:th-muted"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Categoria</label>
+                  <label className="block text-xs font-medium th-muted mb-1">Categoria</label>
                   <select
                     value={newCategory}
                     onChange={e => setNewCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-200 outline-none"
+                    className="w-full px-3 py-2 th-input text-xs th-text"
                   >
                     <option>Geral</option>
                     <option>Fiscal</option>
@@ -410,11 +410,11 @@ export const HelpdeskView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Prioridade</label>
+                  <label className="block text-xs font-medium th-muted mb-1">Prioridade</label>
                   <select
                     value={newPriority}
                     onChange={e => setNewPriority(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-xs text-gray-200 outline-none"
+                    className="w-full px-3 py-2 th-input text-xs th-text"
                   >
                     <option>Baixa</option>
                     <option>Média</option>
@@ -425,13 +425,13 @@ export const HelpdeskView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Descrição detalhada</label>
+                <label className="block text-xs font-medium th-muted mb-1">Descrição detalhada</label>
                 <textarea
                   rows={3}
                   placeholder="Descreva o que aconteceu..."
                   value={newDescription}
                   onChange={e => setNewDescription(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-gray-950 border border-gray-800 rounded-xl text-sm text-gray-200 outline-none focus:border-blue-500"
+                  className="w-full px-3.5 py-2 th-input text-sm th-text placeholder:th-muted"
                 />
               </div>
 
@@ -439,7 +439,7 @@ export const HelpdeskView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowNewModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-gray-400 hover:text-gray-200"
+                  className="px-4 py-2 text-xs font-semibold th-muted hover:th-text"
                 >
                   Cancelar
                 </button>

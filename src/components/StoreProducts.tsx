@@ -78,8 +78,8 @@ const StoreProducts: React.FC = () => {
 
       {/* Search */}
       <div className="relative max-w-sm">
-        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 th-muted" />
-        <input className="th-input pl-10" placeholder="Buscar nome, SKU, categoria..." value={query} onChange={e => setQuery(e.target.value)} />
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 th-muted pointer-events-none z-10" />
+        <input className="th-input th-input-search" placeholder="Buscar nome, SKU, categoria..." value={query} onChange={e => setQuery(e.target.value)} />
       </div>
 
       {/* Table */}

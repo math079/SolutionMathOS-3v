@@ -410,6 +410,33 @@ const db = new sqlite3.Database(dbPath, (err) => {
           });
         }
       });
+
+      // ═══════════════════════════════════════════
+      // LEADS TABLE (Landing Page Funnel)
+      // ═══════════════════════════════════════════
+      db.run(`CREATE TABLE IF NOT EXISTS leads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        whatsapp TEXT NOT NULL,
+        business_type TEXT,
+        plan_interest TEXT,
+        status TEXT DEFAULT 'Novo',
+        whatsapp_sent INTEGER DEFAULT 0,
+        notes TEXT,
+        utm_source TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      // ═══════════════════════════════════════════
+      // AI CONVERSATIONS TABLE (Lyra Memory)
+      // ═══════════════════════════════════════════
+      db.run(`CREATE TABLE IF NOT EXISTS ai_conversations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`);
     });
   }
 });
