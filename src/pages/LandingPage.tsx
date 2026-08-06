@@ -192,21 +192,10 @@ const LandingPage: React.FC = () => {
   const [redirectUrl, setRedirectUrl] = useState('');
 
   const generateWhatsAppLink = (name: string, businessType: string, plan: string) => {
-    const emojis: Record<string, string> = {
-      'Mercado / Mercearia': '🛒',
-      'Hortifruti': '🥦',
-      'Pet Shop': '🐾',
-      'Autopeças': '🔧',
-      'Papelaria': '📚',
-      'Materiais de Construção': '🏗️',
-      'Distribuidora': '🚚',
-      'Outro comércio': '💼',
-    };
-    const emoji = emojis[businessType] || '💼';
     const planName = plan || 'Growth';
     const segment = businessType || 'meu negócio';
 
-    const text = `Olá, Solution Math! ${emoji}\n\nMeu nome é *${name}* e tenho um(a) *${segment}*.\n\nVi as funcionalidades do Solution Math OS e estou muito interessado no *Plano ${planName}*.\n\nGostaria de agendar uma demonstração gratuita de 30 minutos para ver na prática como o sistema vai me ajudar a organizar estoque, financeiro e clientes.\n\nPodemos conversar agora?`;
+    const text = `Olá, equipe Solution Math!\n\nMeu nome é *${name}* e sou responsável por um(a) *${segment}*.\n\nTenho interesse no *Plano ${planName}* do Solution Math OS.\n\nGostaria de agendar uma demonstração técnica de 30 minutos para avaliar o sistema na prática.\n\nQual o melhor horário para conversarmos?`;
     
     return `https://wa.me/5511939157368?text=${encodeURIComponent(text)}`;
   };
@@ -398,10 +387,10 @@ const LandingPage: React.FC = () => {
               {/* Feature Tabs Selector */}
               <div className="flex items-center gap-2 mb-3 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl border border-gray-200/80 shadow-sm overflow-x-auto">
                 {[
-                  { id: 'dashboard', label: '📊 Visão Geral', badge: 'MRR R$ 84.5K' },
-                  { id: 'pdv', label: '🛒 Lojas & PDV', badge: 'Estoque Auto' },
-                  { id: 'crm', label: '💼 Pipeline Deals', badge: 'Kanban 2026' },
-                  { id: 'lyra', label: '🤖 IA Lyra', badge: 'Memória V2' },
+                  { id: 'dashboard', label: 'Visão Geral', badge: 'MRR R$ 84.5K' },
+                  { id: 'pdv', label: 'Lojas & PDV', badge: 'Estoque Auto' },
+                  { id: 'crm', label: 'Pipeline Deals', badge: 'Kanban 2026' },
+                  { id: 'lyra', label: 'IA Lyra 3.0', badge: 'Memória V2' },
                 ].map(t => (
                   <button
                     key={t.id}
@@ -545,7 +534,7 @@ const LandingPage: React.FC = () => {
 
             <div className="text-center max-w-2xl mx-auto mb-10 relative z-10">
               <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-extrabold px-4 py-1.5 rounded-full mb-3 border border-blue-200 uppercase tracking-wider">
-                💡 Calculadora de ROI & Plano Ideal
+                Calculadora de ROI & Plano Ideal
               </span>
               <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight mb-2">
                 Simule a economia real para o seu comércio.
@@ -566,25 +555,24 @@ const LandingPage: React.FC = () => {
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {[
-                      { label: 'Mercado / Mercearia', emoji: '🛒' },
-                      { label: 'Pet Shop', emoji: '🐾' },
-                      { label: 'Autopeças / Mat. Const.', emoji: '🔧' },
-                      { label: 'Distribuidora / Varejo', emoji: '🚚' },
-                      { label: 'Prestador de Serviços', emoji: '💼' },
-                      { label: 'Outro comércio', emoji: '🏢' },
+                      'Mercado / Mercearia',
+                      'Pet Shop',
+                      'Autopeças / Mat. Const.',
+                      'Distribuidora / Varejo',
+                      'Prestador de Serviços',
+                      'Outro comércio',
                     ].map(s => (
                       <button
-                        key={s.label}
+                        key={s}
                         type="button"
-                        onClick={() => setCalcSegment(s.label)}
-                        className={`p-3 rounded-xl border text-xs font-bold text-left transition-all flex items-center gap-2 ${
-                          calcSegment === s.label
+                        onClick={() => setCalcSegment(s)}
+                        className={`p-3 rounded-xl border text-xs font-bold text-left transition-all ${
+                          calcSegment === s
                             ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
                             : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
                         }`}
                       >
-                        <span className="text-base">{s.emoji}</span>
-                        <span className="truncate">{s.label}</span>
+                        <span className="truncate">{s}</span>
                       </button>
                     ))}
                   </div>
@@ -654,32 +642,32 @@ const LandingPage: React.FC = () => {
                   let priceText = 'R$ 347/mês';
                   let hoursSaved = '28 horas/mês';
                   let moneySaved = 'R$ 1.450/mês';
-                  let badgeText = 'MAIS POPULAR ⭐';
+                  let badgeText = 'RECOMENDADO';
 
                   if (calcRevenue === 'ate_30k' && calcUsers === '1_3') {
                     recommendedPlan = 'Start';
                     priceText = 'R$ 197/mês';
                     hoursSaved = '16 horas/mês';
                     moneySaved = 'R$ 680/mês';
-                    badgeText = 'ESSENCIAL 🔵';
+                    badgeText = 'PLANO INICIAL';
                   } else if (calcRevenue === 'acima_300k' || calcUsers === 'mais_10') {
                     recommendedPlan = 'Enterprise';
-                    priceText = 'Sob Consulta (Sob Medida)';
+                    priceText = 'Sob Consulta';
                     hoursSaved = '45+ horas/mês';
                     moneySaved = 'R$ 3.900/mês';
-                    badgeText = 'EXCLUSIVO 👑';
+                    badgeText = 'PLANO CORPORATIVO';
                   }
 
                   return (
                     <div>
                       <div className="flex items-center justify-between mb-4">
-                        <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 bg-amber-400 text-slate-950 rounded-full">
+                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-blue-500 text-white rounded-full">
                           {badgeText}
                         </span>
                         <span className="text-xs text-slate-400 font-medium">Recomendação Automática</span>
                       </div>
 
-                      <h4 className="text-xs text-blue-300 font-bold uppercase tracking-wider mb-1">Plano Recomendado</h4>
+                      <h4 className="text-xs text-blue-300 font-bold uppercase tracking-wider mb-1">Plano Ideal</h4>
                       <div className="text-3xl font-black text-white mb-1">
                         Plano {recommendedPlan}
                       </div>
@@ -689,15 +677,15 @@ const LandingPage: React.FC = () => {
 
                       <div className="space-y-3 mb-6 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-400">⏱️ Tempo Salvo em Gestão:</span>
+                          <span className="text-slate-400">Tempo Salvo em Gestão:</span>
                           <span className="font-bold text-emerald-400">{hoursSaved}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-400">💰 Prevenção de Perdas:</span>
+                          <span className="text-slate-400">Prevenção de Perdas:</span>
                           <span className="font-bold text-emerald-400">{moneySaved}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-400">🚀 Prazo de Implantação:</span>
+                          <span className="text-slate-400">Prazo de Implantação:</span>
                           <span className="font-bold text-blue-300">Até 48 horas</span>
                         </div>
                       </div>
@@ -830,8 +818,8 @@ const LandingPage: React.FC = () => {
                     : 'bg-white border-2 border-gray-200 hover:border-blue-200 hover:shadow-xl'}`}
               >
                 {plan.badge && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-400 text-amber-900 text-[11px] font-extrabold px-4 py-1 rounded-full shadow-lg whitespace-nowrap">
-                    ⭐ {plan.badge}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-400 text-amber-900 text-[11px] font-extrabold px-4 py-1 rounded-full shadow-lg whitespace-nowrap uppercase tracking-wider">
+                    {plan.badge}
                   </div>
                 )}
 
@@ -867,8 +855,8 @@ const LandingPage: React.FC = () => {
                     <div className={`text-xs mt-3 mb-6 px-3 py-2.5 rounded-xl font-medium ${plan.highlight ? 'bg-white/15 text-blue-50 border border-white/20' : 'bg-blue-50 text-blue-700 border border-blue-100'}`}>
                       {billing === 'annual'
                         ? plan.implantacaoAnual === 'GRÁTIS'
-                          ? '🎁 Implantação GRATUITA no plano anual'
-                          : `🎁 Implantação por R$${plan.implantacaoAnual} no plano anual`
+                          ? 'Implantação GRATUITA no plano anual'
+                          : `Implantação por R$${plan.implantacaoAnual} no plano anual`
                         : `+ Taxa de implantação: R$${plan.implantacao}`}
                     </div>
                   )}
@@ -954,7 +942,9 @@ const LandingPage: React.FC = () => {
       <section className="py-20 bg-gray-900">
         <div className="max-w-5xl mx-auto px-5">
           <div className="flex flex-col md:flex-row items-center gap-10">
-            <div className="text-6xl flex-shrink-0">🛡️</div>
+            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Shield className="w-9 h-9 text-white" />
+            </div>
             <div className="flex-1">
               <h2 className="text-3xl font-extrabold text-white mb-3">7 dias de garantia incondicional.</h2>
               <p className="text-gray-400 text-base leading-relaxed">
@@ -1077,14 +1067,14 @@ const LandingPage: React.FC = () => {
                         className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-4 py-3 text-sm outline-none transition-colors text-gray-700"
                       >
                         <option value="">Selecione seu segmento</option>
-                        <option value="Mercado / Mercearia">Mercado / Mercearia 🛒</option>
-                        <option value="Hortifruti">Hortifruti 🥦</option>
-                        <option value="Pet Shop">Pet Shop 🐾</option>
-                        <option value="Autopeças">Autopeças 🔧</option>
-                        <option value="Papelaria">Papelaria 📚</option>
-                        <option value="Materiais de Construção">Materiais de Construção 🏗️</option>
-                        <option value="Distribuidora">Distribuidora 🚚</option>
-                        <option value="Outro comércio">Outro comércio 💼</option>
+                        <option value="Mercado / Mercearia">Mercado / Mercearia</option>
+                        <option value="Hortifruti">Hortifruti</option>
+                        <option value="Pet Shop">Pet Shop</option>
+                        <option value="Autopeças">Autopeças</option>
+                        <option value="Papelaria">Papelaria</option>
+                        <option value="Materiais de Construção">Materiais de Construção</option>
+                        <option value="Distribuidora">Distribuidora</option>
+                        <option value="Outro comércio">Outro comércio</option>
                       </select>
                     </div>
                     <div>
