@@ -808,17 +808,17 @@ const LandingPage: React.FC = () => {
           </div>
 
           {/* Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-7 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-7 items-center pt-5">
             {PLANS.map(plan => (
               <div
                 key={plan.name}
-                className={`relative rounded-3xl flex flex-col overflow-hidden transition-all duration-200
+                className={`relative rounded-3xl flex flex-col transition-all duration-200
                   ${plan.highlight
                     ? 'bg-blue-600 shadow-2xl shadow-blue-500/40 scale-[1.03] border-2 border-blue-500'
                     : 'bg-white border-2 border-gray-200 hover:border-blue-200 hover:shadow-xl'}`}
               >
                 {plan.badge && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-400 text-amber-900 text-[11px] font-extrabold px-4 py-1 rounded-full shadow-lg whitespace-nowrap uppercase tracking-wider">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 text-[11px] font-extrabold px-5 py-1.5 rounded-full shadow-lg whitespace-nowrap uppercase tracking-widest z-10">
                     {plan.badge}
                   </div>
                 )}
