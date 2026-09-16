@@ -42,9 +42,9 @@ const CEODashboard: React.FC<CEODashboardProps> = ({ companyData, onOpenDepartme
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {[
           { label: 'Projetos Ativos', value: '12', icon: <Activity className="text-primary" />, trend: '+2 esse mês' },
-          { label: 'Receita (MRR)', value: 'R$ 84.500', icon: <DollarSign className="text-primary" />, trend: '+15% vs último mês' },
-          { label: 'Time & Freelancers', value: '28', icon: <Users className="text-primary" />, trend: '3 posições abertas' },
-          { label: 'Satisfação (NPS)', value: '89', icon: <Target className="text-primary" />, trend: 'Zona de Excelência' },
+          { label: 'Receita Mensal (Setembro)', value: 'R$ 30.000', icon: <DollarSign className="text-primary" />, trend: '+36% vs mês ant.' },
+          { label: 'Time & Freelancers', value: '4', icon: <Users className="text-primary" />, trend: 'Operação ativa' },
+          { label: 'Satisfação (NPS)', value: '94', icon: <Target className="text-primary" />, trend: 'Zona de Excelência' },
         ].map((stat, i) => (
           <div key={i} className="th-card p-6 flex flex-col group relative overflow-hidden">
             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>

@@ -42,24 +42,71 @@ const FinancialDashboard: React.FC = () => {
   // Predictability Simulation Additions
   const [simExtraMonthlySales, setSimExtraMonthlySales] = useState<number>(2);
   const [simProductTicket, setSimProductTicket]         = useState<number>(5000);
+  const currentMonthKey = new Date().toISOString().slice(0, 7);
+
+  // Metas da Empresa (Anual e Mensal)
+  const [annualTarget, setAnnualTarget] = useState<number>(500000);
+  const [monthlyTarget, setMonthlyTarget] = useState<number>(45000);
+  const [showTargetModal, setShowTargetModal] = useState<boolean>(false);
+  const [savingTarget, setSavingTarget] = useState<boolean>(false);
+  const [targetForm, setTargetForm] = useState({
+    annual_target: '500000',
+    monthly_target: '45000'
+  });
 
   const [form, setForm] = useState({
     description: '', amount: '', type: 'income',
-    category: 'Sistemas', month: '2026-07'
+    category: 'Sistemas', month: currentMonthKey
   });
 
   useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
     try {
-      const [s, m, c, t] = await Promise.all([
+      const [s, m, c, t, targetRes] = await Promise.all([
         fetch('http://localhost:3001/api/finance/summary').then(r => r.json()),
         fetch('http://localhost:3001/api/finance/monthly').then(r => r.json()),
         fetch('http://localhost:3001/api/finance/by-category').then(r => r.json()),
         fetch('http://localhost:3001/api/finance/transactions').then(r => r.json()),
+        fetch('http://localhost:3001/api/settings/target').then(r => r.ok ? r.json() : null)
       ]);
       setSummary(s); setMonthly(m); setByCategory(c); setTransactions(t);
+      if (targetRes) {
+        if (targetRes.annual_target) {
+          setAnnualTarget(targetRes.annual_target);
+          setTargetForm(prev => ({ ...prev, annual_target: String(targetRes.annual_target) }));
+        }
+        if (targetRes.monthly_target) {
+          setMonthlyTarget(targetRes.monthly_target);
+          setTargetForm(prev => ({ ...prev, monthly_target: String(targetRes.monthly_target) }));
+        }
+      }
     } catch (e) { console.error("Erro ao carregar dados financeiros:", e); }
+  };
+
+  const handleSaveTargets = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingTarget(true);
+    try {
+      const res = await fetch('http://localhost:3001/api/settings/target', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          annual_target: parseFloat(targetForm.annual_target) || 500000,
+          monthly_target: parseFloat(targetForm.monthly_target) || 45000
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.annual_target) setAnnualTarget(data.annual_target);
+        if (data.monthly_target) setMonthlyTarget(data.monthly_target);
+        setShowTargetModal(false);
+      }
+    } catch (e) {
+      console.error("Erro ao salvar metas:", e);
+    } finally {
+      setSavingTarget(false);
+    }
   };
 
   const handleSaveTransaction = async (e: React.FormEvent) => {
@@ -106,8 +153,10 @@ const FinancialDashboard: React.FC = () => {
   };
 
   const resetForm = () => {
-    setForm({ description: '', amount: '', type: 'income', category: 'Sistemas', month: '2026-07' });
+    setForm({ description: '', amount: '', type: 'income', category: 'Sistemas', month: currentMonthKey });
   };
+
+  const todayDateFormatted = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   const handlePrintDRE = () => {
     window.print();
@@ -152,13 +201,16 @@ const FinancialDashboard: React.FC = () => {
 
   const viewMargin = viewRevenue > 0 ? (viewProfit / viewRevenue) * 100 : 0;
 
-  // Annual Predictability Calculations
+  // Annual Predictability Calculations (Dinamizado para os meses futuros)
+  const currentMonthIdx = new Date().getMonth() + 1; // 9 para setembro
+  const remainingMonthsCount = Math.max(0, 12 - currentMonthIdx); // 3 (Out, Nov, Dez)
   const realizedRevenue2026 = monthly.reduce((s, m) => s + m.revenue, 0);
   const realizedExpense2026 = monthly.reduce((s, m) => s + m.expense, 0);
   const simExtraMonthlyRevenue = simExtraMonthlySales * simProductTicket;
-  const simExtraTotal2026      = simExtraMonthlyRevenue * 5;
+  const simExtraTotal2026      = simExtraMonthlyRevenue * remainingMonthsCount;
   const totalProjectedRevenue2026 = realizedRevenue2026 + simExtraTotal2026;
-  const totalProjectedProfit2026  = totalProjectedRevenue2026 - (realizedExpense2026 + (26000 * 5));
+  const estimatedFutureMonthlyExpense = 11000;
+  const totalProjectedProfit2026  = totalProjectedRevenue2026 - (realizedExpense2026 + (estimatedFutureMonthlyExpense * remainingMonthsCount));
 
   const monthlyProfitData = monthly.map(m => ({
     ...m,
@@ -187,7 +239,7 @@ const FinancialDashboard: React.FC = () => {
       {/* Printable DRE Header */}
       <div className="hidden print:block text-black p-4 space-y-4">
         <h1 className="text-2xl font-bold border-b pb-2">SOLUTION MATH — DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE 2026)</h1>
-        <p className="text-sm">Relatório gerado em 22/07/2026 | Período: {selectedMonth === 'all' ? 'Ano 2026 Completo' : ALL_MONTHS[selectedMonth]}</p>
+        <p className="text-sm">Relatório gerado em {todayDateFormatted} | Período: {selectedMonth === 'all' ? 'Ano 2026 Completo' : ALL_MONTHS[selectedMonth]}</p>
         <div className="grid grid-cols-3 gap-4 border p-4">
           <div><strong>Faturamento Total:</strong> {fmt(viewRevenue)}</div>
           <div><strong>Custos Operacionais:</strong> {fmt(viewExpense)}</div>
@@ -225,6 +277,14 @@ const FinancialDashboard: React.FC = () => {
               ))}
             </select>
           </div>
+
+          <button
+            onClick={() => setShowTargetModal(true)}
+            className="flex items-center gap-2 px-3 py-2 th-surface2 border border-amber-500/30 text-amber-500 hover:bg-amber-500/10 text-sm font-semibold rounded-xl transition-colors"
+            title="Definir Meta Anual e Mensal da Empresa"
+          >
+            <Target size={16} /> Configurar Metas
+          </button>
 
           <button
             onClick={handlePrintDRE}
@@ -270,6 +330,82 @@ const FinancialDashboard: React.FC = () => {
         ))}
       </div>
 
+      {/* Card de Acompanhamento das Metas Empresariais */}
+      <div className="th-card p-6 border-l-4 border-l-amber-500 print:hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+              <Target size={20} />
+            </div>
+            <div>
+              <h4 className="text-base font-bold th-text">Metas Financeiras da Empresa (2026)</h4>
+              <p className="text-xs th-muted">Metas corporativas sincronizadas com toda a plataforma</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowTargetModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl th-surface2 border border-amber-500/30 text-amber-500 text-xs font-bold hover:bg-amber-500/10 transition-colors self-start sm:self-auto"
+          >
+            <Edit3 size={13} /> Editar Metas
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Meta Anual */}
+          <div className="p-4 rounded-xl th-surface2 border th-border space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold th-muted">Meta Anual 2026</span>
+              <span className="text-xs font-bold text-amber-500">
+                {((realizedRevenue2026 / (annualTarget || 1)) * 100).toFixed(1)}% atingido
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl font-bold th-text">{fmt(realizedRevenue2026)}</span>
+              <span className="text-xs th-muted font-medium">de {fmt(annualTarget)}</span>
+            </div>
+            {/* Barra de progresso */}
+            <div className="w-full bg-black/10 dark:bg-white/10 h-2.5 rounded-full overflow-hidden">
+              <div
+                className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, Math.max(0, (realizedRevenue2026 / (annualTarget || 1)) * 100))}%` }}
+              ></div>
+            </div>
+            <div className="text-[11px] th-muted flex items-center justify-between pt-0.5">
+              <span>Restam {fmt(Math.max(0, annualTarget - realizedRevenue2026))}</span>
+              <span>{remainingMonthsCount} meses restantes</span>
+            </div>
+          </div>
+
+          {/* Meta Mensal (Setembro) */}
+          <div className="p-4 rounded-xl th-surface2 border th-border space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold th-muted">Meta Mensal (Setembro/2026)</span>
+              <span className="text-xs font-bold text-primary">
+                {(((monthly.find(m => m.month === currentMonthKey)?.revenue || 30000) / (monthlyTarget || 1)) * 100).toFixed(1)}% atingido
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl font-bold text-primary">
+                {fmt(monthly.find(m => m.month === currentMonthKey)?.revenue || 30000)}
+              </span>
+              <span className="text-xs th-muted font-medium">de {fmt(monthlyTarget)}</span>
+            </div>
+            {/* Barra de progresso */}
+            <div className="w-full bg-black/10 dark:bg-white/10 h-2.5 rounded-full overflow-hidden">
+              <div
+                className="bg-primary h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, Math.max(0, ((monthly.find(m => m.month === currentMonthKey)?.revenue || 30000) / (monthlyTarget || 1)) * 100))}%` }}
+              ></div>
+            </div>
+            <div className="text-[11px] th-muted flex items-center justify-between pt-0.5">
+              <span>Falta {fmt(Math.max(0, monthlyTarget - (monthly.find(m => m.month === currentMonthKey)?.revenue || 30000)))} para o mês</span>
+              <span className="text-emerald-500 font-semibold">Em andamento</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Predictability Simulator Card */}
       <div className="th-card p-6 border-l-4 border-l-primary relative overflow-hidden print:hidden">
         <div className="flex items-center justify-between mb-4">
@@ -312,7 +448,7 @@ const FinancialDashboard: React.FC = () => {
           <div className="th-surface2 border th-border rounded-xl p-4">
             <span className="text-xs font-semibold th-muted block mb-1">Projeção Faturamento 2026</span>
             <div className="text-2xl font-bold text-primary">{fmt(totalProjectedRevenue2026)}</div>
-            <div className="text-xs text-primary/80 mt-1">Realizado + Meta Ago-Dez</div>
+            <div className="text-xs text-primary/80 mt-1">Realizado + Meta Out-Dez</div>
           </div>
 
           <div className="th-surface2 border border-emerald-300 dark:border-emerald-800 rounded-xl p-4 bg-emerald-50 dark:bg-emerald-950/20">
@@ -543,6 +679,88 @@ const FinancialDashboard: React.FC = () => {
               <button type="submit" className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-primary/90 transition-colors mt-2">
                 {editingTx ? 'Atualizar Faturamento' : 'Salvar Transação'}
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Target Configuration Modal */}
+      {showTargetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 print:hidden">
+          <div className="th-card border th-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex justify-between items-center mb-5 border-b th-border pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+                  <Target size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold th-text">Configurar Metas da Empresa</h3>
+                  <p className="text-xs th-muted">Define as metas globais que abastecem a plataforma</p>
+                </div>
+              </div>
+              <button onClick={() => setShowTargetModal(false)} className="th-muted hover:text-rose-500 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTargets} className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold th-muted mb-1 block">Meta Anual de Faturamento (R$) *</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold th-muted">R$</span>
+                  <input
+                    type="number"
+                    step="1000"
+                    required
+                    placeholder="500000"
+                    value={targetForm.annual_target}
+                    onChange={e => setTargetForm({ ...targetForm, annual_target: e.target.value })}
+                    className="th-input pl-9 text-base font-bold text-amber-500"
+                  />
+                </div>
+                <p className="text-[11px] th-muted mt-1">Ex: 500000 para quinhentos mil reais no ano.</p>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold th-muted mb-1 block">Meta Mensal de Faturamento (R$) *</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold th-muted">R$</span>
+                  <input
+                    type="number"
+                    step="1000"
+                    required
+                    placeholder="45000"
+                    value={targetForm.monthly_target}
+                    onChange={e => setTargetForm({ ...targetForm, monthly_target: e.target.value })}
+                    className="th-input pl-9 text-base font-bold text-primary"
+                  />
+                </div>
+                <p className="text-[11px] th-muted mt-1">Ex: 45000 para a meta mensal de Setembro e dos próximos meses.</p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400 space-y-1">
+                <p className="font-semibold">Sincronização em toda a plataforma:</p>
+                <p className="th-muted text-[11px]">
+                  Ao alterar estes valores, a tela de Visão Geral, o Painel de Vendas e os Relatórios atualizarão o percentual de atingimento automaticamente.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowTargetModal(false)}
+                  className="px-4 py-2 rounded-xl th-surface2 border th-border th-muted hover:th-text text-sm font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingTarget}
+                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold shadow-md transition-colors disabled:opacity-50"
+                >
+                  {savingTarget ? 'Salvando...' : 'Salvar Metas'}
+                </button>
+              </div>
             </form>
           </div>
         </div>

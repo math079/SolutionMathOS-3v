@@ -207,7 +207,7 @@ function rateLimitMiddleware(req, res, next) {
  */
 function authMiddleware(req, res, next) {
   // Rotas públicas que não precisam de autenticação
-  const publicRoutes = ['/api/auth/login', '/api/auth/logout', '/api/health'];
+  const publicRoutes = ['/api/auth/login', '/api/auth/logout', '/api/health', '/api/sales/webhook', '/api/leads'];
   if (publicRoutes.includes(req.path)) return next();
 
   // Verifica header de autenticação

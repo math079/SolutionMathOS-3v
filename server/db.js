@@ -200,17 +200,17 @@ const db = new sqlite3.Database(dbPath, (err) => {
         }
       });
 
-      // ── Seed Agenda Events (All 2026 including 22/07, 23/07, etc) ──
+      // ── Seed Agenda Events (Setembro/2026) ──
       db.get("SELECT count(*) as count FROM agenda_events", (err, row) => {
         if (!err && row.count === 0) {
           const sampleEvents = [
-            ['Reunião de Alinhamento com Cliente XYZ', '2026-07-22', '14:00', 'Cliente', 2, 'Concluído'],
-            ['Apresentação de Proposta ERP', '2026-07-22', '16:30', 'Vendas', 2, 'Concluído'],
-            ['Entrega da Fase 1 - Sistema OS', '2026-07-23', '10:00', 'Projeto', 3, 'Agendado'],
-            ['Code Review Agente IA', '2026-07-23', '15:00', 'Dev', 3, 'Agendado'],
-            ['Sprints Planning Agosto/2026', '2026-07-25', '09:00', 'Interno', 1, 'Agendado'],
-            ['Workshop de Treinamento de Clientes', '2026-07-28', '11:00', 'Cliente', 4, 'Agendado'],
-            ['Fechamento Financeiro de Julho/2026', '2026-07-31', '17:00', 'Financeiro', 1, 'Agendado']
+            ['Reunião de Alinhamento com Cliente XYZ', '2026-09-15', '14:00', 'Cliente', 2, 'Concluído'],
+            ['Apresentação Comercial Solution Math OS', '2026-09-15', '16:30', 'Vendas', 2, 'Agendado'],
+            ['Entrega da Fase 2 - Sistema Customizado', '2026-09-16', '10:00', 'Projeto', 3, 'Agendado'],
+            ['Code Review Agente de IA Lyra 3.0', '2026-09-17', '15:00', 'Dev', 3, 'Agendado'],
+            ['Alinhamento Estratégico Metas Q4', '2026-09-20', '09:00', 'Interno', 1, 'Agendado'],
+            ['Treinamento Operacional PDV & Lojas', '2026-09-25', '11:00', 'Cliente', 4, 'Agendado'],
+            ['Fechamento Financeiro de Setembro/2026', '2026-09-30', '17:00', 'Financeiro', 1, 'Agendado']
           ];
           sampleEvents.forEach(([title, date, time, cat, assignee, status]) => {
             db.run(`INSERT INTO agenda_events (title, date, time, category, assignee_id, status) VALUES (?,?,?,?,?,?)`,
@@ -219,72 +219,65 @@ const db = new sqlite3.Database(dbPath, (err) => {
         }
       });
 
-      // ── Seed Transactions (Full 2026 Calendar Jan-Dec) ──
+      // ── Seed Transactions (Dados Reais Jan-Set/2026 = R$ 150.000) ──
+      // Faturamento real acumulado Jan-Set/2026: R$ 150.000
+      // Projeções para Out-Dez são calculadas matematicamente pelo dashboard
       db.get("SELECT count(*) as count FROM transactions", (err, row) => {
-        if (!err) {
-          db.run(`DELETE FROM transactions`);
+        if (!err && row.count === 0) {
           const revenues = [
-            // Jan
-            ['Sistema ERP Módulo Alpha','38000','income','Sistemas','2026-01'],
-            ['Landing Page Institucional','6500','income','Sites','2026-01'],
-            ['Servidor AWS','3000','expense','Infraestrutura','2026-01'],
-            ['Salários','18000','expense','Pessoas','2026-01'],
-            // Feb
-            ['Sistema E-commerce','42000','income','Sistemas','2026-02'],
-            ['Landing Page Pack','8500','income','Sites','2026-02'],
-            ['Servidor AWS','3200','expense','Infraestrutura','2026-02'],
-            ['Salários','18000','expense','Pessoas','2026-02'],
-            // Mar
-            ['App Mobile Fintech','35000','income','Apps','2026-03'],
-            ['Agente IA Atendimento','12000','income','IA','2026-03'],
-            ['Ferramentas SaaS','2100','expense','Ferramentas','2026-03'],
-            ['Salários','18000','expense','Pessoas','2026-03'],
-            // Apr
-            ['Site Institucional','7500','income','Sites','2026-04'],
-            ['Integração API Pagamentos','18000','income','Integrações','2026-04'],
-            ['Sistema ERP Módulo','28000','income','Sistemas','2026-04'],
-            ['Marketing Ads','4500','expense','Marketing','2026-04'],
-            ['Salários','20000','expense','Pessoas','2026-04'],
-            // May
-            ['Automação Workflows','15000','income','Automações','2026-05'],
-            ['Landing Page Premium','9000','income','Sites','2026-05'],
-            ['Consultoria IA','22000','income','IA','2026-05'],
-            ['Servidor AWS','3500','expense','Infraestrutura','2026-05'],
-            ['Salários','20000','expense','Pessoas','2026-05'],
-            // Jun
-            ['Dashboard Analytics','19000','income','Sistemas','2026-06'],
-            ['App Mobile v2','25000','income','Apps','2026-06'],
-            ['Agente IA Vendas','18000','income','IA','2026-06'],
-            ['Google Ads','3000','expense','Marketing','2026-06'],
-            ['Salários','22000','expense','Pessoas','2026-06'],
-            // Jul (Current - 22/07/2026)
-            ['Sistema OS SolutionMath','38000','income','Sistemas','2026-07'],
-            ['Pack 3 Landing Pages','14500','income','Sites','2026-07'],
-            ['Integração CRM Custom','18000','income','Integrações','2026-07'],
-            ['Agente IA Suporte','14000','income','IA','2026-07'],
-            ['Servidor AWS','3800','expense','Infraestrutura','2026-07'],
-            ['Salários','22000','expense','Pessoas','2026-07'],
-            ['Ferramentas Dev','2200','expense','Ferramentas','2026-07'],
-            // Aug (Forecast/Projeção)
-            ['[Projeção] Contrato ERP Beta','45000','income','Sistemas','2026-08'],
-            ['[Projeção] Agente IA Vendas v2','25000','income','IA','2026-08'],
-            ['[Projeção] Custo Fixo Operacional','25000','expense','Pessoas','2026-08'],
-            // Sep (Forecast/Projeção)
-            ['[Projeção] App Mobile SaaS','38000','income','Apps','2026-09'],
-            ['[Projeção] Integração API Cloud','20000','income','Integrações','2026-09'],
-            ['[Projeção] Custo Fixo Operacional','25000','expense','Pessoas','2026-09'],
-            // Oct (Forecast/Projeção)
-            ['[Projeção] Renovação Contratos IA','30000','income','IA','2026-10'],
-            ['[Projeção] Sistema Sob Medida Corp','50000','income','Sistemas','2026-10'],
-            ['[Projeção] Custo Fixo Operacional','26000','expense','Pessoas','2026-10'],
-            // Nov (Forecast/Projeção)
-            ['[Projeção] Licenciamento SaaS','40000','income','Sistemas','2026-11'],
-            ['[Projeção] Consultoria IA Enterprise','35000','income','IA','2026-11'],
-            ['[Projeção] Custo Fixo Operacional','26000','expense','Pessoas','2026-11'],
-            // Dec (Forecast/Projeção)
-            ['[Projeção] Projeto Especial Fim de Ano','60000','income','Sistemas','2026-12'],
-            ['[Projeção] Agentes IA Black Friday','32000','income','IA','2026-12'],
-            ['[Projeção] Custo Fixo Operacional','28000','expense','Pessoas','2026-12']
+            // Janeiro — R$ 8.500 receita real
+            ['Contrato Mensal Software Chat','6500','income','Sistemas','2026-01'],
+            ['Manutenção de Site Cliente','2000','income','Sites','2026-01'],
+            ['Servidor VPS','800','expense','Infraestrutura','2026-01'],
+            ['Salários Equipe','6000','expense','Pessoas','2026-01'],
+            // Fevereiro — R$ 9.000 receita real
+            ['Contrato Mensal Software Chat','6500','income','Sistemas','2026-02'],
+            ['Landing Page Conversão','2500','income','Sites','2026-02'],
+            ['Servidor VPS','800','expense','Infraestrutura','2026-02'],
+            ['Salários Equipe','6000','expense','Pessoas','2026-02'],
+            // Março — R$ 12.000 receita real
+            ['Contrato Mensal Software Chat','6500','income','Sistemas','2026-03'],
+            ['Consultoria Automação','3500','income','Automações','2026-03'],
+            ['Novo Cliente Software Chat','2000','income','Sistemas','2026-03'],
+            ['Ferramentas SaaS','500','expense','Ferramentas','2026-03'],
+            ['Salários Equipe','6000','expense','Pessoas','2026-03'],
+            // Abril — R$ 14.500 receita real
+            ['Contrato Mensal Software Chat','6500','income','Sistemas','2026-04'],
+            ['Integração API Pagamentos','5000','income','Integrações','2026-04'],
+            ['Landing Page Cliente','3000','income','Sites','2026-04'],
+            ['Marketing Ads','1200','expense','Marketing','2026-04'],
+            ['Salários Equipe','7000','expense','Pessoas','2026-04'],
+            // Maio — R$ 16.000 receita real
+            ['Contrato Mensal Software Chat','7000','income','Sistemas','2026-05'],
+            ['Automação Workflows Cliente','5000','income','Automações','2026-05'],
+            ['Consultoria IA','4000','income','IA','2026-05'],
+            ['Servidor VPS','900','expense','Infraestrutura','2026-05'],
+            ['Salários Equipe','7000','expense','Pessoas','2026-05'],
+            // Junho — R$ 18.000 receita real
+            ['Contrato Mensal Software Chat','8000','income','Sistemas','2026-06'],
+            ['Dashboard Analytics Cliente','6000','income','Sistemas','2026-06'],
+            ['Agente IA Atendimento','4000','income','IA','2026-06'],
+            ['Google Ads','1000','expense','Marketing','2026-06'],
+            ['Salários Equipe','7500','expense','Pessoas','2026-06'],
+            // Julho — R$ 20.000 receita real
+            ['Contrato Mensal Software Chat','8000','income','Sistemas','2026-07'],
+            ['Solution Math OS - Licença','7000','income','Sistemas','2026-07'],
+            ['Integração CRM','3000','income','Integrações','2026-07'],
+            ['Consultoria Tech','2000','income','IA','2026-07'],
+            ['Servidor VPS','1000','expense','Infraestrutura','2026-07'],
+            ['Salários Equipe','8000','expense','Pessoas','2026-07'],
+            // Agosto — R$ 22.000 receita real
+            ['Contrato Mensal Software Chat','9000','income','Sistemas','2026-08'],
+            ['Solution Math OS - 2 Licenças','10000','income','Sistemas','2026-08'],
+            ['Consultoria Automação','3000','income','Automações','2026-08'],
+            ['Servidor VPS','1000','expense','Infraestrutura','2026-08'],
+            ['Salários Equipe','8500','expense','Pessoas','2026-08'],
+            // Setembro — R$ 30.000 receita real (Mês Atual - 15/09/2026)
+            ['Contrato Mensal Software Chat','10000','income','Sistemas','2026-09'],
+            ['Solution Math OS - 3 Licenças','15000','income','Sistemas','2026-09'],
+            ['Agente IA Vendas Cliente','5000','income','IA','2026-09'],
+            ['Salários Equipe','9000','expense','Pessoas','2026-09'],
+            ['Ferramentas Dev','800','expense','Ferramentas','2026-09']
           ];
           revenues.forEach(([desc, amt, type, cat, month]) => {
             db.run(`INSERT INTO transactions (description,amount,type,category,month) VALUES (?,?,?,?,?)`,
@@ -437,6 +430,87 @@ const db = new sqlite3.Database(dbPath, (err) => {
         content TEXT NOT NULL,
         created_at TEXT DEFAULT (datetime('now'))
       )`);
+
+      // ═══════════════════════════════════════════
+      // SALES TABLE (Módulo Exclusivo de Vendas)
+      // ═══════════════════════════════════════════
+      db.run(`CREATE TABLE IF NOT EXISTS sales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer_name TEXT NOT NULL,
+        customer_email TEXT,
+        customer_phone TEXT,
+        product_name TEXT NOT NULL,
+        amount REAL NOT NULL,
+        payment_method TEXT DEFAULT 'PIX',
+        channel TEXT DEFAULT 'Manual',
+        status TEXT DEFAULT 'Aprovado',
+        notes TEXT,
+        month TEXT,
+        external_id TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      // Garantir integridade e sincronização automática entre sales e transactions
+      db.all("SELECT * FROM sales WHERE status != 'Cancelado'", [], (err, allSales) => {
+        if (!err && allSales && allSales.length > 0) {
+          allSales.forEach(s => {
+            db.get("SELECT id FROM transactions WHERE source_id = ? AND (source_type = 'sale_manual' OR source_type = 'sale_webhook')", [s.id], (errTx, txRow) => {
+              if (!errTx && !txRow) {
+                const desc = s.channel === 'Site / Webhook'
+                  ? `Venda Online #${s.external_id || s.id}: ${s.customer_name} (${s.product_name})`
+                  : `Venda #${s.id}: ${s.customer_name} (${s.product_name})`;
+                const sourceType = s.channel === 'Site / Webhook' ? 'sale_webhook' : 'sale_manual';
+                db.run(
+                  `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
+                   VALUES (?, ?, 'income', 'Sistemas', ?, ?, ?)`,
+                  [desc, s.amount, s.month, sourceType, s.id]
+                );
+              }
+            });
+          });
+        }
+      });
+
+      // ═══════════════════════════════════════════
+      // COMPANY SETTINGS (Metas e Parâmetros)
+      // ═══════════════════════════════════════════
+      db.run(`CREATE TABLE IF NOT EXISTS company_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT,
+        updated_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      db.get("SELECT value FROM company_settings WHERE key = 'annual_target_2026'", (err, row) => {
+        if (!err && !row) {
+          db.run(`INSERT INTO company_settings (key, value) VALUES ('annual_target_2026', '500000')`);
+        }
+      });
+
+      // ═══════════════════════════════════════════
+      // PAYROLL STARTUP SYNC
+      // Garante que os salários do mês atual estejam no financeiro
+      // ═══════════════════════════════════════════
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      db.all("SELECT id, name, role, salary, status FROM users WHERE status = 'Ativo' AND salary > 0", [], (err, activeUsers) => {
+        if (!err && activeUsers && activeUsers.length > 0) {
+          activeUsers.forEach(u => {
+            db.get(
+              `SELECT id FROM transactions WHERE source_type = 'payroll' AND source_id = ? AND month = ?`,
+              [u.id, currentMonth],
+              (errTx, existing) => {
+                if (!errTx && !existing) {
+                  const desc = `Salário: ${u.name} (${u.role})`;
+                  db.run(
+                    `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
+                     VALUES (?, ?, 'expense', 'Pessoas', ?, 'payroll', ?)`,
+                    [desc, u.salary, currentMonth, u.id]
+                  );
+                }
+              }
+            );
+          });
+        }
+      });
     });
   }
 });

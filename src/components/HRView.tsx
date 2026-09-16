@@ -217,6 +217,31 @@ const HRView: React.FC = () => {
         </div>
       </div>
 
+      {/* Financial Sync Status Banner */}
+      <div className="th-card p-4 border-l-4 border-emerald-500 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/40 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+            <DollarSign size={18} />
+          </div>
+          <div>
+            <div className="text-sm font-bold th-text flex items-center gap-2">
+              Folha Conectada ao Financeiro
+              <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-xs rounded-full font-semibold border border-emerald-300 dark:border-emerald-800">
+                ✓ Sincronizado
+              </span>
+            </div>
+            <div className="text-xs th-muted mt-0.5">
+              Os salários dos colaboradores ativos são lançados automaticamente como despesas de <strong>Pessoas</strong> no módulo Financeiro todo mês.
+              Qualquer alteração aqui reflete em tempo real no Financeiro 2026.
+            </div>
+          </div>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <div className="text-lg font-bold text-rose-500">{fmt(totalPayroll)}</div>
+          <div className="text-xs th-muted">custo/mês lançado</div>
+        </div>
+      </div>
+
       {/* Filter and Search Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 th-card p-4">
         <div className="relative flex-1 max-w-md">
@@ -297,8 +322,16 @@ const HRView: React.FC = () => {
                       {user.contract_type || 'PJ'}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-sm font-bold text-emerald-500">
-                    {fmt(user.salary || 0)} <span className="text-xs font-normal th-muted">/mês</span>
+                  <td className="py-3.5 px-4">
+                    <div className="text-sm font-bold text-emerald-500">
+                      {fmt(user.salary || 0)} <span className="text-xs font-normal th-muted">/mês</span>
+                    </div>
+                    {(user.status === 'Ativo' || !user.status) && (
+                      <div className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
+                        <DollarSign size={10} />
+                        <span>Lançado no financeiro</span>
+                      </div>
+                    )}
                   </td>
                   <td className="py-3.5 px-4">
                     <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${statusBadgeClass(user.status)}`}>

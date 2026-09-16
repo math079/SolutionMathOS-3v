@@ -45,7 +45,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ════════════════════════════════════════════
-// USERS (RH)
+// USERS (RH) – com sincronização de folha de pagamento no Financeiro
 // ════════════════════════════════════════════
 app.get('/api/users', (req, res) => {
   db.all("SELECT * FROM users ORDER BY id DESC", [], (err, rows) => {
@@ -54,8 +54,62 @@ app.get('/api/users', (req, res) => {
   });
 });
 
+// Endpoint para obter resumo de folha do mês atual
+app.get('/api/users/payroll/summary', (req, res) => {
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  db.all(
+    "SELECT SUM(salary) as total_payroll, COUNT(*) as total_active FROM users WHERE status = 'Ativo'",
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ total_payroll: rows[0]?.total_payroll || 0, total_active: rows[0]?.total_active || 0, month: currentMonth });
+    }
+  );
+});
+
+// Helper: sincronizar a folha de pagamento de um usuário em todas as transactions relevantes
+function syncPayrollToTransactions(userId, userName, userRole, salary, status, cb) {
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  if (status && status !== 'Ativo') {
+    // Usuário inativo ou de férias com custo zero — remover lançamentos futuros
+    db.run(
+      `DELETE FROM transactions WHERE source_type = 'payroll' AND source_id = ? AND month >= ?`,
+      [userId, currentMonth],
+      cb
+    );
+    return;
+  }
+
+  const desc = `Salário: ${userName} (${userRole || 'Colaborador'})`;
+  db.get(
+    `SELECT id FROM transactions WHERE source_type = 'payroll' AND source_id = ? AND month = ?`,
+    [userId, currentMonth],
+    (err, existing) => {
+      if (err) { if (cb) cb(err); return; }
+      if (existing) {
+        // Atualizar se já existe
+        db.run(
+          `UPDATE transactions SET description = ?, amount = ? WHERE id = ?`,
+          [desc, salary, existing.id],
+          cb
+        );
+      } else {
+        // Inserir novo lançamento de custo
+        db.run(
+          `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
+           VALUES (?, ?, 'expense', 'Pessoas', ?, 'payroll', ?)`,
+          [desc, salary, currentMonth, userId],
+          cb
+        );
+      }
+    }
+  );
+}
+
 app.post('/api/users', (req, res) => {
   const { name, role, email, phone, contract_type, salary, status, hired_at } = req.body;
+  const numSalary = parseFloat(salary) || 0;
   db.run(
     `INSERT INTO users (name, role, email, phone, contract_type, salary, status, hired_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
@@ -64,15 +118,25 @@ app.post('/api/users', (req, res) => {
       email || '',
       phone || '',
       contract_type || 'PJ',
-      parseFloat(salary) || 0,
+      numSalary,
       status || 'Ativo',
       hired_at || new Date().toISOString().split('T')[0]
     ],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
+      const newUserId = this.lastID;
+      const newStatus = status || 'Ativo';
+
+      // Sincronizar custo de salário com Financeiro do mês atual
+      if (numSalary > 0 && newStatus === 'Ativo') {
+        syncPayrollToTransactions(newUserId, name, role, numSalary, newStatus, (syncErr) => {
+          if (syncErr) console.error('[RH SYNC] Erro ao criar custo de salário:', syncErr);
+        });
+      }
+
       res.json({
-        id: this.lastID, name, role, email, phone, contract_type,
-        salary: parseFloat(salary) || 0, status: status || 'Ativo', hired_at
+        id: newUserId, name, role, email, phone, contract_type,
+        salary: numSalary, status: newStatus, hired_at
       });
     }
   );
@@ -80,6 +144,9 @@ app.post('/api/users', (req, res) => {
 
 app.put('/api/users/:id', (req, res) => {
   const { name, role, email, phone, contract_type, salary, status } = req.body;
+  const userId = req.params.id;
+  const numSalary = salary !== undefined ? parseFloat(salary) : null;
+
   db.run(
     `UPDATE users SET
       name = COALESCE(?, name),
@@ -90,20 +157,40 @@ app.put('/api/users/:id', (req, res) => {
       salary = COALESCE(?, salary),
       status = COALESCE(?, status)
      WHERE id = ?`,
-    [name||null, role||null, email||null, phone||null, contract_type||null, salary !== undefined ? parseFloat(salary) : null, status||null, req.params.id],
+    [name||null, role||null, email||null, phone||null, contract_type||null, numSalary, status||null, userId],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
+
+      // Buscar dados atualizados para sincronizar folha
+      db.get(`SELECT name, role, salary, status FROM users WHERE id = ?`, [userId], (err2, u) => {
+        if (!err2 && u && u.salary > 0) {
+          syncPayrollToTransactions(parseInt(userId), u.name, u.role, u.salary, u.status, (syncErr) => {
+            if (syncErr) console.error('[RH SYNC] Erro ao atualizar custo de salário:', syncErr);
+          });
+        }
+      });
+
       res.json({ success: true });
     }
   );
 });
 
 app.delete('/api/users/:id', (req, res) => {
-  db.run(`DELETE FROM users WHERE id=?`, [req.params.id], (err) => {
+  const userId = req.params.id;
+  // Remover lançamentos de folha do mês atual e futuros ao demitir
+  db.run(
+    `DELETE FROM transactions WHERE source_type = 'payroll' AND source_id = ?`,
+    [userId],
+    (errTx) => {
+      if (errTx) console.error('[RH DELETE] Erro ao remover transações de folha:', errTx);
+    }
+  );
+  db.run(`DELETE FROM users WHERE id=?`, [userId], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ success: true });
   });
 });
+
 
 // ════════════════════════════════════════════
 // CRM CLIENTS
@@ -156,7 +243,7 @@ app.get('/api/deals', (req, res) => {
 app.post('/api/deals', (req, res) => {
   const { title, client_id, value, stage, assignee_id, notes } = req.body;
   const numValue = parseFloat(value) || 0;
-  const currentMonth = '2026-07';
+  const currentMonth = new Date().toISOString().slice(0, 7);
 
   db.run(
     `INSERT INTO deals (title,client_id,value,stage,assignee_id,notes) VALUES (?,?,?,?,?,?)`,
@@ -182,7 +269,7 @@ app.post('/api/deals', (req, res) => {
 app.put('/api/deals/:id', (req, res) => {
   const { stage, value, notes } = req.body;
   const dealId = req.params.id;
-  const currentMonth = '2026-07';
+  const currentMonth = new Date().toISOString().slice(0, 7);
 
   // Check previous stage
   db.get(`SELECT * FROM deals WHERE id=?`, [dealId], (err, deal) => {
@@ -263,17 +350,19 @@ app.get('/api/finance/transactions', (req, res) => {
 
 app.post('/api/finance/transactions', (req, res) => {
   const { description, amount, type, category, month } = req.body;
+  const currentMonth = new Date().toISOString().slice(0, 7);
   db.run(`INSERT INTO transactions (description,amount,type,category,month) VALUES (?,?,?,?,?)`,
-    [description, parseFloat(amount)||0, type||'income', category||'Sistemas', month||'2026-07'],
+    [description, parseFloat(amount)||0, type||'income', category||'Sistemas', month||currentMonth],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, description, amount: parseFloat(amount)||0, type, category, month });
+      res.json({ id: this.lastID, description, amount: parseFloat(amount)||0, type, category, month: month||currentMonth });
     }
   );
 });
 
 app.put('/api/finance/transactions/:id', (req, res) => {
   const { description, amount, type, category, month } = req.body;
+  const numAmount = amount !== undefined ? parseFloat(amount) : null;
   db.run(
     `UPDATE transactions SET
       description = COALESCE(?, description),
@@ -282,18 +371,31 @@ app.put('/api/finance/transactions/:id', (req, res) => {
       category = COALESCE(?, category),
       month = COALESCE(?, month)
      WHERE id = ?`,
-    [description||null, amount !== undefined ? parseFloat(amount) : null, type||null, category||null, month||null, req.params.id],
+    [description||null, numAmount, type||null, category||null, month||null, req.params.id],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
+      // Se a transação foi originada de uma venda, atualizar na tabela sales também
+      db.get(`SELECT source_type, source_id FROM transactions WHERE id = ?`, [req.params.id], (err2, row) => {
+        if (!err2 && row && (row.source_type === 'sale_manual' || row.source_type === 'sale_webhook') && row.source_id) {
+          if (numAmount !== null) {
+            db.run(`UPDATE sales SET amount = ? WHERE id = ?`, [numAmount, row.source_id]);
+          }
+        }
+      });
       res.json({ success: true });
     }
   );
 });
 
 app.delete('/api/finance/transactions/:id', (req, res) => {
-  db.run(`DELETE FROM transactions WHERE id=?`, [req.params.id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ success: true });
+  db.get(`SELECT source_type, source_id FROM transactions WHERE id = ?`, [req.params.id], (err, row) => {
+    if (!err && row && (row.source_type === 'sale_manual' || row.source_type === 'sale_webhook') && row.source_id) {
+      db.run(`DELETE FROM sales WHERE id = ?`, [row.source_id]);
+    }
+    db.run(`DELETE FROM transactions WHERE id=?`, [req.params.id], (err2) => {
+      if (err2) return res.status(500).json({ error: err2.message });
+      res.json({ success: true });
+    });
   });
 });
 
@@ -530,7 +632,7 @@ app.post('/api/store/orders', (req, res) => {
   const discountVal = parseFloat(discount) || 0;
   const itemsTotal  = items.reduce((s, i) => s + (i.unit_price * i.qty), 0);
   const total       = Math.max(0, itemsTotal - discountVal);
-  const currentMonth = '2026-07';
+  const currentMonth = new Date().toISOString().slice(0, 7);
   const today        = new Date().toISOString().split('T')[0];
 
   db.run(
@@ -1019,6 +1121,214 @@ app.post('/api/ai/chat', async (req, res) => {
       error: 'Não foi possível se comunicar com o assistente de IA no momento. Tente novamente em instantes.'
     });
   }
+});
+
+// ════════════════════════════════════════════
+// MÓDULO EXCLUSIVO DE VENDAS & WEBHOOK DO SITE
+// ════════════════════════════════════════════
+app.get('/api/sales', (req, res) => {
+  const { month, channel, status } = req.query;
+  let query = 'SELECT * FROM sales WHERE 1=1';
+  const params = [];
+
+  if (month && month !== 'all') {
+    query += ' AND month = ?';
+    params.push(month);
+  }
+  if (channel && channel !== 'all') {
+    query += ' AND channel = ?';
+    params.push(channel);
+  }
+  if (status && status !== 'all') {
+    query += ' AND status = ?';
+    params.push(status);
+  }
+
+  query += ' ORDER BY created_at DESC, id DESC';
+  db.all(query, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+app.get('/api/sales/stats', (req, res) => {
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  Promise.all([
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COUNT(*) as total_count, COALESCE(SUM(amount), 0) as total_revenue, AVG(amount) as avg_ticket FROM sales WHERE status != 'Cancelado'`, [], (e, r) => e ? reject(e) : resolve(r))
+    ),
+    new Promise((resolve, reject) =>
+      db.get(`SELECT COUNT(*) as month_count, COALESCE(SUM(amount), 0) as month_revenue FROM sales WHERE month = ? AND status != 'Cancelado'`, [currentMonth], (e, r) => e ? reject(e) : resolve(r))
+    ),
+    new Promise((resolve, reject) =>
+      db.all(`SELECT channel, COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM sales WHERE status != 'Cancelado' GROUP BY channel`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    ),
+    new Promise((resolve, reject) =>
+      db.all(`SELECT payment_method, COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM sales WHERE status != 'Cancelado' GROUP BY payment_method`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    ),
+    new Promise((resolve, reject) =>
+      db.all(`SELECT month, COUNT(*) as count, COALESCE(SUM(amount), 0) as total FROM sales WHERE status != 'Cancelado' GROUP BY month ORDER BY month ASC`, [], (e, r) => e ? reject(e) : resolve(r || []))
+    )
+  ]).then(([total, currentMonthStats, byChannel, byPaymentMethod, monthlyTimeline]) => {
+    res.json({
+      totalRevenue: total?.total_revenue || 0,
+      totalCount: total?.total_count || 0,
+      avgTicket: Math.round(total?.avg_ticket || 0),
+      monthRevenue: currentMonthStats?.month_revenue || 0,
+      monthCount: currentMonthStats?.month_count || 0,
+      byChannel,
+      byPaymentMethod,
+      monthlyTimeline
+    });
+  }).catch(err => res.status(500).json({ error: err.message }));
+});
+
+// Lançamento manual de venda
+app.post('/api/sales', (req, res) => {
+  const { customer_name, customer_email, customer_phone, product_name, amount, payment_method, notes, sync_finance } = req.body;
+  const numAmount = parseFloat(amount) || 0;
+  if (!customer_name || numAmount <= 0) {
+    return res.status(400).json({ error: 'Nome do cliente e valor da venda são obrigatórios.' });
+  }
+
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const externalId = 'MAN-' + Date.now().toString().slice(-6);
+
+  db.run(
+    `INSERT INTO sales (customer_name, customer_email, customer_phone, product_name, amount, payment_method, channel, status, notes, month, external_id)
+     VALUES (?, ?, ?, ?, ?, ?, 'Manual', 'Aprovado', ?, ?, ?)`,
+    [customer_name, customer_email || '', customer_phone || '', product_name || 'Venda Direta', numAmount, payment_method || 'PIX', notes || '', currentMonth, externalId],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      const saleId = this.lastID;
+
+      // Integração automática com o Financeiro
+      if (sync_finance !== false) {
+        db.run(
+          `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
+           VALUES (?, ?, 'income', 'Sistemas', ?, 'sale_manual', ?)`,
+          [`Venda #${saleId}: ${customer_name} (${product_name || 'Sistema'})`, numAmount, currentMonth, saleId]
+        );
+      }
+
+      res.json({
+        id: saleId,
+        customer_name,
+        amount: numAmount,
+        external_id: externalId,
+        status: 'Aprovado',
+        channel: 'Manual',
+        month: currentMonth
+      });
+    }
+  );
+});
+
+// Webhook para automação direta do site / checkout (Stripe, Hotmart, Kiwify, Mercado Pago, WooCommerce, etc)
+app.post('/api/sales/webhook', (req, res) => {
+  const payload = req.body || {};
+  // Mapear campos comuns de gateways ou receber formato padronizado do site
+  const customer_name = payload.customer_name || payload.name || payload.client_name || payload.buyer_name || 'Cliente Online';
+  const customer_email = payload.customer_email || payload.email || payload.buyer_email || '';
+  const customer_phone = payload.customer_phone || payload.phone || payload.whatsapp || '';
+  const product_name = payload.product_name || payload.product || payload.item_name || 'Assinatura Solution Math';
+  const amount = parseFloat(payload.amount || payload.total || payload.value || payload.price || 0);
+  const payment_method = payload.payment_method || payload.gateway || payload.payment_type || 'Cartão';
+  const external_id = payload.external_id || payload.order_id || payload.transaction_id || ('WEB-' + Date.now().toString().slice(-6));
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  if (amount <= 0) {
+    return res.status(400).json({ error: 'Valor da venda precisa ser maior que zero.' });
+  }
+
+  db.run(
+    `INSERT INTO sales (customer_name, customer_email, customer_phone, product_name, amount, payment_method, channel, status, notes, month, external_id)
+     VALUES (?, ?, ?, ?, ?, ?, 'Site / Webhook', 'Aprovado', ?, ?, ?)`,
+    [customer_name, customer_email, customer_phone, product_name, amount, payment_method, 'Venda recebida via automação / webhook do site', currentMonth, external_id],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      const saleId = this.lastID;
+
+      // Auto-integração com fluxo financeiro
+      db.run(
+        `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
+         VALUES (?, ?, 'income', 'Sistemas', ?, 'sale_webhook', ?)`,
+        [`Venda Online #${external_id}: ${customer_name} (${product_name})`, amount, currentMonth, saleId]
+      );
+
+      console.log(`[SALES WEBHOOK] Nova venda registrada com sucesso: #${saleId} - R$ ${amount} (${customer_name})`);
+      res.json({
+        success: true,
+        message: 'Venda registrada e integrada ao financeiro com sucesso!',
+        sale_id: saleId,
+        external_id
+      });
+    }
+  );
+});
+
+// Excluir venda (com remoção em cascata no financeiro)
+app.delete('/api/sales/:id', (req, res) => {
+  const saleId = req.params.id;
+  db.run(
+    `DELETE FROM transactions WHERE (source_type = 'sale_manual' OR source_type = 'sale_webhook') AND source_id = ?`,
+    [saleId],
+    (err) => {
+      if (err) console.error('[SALES DELETE] Erro ao excluir transação vinculada:', err);
+      db.run(`DELETE FROM sales WHERE id = ?`, [saleId], (err2) => {
+        if (err2) return res.status(500).json({ error: err2.message });
+        res.json({ success: true });
+      });
+    }
+  );
+});
+
+// ════════════════════════════════════════════
+// CONFIGURAÇÃO DE METAS (Anual e Mensal)
+// ════════════════════════════════════════════
+app.get('/api/settings/target', (req, res) => {
+  db.all("SELECT key, value FROM company_settings WHERE key IN ('annual_target_2026', 'monthly_target_2026')", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const settingsMap = {};
+    (rows || []).forEach(r => { settingsMap[r.key] = r.value; });
+    const annual_target = parseFloat(settingsMap['annual_target_2026']) || 500000;
+    const monthly_target = parseFloat(settingsMap['monthly_target_2026']) || 45000;
+    res.json({ annual_target, monthly_target });
+  });
+});
+
+app.put('/api/settings/target', (req, res) => {
+  const { annual_target, monthly_target } = req.body;
+  const numAnnual = parseFloat(annual_target);
+  const numMonthly = parseFloat(monthly_target);
+
+  const updates = [];
+  if (!isNaN(numAnnual) && numAnnual > 0) {
+    updates.push(['annual_target_2026', String(numAnnual)]);
+  }
+  if (!isNaN(numMonthly) && numMonthly > 0) {
+    updates.push(['monthly_target_2026', String(numMonthly)]);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'Informe ao menos uma meta válida (anual ou mensal).' });
+  }
+
+  const stmt = db.prepare(`
+    INSERT INTO company_settings (key, value, updated_at)
+    VALUES (?, ?, datetime('now'))
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')
+  `);
+
+  updates.forEach(([k, v]) => stmt.run(k, v));
+  stmt.finalize((err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({
+      success: true,
+      annual_target: !isNaN(numAnnual) ? numAnnual : undefined,
+      monthly_target: !isNaN(numMonthly) ? numMonthly : undefined
+    });
+  });
 });
 
 // 404 handler — nunca revelar estrutura interna (Regra 3)
