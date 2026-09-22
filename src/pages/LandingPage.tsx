@@ -7,6 +7,7 @@ import {
   Lock, Award, Zap, Play, Building2, Globe,
   PhoneCall, Mail, MapPin, Check, Minus
 } from 'lucide-react';
+import { InteractiveSystemDemo } from '../components/InteractiveSystemDemo';
 
 /* ═══════════════════════════════════════════
    DATA
@@ -382,106 +383,9 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Right — Real System Interface Mockup */}
+            {/* Right — Interactive System Sandbox Demo */}
             <div className="relative hidden lg:block">
-              {/* Feature Tabs Selector */}
-              <div className="flex items-center gap-2 mb-3 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl border border-gray-200/80 shadow-sm overflow-x-auto">
-                {[
-                  { id: 'dashboard', label: 'Visão Geral', badge: 'MRR R$ 84.5K' },
-                  { id: 'pdv', label: 'Lojas & PDV', badge: 'Estoque Auto' },
-                  { id: 'crm', label: 'Pipeline Deals', badge: 'Kanban 2026' },
-                  { id: 'lyra', label: 'IA Lyra 3.0', badge: 'Memória V2' },
-                ].map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveHeroTab(t.id as any)}
-                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                      activeHeroTab === t.id
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative bg-slate-900 rounded-3xl shadow-2xl shadow-blue-900/25 border-2 border-slate-800 overflow-hidden group">
-                {/* Browser chrome */}
-                <div className="bg-slate-950 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-red-500/80 inline-block" />
-                    <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
-                    <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
-                    <div className="ml-2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1 flex items-center gap-2 text-xs text-slate-300 font-mono">
-                      <span className="text-emerald-400 font-bold">https://</span>
-                      <span>app.solutionmath.com.br</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                      OS 3.0 Enterprise
-                    </span>
-                  </div>
-                </div>
-
-                {/* Real Software Image Frame */}
-                <div className="relative overflow-hidden bg-slate-950">
-                  <img
-                    src="/system-preview.png"
-                    alt="Solution Math OS 3.0 Real Interface"
-                    className="w-full h-auto object-cover transform transition-transform duration-500 group-hover:scale-[1.01]"
-                  />
-
-                  {/* Hotspot overlay based on tab selection */}
-                  {activeHeroTab === 'dashboard' && (
-                    <div className="absolute top-4 left-4 right-4 bg-slate-950/85 backdrop-blur-md border border-blue-500/40 rounded-2xl p-4 text-white shadow-2xl animate-fade-in flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <img src="/logo.jpg" className="w-8 h-8 rounded-full border border-blue-400/40" />
-                        <div>
-                          <p className="text-xs font-bold text-blue-300">Resumo Executivo Integrado</p>
-                          <p className="text-sm font-black text-white">MRR Julho 2026: R$ 84.500 (+15%)</p>
-                        </div>
-                      </div>
-                      <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold rounded-lg">
-                        Ao Vivo no Sistema
-                      </span>
-                    </div>
-                  )}
-
-                  {activeHeroTab === 'pdv' && (
-                    <div className="absolute bottom-4 left-4 right-4 bg-slate-950/85 backdrop-blur-md border border-emerald-500/40 rounded-2xl p-4 text-white shadow-2xl animate-fade-in flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-bold text-emerald-400">Módulo Lojas & PDV Varejo 2026</p>
-                        <p className="text-sm font-medium text-slate-200">Baixa automática de estoque & auto-financeiro instantâneo</p>
-                      </div>
-                      <span className="px-3 py-1 bg-blue-600 text-white font-bold text-xs rounded-lg shadow">
-                        Plano Growth / Enterprise
-                      </span>
-                    </div>
-                  )}
-
-                  {activeHeroTab === 'crm' && (
-                    <div className="absolute top-1/3 left-6 bg-slate-950/90 backdrop-blur-md border border-amber-500/40 rounded-2xl p-3.5 text-white shadow-2xl animate-fade-in max-w-xs">
-                      <p className="text-xs font-bold text-amber-400 mb-1">Pipeline Deals Ativos</p>
-                      <p className="text-sm font-bold text-white">R$ 251.000 em negociação</p>
-                      <p className="text-[11px] text-slate-400 mt-1">Funil visual de propostas & automação de contatos</p>
-                    </div>
-                  )}
-
-                  {activeHeroTab === 'lyra' && (
-                    <div className="absolute bottom-6 right-6 bg-slate-900/90 backdrop-blur-md border border-purple-500/40 rounded-2xl p-4 text-white shadow-2xl animate-fade-in max-w-sm">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-ping" />
-                        <span className="text-xs font-bold text-purple-300">IA Assistente Lyra 3.0</span>
-                      </div>
-                      <p className="text-xs text-slate-200 leading-relaxed">
-                        "Analisei seu estoque: 3 produtos com margem alta precisam de reposição para o final de semana."
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <InteractiveSystemDemo />
 
               {/* Floating trust badge bottom-left */}
               <div className="absolute -bottom-5 -left-6 bg-white rounded-2xl shadow-2xl border border-gray-200 px-4 py-3 flex items-center gap-3">

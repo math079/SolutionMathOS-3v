@@ -197,7 +197,7 @@ export const SalesDashboardView: React.FC = () => {
   });
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+    <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b th-border pb-5">
         <div>
@@ -206,7 +206,7 @@ export const SalesDashboardView: React.FC = () => {
               <BadgeDollarSign size={24} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold th-text flex items-center gap-2">
+              <h2 className="text-lg sm:text-2xl font-bold th-text flex items-center gap-2">
                 Painel Central de Vendas
                 <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                   Ao Vivo
@@ -247,7 +247,7 @@ export const SalesDashboardView: React.FC = () => {
               <DollarSign size={18} />
             </div>
           </div>
-          <div className="text-2xl lg:text-3xl font-bold text-emerald-500 mb-1">
+          <div className="text-2xl lg:text-3xl font-bold text-emerald-500 mb-1 truncate">
             {fmt(stats?.totalRevenue || 0)}
           </div>
           <div className="text-xs th-muted flex items-center gap-1.5">
@@ -263,7 +263,7 @@ export const SalesDashboardView: React.FC = () => {
               <TrendingUp size={18} />
             </div>
           </div>
-          <div className="text-2xl lg:text-3xl font-bold text-primary mb-1">
+          <div className="text-2xl lg:text-3xl font-bold text-primary mb-1 truncate">
             {fmt(stats?.monthRevenue || 0)}
           </div>
           <div className="text-xs th-muted">
@@ -278,7 +278,7 @@ export const SalesDashboardView: React.FC = () => {
               <ArrowUpRight size={18} />
             </div>
           </div>
-          <div className="text-2xl lg:text-3xl font-bold text-purple-500 mb-1">
+          <div className="text-2xl lg:text-3xl font-bold text-purple-500 mb-1 truncate">
             {fmt(stats?.avgTicket || 0)}
           </div>
           <div className="text-xs th-muted">Média por cliente faturado</div>
@@ -291,7 +291,7 @@ export const SalesDashboardView: React.FC = () => {
               <Zap size={18} />
             </div>
           </div>
-          <div className="text-2xl lg:text-3xl font-bold text-blue-500 mb-1">
+          <div className="text-2xl lg:text-3xl font-bold text-blue-500 mb-1 truncate">
             {stats?.byChannel.find(c => c.channel.includes('Site'))?.count || 0} vendas
           </div>
           <div className="text-xs th-muted">
@@ -424,12 +424,12 @@ export const SalesDashboardView: React.FC = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b th-border th-surface2">
-                <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider">Código</th>
+                <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider hidden sm:table-cell">Código</th>
                 <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider">Cliente</th>
-                <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider">Produto / Serviço</th>
+                <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider hidden sm:table-cell">Produto / Serviço</th>
                 <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider">Canal</th>
-                <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider">Pagamento</th>
-                <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider">Status</th>
+                <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider hidden sm:table-cell">Pagamento</th>
+                <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider hidden sm:table-cell">Status</th>
                 <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider">Valor</th>
                 <th className="py-3 px-3 text-right text-xs font-semibold th-muted uppercase tracking-wider">Ações</th>
               </tr>
@@ -444,7 +444,7 @@ export const SalesDashboardView: React.FC = () => {
               ) : (
                 filteredSales.map(sale => (
                   <tr key={sale.id} className="hover:bg-primary/5 transition-colors">
-                    <td className="py-3 px-3">
+                    <td className="py-3 px-3 hidden sm:table-cell">
                       <span className="font-mono text-xs px-2 py-1 rounded bg-black/5 dark:bg-white/5 font-semibold text-primary">
                         {sale.external_id || `#${sale.id}`}
                       </span>
@@ -453,7 +453,7 @@ export const SalesDashboardView: React.FC = () => {
                       <div className="font-medium th-text">{sale.customer_name}</div>
                       <div className="text-[11px] th-muted">{sale.customer_email || sale.customer_phone || 'Sem contato'}</div>
                     </td>
-                    <td className="py-3 px-3 font-medium th-text">
+                    <td className="py-3 px-3 font-medium th-text hidden sm:table-cell">
                       {sale.product_name}
                     </td>
                     <td className="py-3 px-3">
@@ -465,10 +465,10 @@ export const SalesDashboardView: React.FC = () => {
                         {sale.channel}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-xs th-muted font-medium">
+                    <td className="py-3 px-3 text-xs th-muted font-medium hidden sm:table-cell">
                       {sale.payment_method}
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="py-3 px-3 hidden sm:table-cell">
                       <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                         {sale.status}
                       </span>

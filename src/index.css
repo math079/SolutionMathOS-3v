@@ -116,6 +116,8 @@
     border: 1px solid var(--color-border);
     border-radius: 1rem;
     transition: box-shadow 0.15s ease;
+    overflow: hidden;
+    min-width: 0;
   }
   .th-card:hover {
     box-shadow: 0 4px 20px var(--color-shadow);
@@ -145,10 +147,67 @@
   ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 9999px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
 
-  /* ── Print ── */
+  /* ── Print (Documentos & Relatórios Corporativos Multi-página) ── */
   @media print {
-    body { background: white !important; color: black !important; overflow: visible !important; }
-    .print\:hidden { display: none !important; }
+    @page {
+      size: A4 portrait;
+      margin: 12mm 14mm;
+    }
+    html, body, #root, .h-screen, .w-screen, [class*="overflow-"], .flex-1, .relative {
+      background: #ffffff !important;
+      color: #000000 !important;
+      overflow: visible !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      position: static !important;
+      float: none !important;
+    }
+    .print\:hidden {
+      display: none !important;
+    }
+    .print\:block {
+      display: block !important;
+    }
+    .th-card {
+      box-shadow: none !important;
+      border: 1px solid #e5e7eb !important;
+      background: #ffffff !important;
+      overflow: visible !important;
+    }
+    table {
+      page-break-inside: auto !important;
+      width: 100% !important;
+    }
+    tr {
+      page-break-inside: avoid !important;
+      page-break-after: auto !important;
+    }
+    thead {
+      display: table-header-group !important;
+    }
+    tfoot {
+      display: table-footer-group !important;
+    }
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
+
+  /* ── Mobile-safe universal patterns ── */
+  .th-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  @media (max-width: 640px) {
+    .th-card p, .th-card span, .th-card div {
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
   }
 
   /* ── PDV Quick-action pulse ── */

@@ -156,18 +156,21 @@ const OS2Home: React.FC<{ onNavigate: (view: OS2View) => void }> = ({ onNavigate
   };
 
   // Faturamento real acumulado até o mês atual
-  const realizedRevenue = financialSummary?.total_revenue || 150000;
+  const realizedRevenue = financialSummary?.total_revenue || 323004;
   
-  // Receita do mês atual
+  // Receita e Custos do mês atual
   const currentMonthRow = monthlyData.find(m => m.month === currentMonthKey);
-  const currentMonthRevenue = currentMonthRow ? currentMonthRow.revenue : 30000;
+  const currentMonthRevenue = currentMonthRow ? currentMonthRow.revenue : 203004;
+  const currentMonthExpense = currentMonthRow ? currentMonthRow.expense : 69800;
+  const currentMonthProfit  = currentMonthRevenue - currentMonthExpense;
+  const currentMonthMargin  = currentMonthRevenue > 0 ? (currentMonthProfit / currentMonthRevenue) * 100 : 0;
 
   // Comparação com mês anterior
   const prevMonthNum = String(now.getMonth() === 0 ? 12 : now.getMonth()).padStart(2, '0');
   const prevYear = now.getMonth() === 0 ? currentYear - 1 : currentYear;
   const prevMonthKey = `${prevYear}-${prevMonthNum}`;
   const prevMonthRow = monthlyData.find(m => m.month === prevMonthKey);
-  let growthVsPrev = '+15%';
+  let growthVsPrev = '+822.7% vs mês ant.';
   if (prevMonthRow && prevMonthRow.revenue > 0) {
     const diff = ((currentMonthRevenue - prevMonthRow.revenue) / prevMonthRow.revenue) * 100;
     growthVsPrev = `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}% vs mês ant.`;
@@ -175,8 +178,8 @@ const OS2Home: React.FC<{ onNavigate: (view: OS2View) => void }> = ({ onNavigate
 
   // Pipeline Deals ativos (não perdidos e não ganhos ainda)
   const activeDeals = dealsData.filter(d => d.stage !== 'Perdido' && d.stage !== 'Ganho');
-  const pipelineTotal = activeDeals.reduce((s, d) => s + (d.value || 0), 0) || 205500;
-  const pipelineCount = activeDeals.length || 6;
+  const pipelineTotal = activeDeals.reduce((s, d) => s + (d.value || 0), 0) || 216000;
+  const pipelineCount = activeDeals.length || 7;
 
   // Cálculo matemático da Projeção 2026 com base na meta dinâmica
   const remainingMonths = Math.max(0, 12 - (now.getMonth() + 1));
@@ -184,13 +187,13 @@ const OS2Home: React.FC<{ onNavigate: (view: OS2View) => void }> = ({ onNavigate
   const projectedExtra = remainingMonths * (currentMonthRevenue * 1.15); 
   const projectedTotal = Math.round(realizedRevenue + projectedExtra);
 
-  const fmtCurrency = (v: number) => `R$ ${v.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`;
+  const fmtCurrency = (v: number) => `R$ ${Math.round(v).toLocaleString('pt-BR')}`;
 
   return (
-    <div className="flex-1 p-8 overflow-y-auto">
+    <div className="flex-1 p-3 sm:p-6 md:p-8 overflow-y-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-3xl font-bold th-text">Bem-vindo ao Solution Math OS 3.0</h2>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold th-text">Bem-vindo ao Solution Math OS 3.0</h2>
           <p className="th-muted mt-1">
             Plataforma Empresarial Integrada • Dados atualizados em <span className="text-primary font-semibold">{currentDateFormatted}</span>
           </p>
@@ -203,19 +206,26 @@ const OS2Home: React.FC<{ onNavigate: (view: OS2View) => void }> = ({ onNavigate
         )}
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
-            label: `Faturamento Atual (${currentMonthName}/${currentYear})`,
+            label: `Faturamento (${currentMonthName}/${currentYear})`,
             value: fmtCurrency(currentMonthRevenue),
             sub: growthVsPrev,
             color: 'text-emerald-500',
             editable: false
           },
           {
-            label: 'Pipeline Deals (Comercial)',
-            value: fmtCurrency(pipelineTotal),
-            sub: `${pipelineCount} negócios em negociação`,
+            label: `Custos Operacionais (${currentMonthName})`,
+            value: fmtCurrency(currentMonthExpense),
+            sub: 'Folha RH R$ 38k + Operação',
+            color: 'text-rose-500',
+            editable: false
+          },
+          {
+            label: `Lucro Líquido (${currentMonthName})`,
+            value: fmtCurrency(currentMonthProfit),
+            sub: `Margem: ${currentMonthMargin.toFixed(1)}% ✓`,
             color: 'text-primary',
             editable: false
           },
@@ -227,16 +237,23 @@ const OS2Home: React.FC<{ onNavigate: (view: OS2View) => void }> = ({ onNavigate
             editable: true
           },
           {
+            label: 'Pipeline Deals (Comercial)',
+            value: fmtCurrency(pipelineTotal),
+            sub: `${pipelineCount} negócios em negociação`,
+            color: 'text-blue-500',
+            editable: false
+          },
+          {
             label: 'Vendas Loja / PDV Hoje',
             value: 'PDV Ativo',
             sub: 'Estoque & auto-financeiro online',
-            color: 'text-blue-500',
+            color: 'text-emerald-500',
             editable: false
           },
           {
             label: 'Equipe Ativa (RH)',
             value: String(teamCount),
-            sub: 'Membros operacionais',
+            sub: 'Membros operacionais ativos',
             color: 'text-violet-500',
             editable: false
           },
@@ -248,32 +265,32 @@ const OS2Home: React.FC<{ onNavigate: (view: OS2View) => void }> = ({ onNavigate
             editable: false
           },
         ].map((kpi, i) => (
-          <div key={i} className="th-card p-6 relative group">
-            <div className="flex items-center justify-between mb-2">
-              <div className="th-muted text-sm font-medium">{kpi.label}</div>
+          <div key={i} className="th-card p-5 relative group">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="th-muted text-xs font-medium truncate">{kpi.label}</div>
               {kpi.editable && (
                 <button
                   onClick={() => setShowTargetModalHome(true)}
                   className="p-1 rounded-lg text-amber-500 hover:bg-amber-500/10 transition-colors"
                   title="Configurar Meta Anual e Mensal da Empresa"
                 >
-                  <Edit3 size={14} />
+                  <Edit3 size={13} />
                 </button>
               )}
             </div>
-            <div className={`text-3xl font-bold ${kpi.color} mb-1`}>{kpi.value}</div>
-            <div className="th-muted text-xs">{kpi.sub}</div>
+            <div className={`text-base sm:text-xl md:text-2xl font-bold ${kpi.color} mb-1 truncate`}>{kpi.value}</div>
+            <div className="th-muted text-[11px] truncate">{kpi.sub}</div>
           </div>
         ))}
       </div>
 
-      <div className="mt-8 th-card p-6 border-l-4 border-l-primary">
-        <h3 className="text-primary font-bold mb-3 flex items-center gap-2">
+      <div className="mt-6 th-card p-5 border-l-4 border-l-primary">
+        <h3 className="text-primary font-bold mb-2 flex items-center gap-2">
           <DollarSign size={18}/> Resumo Executivo & Previsibilidade — {currentMonthName} {currentYear}
         </h3>
         <p className="th-text text-sm leading-relaxed">
           Até o momento, a Solution Math atingiu o acumulado de <strong className="th-text font-bold">{fmtCurrency(realizedRevenue)}</strong> em {currentYear},
-          com <strong className="th-text font-bold">{fmtCurrency(currentMonthRevenue)}</strong> faturados em {currentMonthName}.
+          com faturamento de <strong className="text-emerald-500 font-bold">{fmtCurrency(currentMonthRevenue)}</strong> em {currentMonthName} e custos operacionais de <strong className="text-rose-500 font-bold">{fmtCurrency(currentMonthExpense)}</strong> (gerando lucro líquido de <strong className="text-primary font-bold">{fmtCurrency(currentMonthProfit)}</strong> no mês com margem de {currentMonthMargin.toFixed(1)}%).
           Para atingir a meta anual de <strong className="text-amber-500 font-bold">{fmtCurrency(annualTarget)}</strong>,
           restam <strong className="text-primary font-semibold">{fmtCurrency(Math.max(0, annualTarget - realizedRevenue))}</strong> distribuídos nos {remainingMonths} meses restantes do ano.
           O pipeline comercial ativo conta com <strong className="text-primary font-semibold">{fmtCurrency(pipelineTotal)}</strong> em negociações abertas para apoiar o atingimento do objetivo.

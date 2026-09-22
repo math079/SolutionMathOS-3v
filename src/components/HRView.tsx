@@ -159,7 +159,7 @@ const HRView: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-transparent flex-1 overflow-y-auto space-y-6">
+    <div className="p-3 sm:p-6 bg-transparent flex-1 overflow-y-auto space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b th-border pb-5">
         <div>
@@ -183,34 +183,34 @@ const HRView: React.FC = () => {
             <span className="th-muted text-xs font-semibold">Total de Colaboradores</span>
             <Users size={18} className="text-primary" />
           </div>
-          <div className="text-3xl font-bold th-text mb-1">{totalEmployees}</div>
+          <div className="text-xl sm:text-2xl md:text-3xl truncate font-bold th-text mb-1">{totalEmployees}</div>
           <div className="text-xs text-primary font-medium">{activeEmployees} ativos na operação</div>
         </div>
 
-        <div className="th-card p-5">
+        <div className="th-card p-5 min-w-0">
           <div className="flex justify-between items-start mb-3">
             <span className="th-muted text-xs font-semibold">Folha Mensal Estimada</span>
             <DollarSign size={18} className="text-emerald-500" />
           </div>
-          <div className="text-3xl font-bold text-emerald-500 mb-1">{fmt(totalPayroll)}</div>
+          <div className="text-xl sm:text-2xl md:text-3xl truncate font-bold text-emerald-500 mb-1">{fmt(totalPayroll)}</div>
           <div className="text-xs th-muted">Média: {fmt(avgSalary)}/pessoa</div>
         </div>
 
-        <div className="th-card p-5">
+        <div className="th-card p-5 min-w-0">
           <div className="flex justify-between items-start mb-3">
             <span className="th-muted text-xs font-semibold">Modelos de Contrato</span>
             <Briefcase size={18} className="text-amber-500" />
           </div>
-          <div className="text-3xl font-bold text-amber-500 mb-1">{pjCount} PJ <span className="text-sm font-normal th-muted">/ {cltCount} CLT</span></div>
+          <div className="text-xl sm:text-2xl md:text-3xl truncate font-bold text-amber-500 mb-1">{pjCount} PJ <span className="text-sm font-normal th-muted">/ {cltCount} CLT</span></div>
           <div className="text-xs th-muted">Flexibilidade na contratação</div>
         </div>
 
-        <div className="th-card p-5">
+        <div className="th-card p-5 min-w-0">
           <div className="flex justify-between items-start mb-3">
             <span className="th-muted text-xs font-semibold">Taxa de Operação</span>
             <CheckCircle2 size={18} className="text-violet-500" />
           </div>
-          <div className="text-3xl font-bold text-violet-500 mb-1">
+          <div className="text-xl sm:text-2xl md:text-3xl truncate font-bold text-violet-500 mb-1">
             {totalEmployees > 0 ? `${Math.round((activeEmployees / totalEmployees) * 100)}%` : '100%'}
           </div>
           <div className="text-xs th-muted">Equipe em produção</div>
@@ -218,7 +218,7 @@ const HRView: React.FC = () => {
       </div>
 
       {/* Financial Sync Status Banner */}
-      <div className="th-card p-4 border-l-4 border-emerald-500 flex items-center justify-between gap-4">
+      <div className="th-card p-4 border-l-4 border-emerald-500 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-950/40 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
             <DollarSign size={18} />
@@ -236,7 +236,7 @@ const HRView: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="text-right flex-shrink-0">
+        <div className="sm:text-right text-left mt-2 sm:mt-0 flex-shrink-0">
           <div className="text-lg font-bold text-rose-500">{fmt(totalPayroll)}</div>
           <div className="text-xs th-muted">custo/mês lançado</div>
         </div>
@@ -286,8 +286,66 @@ const HRView: React.FC = () => {
         </div>
       </div>
 
-      {/* Staff Table */}
-      <div className="th-card overflow-hidden">
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="th-card p-8 text-center th-muted">Carregando lista de colaboradores...</div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="th-card p-8 text-center th-muted">Nenhum colaborador encontrado com os filtros selecionados.</div>
+        ) : (
+          filteredUsers.map(user => (
+            <div key={user.id} className="th-card p-4 space-y-3">
+              <div className="flex justify-between items-start min-w-0 gap-2">
+                <div className="min-w-0">
+                  <div className="font-bold th-text text-sm truncate">{user.name}</div>
+                  <div className="text-xs th-muted flex flex-col gap-1 mt-1">
+                    {user.email && <span className="flex items-center gap-1 min-w-0"><Mail size={11} className="text-primary flex-shrink-0"/> <span className="truncate">{user.email}</span></span>}
+                    {user.phone && <span className="flex items-center gap-1 min-w-0"><Phone size={11} className="th-muted flex-shrink-0"/> <span className="truncate">{user.phone}</span></span>}
+                  </div>
+                </div>
+                <div className="flex-shrink-0 flex items-center gap-1">
+                  <button onClick={() => openEditModal(user)} className="th-muted hover:text-primary p-1.5 rounded-lg hover:bg-primary/10">
+                    <Edit3 size={15} />
+                  </button>
+                  <button onClick={() => deleteUser(user.id)} className="th-muted hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-500/10">
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs border-t th-border pt-3 mt-3">
+                <div>
+                  <span className="th-muted block mb-0.5">Cargo</span>
+                  <span className="text-primary font-medium">{user.role}</span>
+                </div>
+                <div>
+                  <span className="th-muted block mb-0.5">Contrato</span>
+                  <span className="px-2 py-0.5 th-surface2 border th-border rounded-md font-semibold th-text inline-block">
+                    {user.contract_type || 'PJ'}
+                  </span>
+                </div>
+                <div>
+                  <span className="th-muted block mb-0.5">Salário</span>
+                  <div className="font-bold text-emerald-500">{fmt(user.salary || 0)}</div>
+                  {(user.status === 'Ativo' || !user.status) && (
+                    <div className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
+                      <DollarSign size={10} /> Lançado no financeiro
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <span className="th-muted block mb-0.5">Status</span>
+                  <span className={`px-2 py-0.5 rounded-md font-bold border inline-block ${statusBadgeClass(user.status)}`}>
+                    {user.status || 'Ativo'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block th-card overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b th-border th-surface2">

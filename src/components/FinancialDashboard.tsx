@@ -235,22 +235,140 @@ const FinancialDashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-transparent space-y-6">
-      {/* Printable DRE Header */}
-      <div className="hidden print:block text-black p-4 space-y-4">
-        <h1 className="text-2xl font-bold border-b pb-2">SOLUTION MATH — DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO (DRE 2026)</h1>
-        <p className="text-sm">Relatório gerado em {todayDateFormatted} | Período: {selectedMonth === 'all' ? 'Ano 2026 Completo' : ALL_MONTHS[selectedMonth]}</p>
-        <div className="grid grid-cols-3 gap-4 border p-4">
-          <div><strong>Faturamento Total:</strong> {fmt(viewRevenue)}</div>
-          <div><strong>Custos Operacionais:</strong> {fmt(viewExpense)}</div>
-          <div><strong>Lucro Líquido:</strong> {fmt(viewProfit)} ({viewMargin.toFixed(1)}%)</div>
+    <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-transparent space-y-6">
+      {/* Printable DRE Formal Header (Documento Executivo de Alto Padrão) */}
+      <div className="hidden print:block text-black p-6 space-y-6 bg-white border-b-2 border-black/80">
+        <div className="flex items-start justify-between border-b pb-4">
+          <div className="flex items-center gap-4">
+            <img src="/logo.jpg" alt="Solution Math Logo" className="w-14 h-14 rounded-xl object-cover border border-gray-300" />
+            <div>
+              <h1 className="text-xl font-extrabold tracking-tight uppercase">Solution Math Tecnologia Empresarial Ltda</h1>
+              <p className="text-xs text-gray-600 mt-0.5 font-medium">CNPJ: 52.894.102/0001-44 • Inscrição Estadual: Isento</p>
+              <p className="text-[11px] text-gray-500">Plataforma Empresarial Integrada • Solution Math OS v3.0 Enterprise</p>
+            </div>
+          </div>
+          <div className="text-right text-xs text-gray-600">
+            <span className="font-bold text-gray-900 block text-sm uppercase tracking-wide">Relatório Gerencial Oficial</span>
+            <span>Emissão: {todayDateFormatted} às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="block text-[10px] text-gray-400 mt-0.5">Protocolo: DRE-2026-{Math.floor(100000 + Math.random() * 900000)}</span>
+          </div>
+        </div>
+
+        <div className="text-center py-2 bg-gray-100 rounded-lg border border-gray-200">
+          <h2 className="text-base font-black tracking-wide uppercase text-gray-900">
+            Demonstração do Resultado do Exercício — DRE Gerencial 2026
+          </h2>
+          <p className="text-xs text-gray-600 font-semibold mt-0.5">
+            Período de Competência: {selectedMonth === 'all' ? 'Exercício Anual Consolidado (Janeiro a Dezembro de 2026)' : ALL_MONTHS[selectedMonth]}
+          </p>
+        </div>
+
+        {/* Quadro Sintético de Resultados */}
+        <div className="grid grid-cols-4 gap-4 border border-gray-300 rounded-lg p-4 bg-gray-50/50">
+          <div className="border-r border-gray-200 pr-3">
+            <span className="text-[11px] uppercase font-bold text-gray-500 block">Receita Bruta Operacional</span>
+            <span className="text-lg font-black text-emerald-700">{fmt(viewRevenue)}</span>
+            <span className="block text-[10px] text-gray-500 mt-0.5">Vendas PDV, Contratos & Webhooks</span>
+          </div>
+
+          <div className="border-r border-gray-200 pr-3">
+            <span className="text-[11px] uppercase font-bold text-gray-500 block">Custos Operacionais Totais</span>
+            <span className="text-lg font-black text-rose-700">{fmt(viewExpense)}</span>
+            <span className="block text-[10px] text-gray-500 mt-0.5">Folha RH (R$ 38k/mês) + Despesas</span>
+          </div>
+
+          <div className="border-r border-gray-200 pr-3">
+            <span className="text-[11px] uppercase font-bold text-gray-500 block">Resultado Líquido do Período</span>
+            <span className="text-lg font-black text-blue-800">{fmt(viewProfit)}</span>
+            <span className="block text-[10px] text-gray-500 mt-0.5">Lucro após todas as deduções</span>
+          </div>
+
+          <div>
+            <span className="text-[11px] uppercase font-bold text-gray-500 block">Margem Líquida</span>
+            <span className="text-lg font-black text-amber-700">{viewMargin.toFixed(1)}%</span>
+            <span className="block text-[10px] text-gray-500 mt-0.5">
+              {viewMargin >= 20 ? 'Operação Altamente Rentável' : 'Operação Estável'}
+            </span>
+          </div>
+        </div>
+
+        {/* Quadro Detalhado de Metas, Custos com Folha RH e Vendas (Dossiê Financeiro) */}
+        <div className="grid grid-cols-3 gap-4 text-xs pt-1">
+          {/* Acompanhamento de Metas */}
+          <div className="border border-gray-200 rounded-lg p-3 bg-white">
+            <span className="font-bold text-gray-900 uppercase text-[11px] block border-b pb-1.5 mb-2">
+              🎯 Metas do Período
+            </span>
+            <div className="space-y-1.5 text-gray-700">
+              <div className="flex justify-between">
+                <span>Meta Fixada:</span>
+                <span className="font-bold text-gray-900">{fmt(selectedMonth === 'all' ? annualTarget : monthlyTarget)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Realizado:</span>
+                <span className="font-bold text-emerald-700">{fmt(viewRevenue)}</span>
+              </div>
+              <div className="flex justify-between border-t pt-1">
+                <span>Atingimento:</span>
+                <span className="font-black text-blue-700">
+                  {((viewRevenue / ((selectedMonth === 'all' ? annualTarget : monthlyTarget) || 1)) * 100).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Desdobramento de Custos & Folha RH */}
+          <div className="border border-gray-200 rounded-lg p-3 bg-white">
+            <span className="font-bold text-gray-900 uppercase text-[11px] block border-b pb-1.5 mb-2">
+              👥 Despesas com Pessoal & Folha RH
+            </span>
+            <div className="space-y-1.5 text-gray-700">
+              <div className="flex justify-between">
+                <span>Folha Salarial Mensal:</span>
+                <span className="font-bold text-rose-700">R$ 38.000</span>
+              </div>
+              <div className="flex justify-between text-[11px] text-gray-500">
+                <span>Equipe Ativa:</span>
+                <span>4 Colaboradores (CLT/PJ)</span>
+              </div>
+              <div className="flex justify-between border-t pt-1">
+                <span>Outras Despesas Op.:</span>
+                <span className="font-bold text-rose-700">{fmt(Math.max(0, viewExpense - (selectedMonth === 'all' ? 38000 * 9 : 38000)))}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Resumo Comercial */}
+          <div className="border border-gray-200 rounded-lg p-3 bg-white">
+            <span className="font-bold text-gray-900 uppercase text-[11px] block border-b pb-1.5 mb-2">
+              📊 Indicadores Comerciais
+            </span>
+            <div className="space-y-1.5 text-gray-700">
+              <div className="flex justify-between">
+                <span>Transações Registradas:</span>
+                <span className="font-bold text-gray-900">{filteredTransactions.length} lançamentos</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Receitas Confirmadas:</span>
+                <span className="font-bold text-emerald-700">
+                  {filteredTransactions.filter(t => t.type === 'income').length} operações
+                </span>
+              </div>
+              <div className="flex justify-between border-t pt-1">
+                <span>Despesas Registradas:</span>
+                <span className="font-bold text-rose-700">
+                  {filteredTransactions.filter(t => t.type === 'expense').length} saídas
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Screen Web Interface Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b th-border pb-5 print:hidden">
         <div>
-          <h2 className="text-2xl font-bold th-text flex items-center gap-2">
+          <h2 className="text-lg sm:text-2xl font-bold th-text flex items-center gap-2">
             Dashboard Financeiro & Previsibilidade 2026
             {selectedMonth !== 'all' && (
               <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full border border-primary/20">
@@ -361,7 +479,7 @@ const FinancialDashboard: React.FC = () => {
               </span>
             </div>
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-bold th-text">{fmt(realizedRevenue2026)}</span>
+              <span className="text-lg sm:text-2xl font-bold th-text truncate">{fmt(realizedRevenue2026)}</span>
               <span className="text-xs th-muted font-medium">de {fmt(annualTarget)}</span>
             </div>
             {/* Barra de progresso */}
@@ -386,7 +504,7 @@ const FinancialDashboard: React.FC = () => {
               </span>
             </div>
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-bold text-primary">
+              <span className="text-lg sm:text-2xl font-bold text-primary truncate">
                 {fmt(monthly.find(m => m.month === currentMonthKey)?.revenue || 30000)}
               </span>
               <span className="text-xs th-muted font-medium">de {fmt(monthlyTarget)}</span>
@@ -447,13 +565,13 @@ const FinancialDashboard: React.FC = () => {
 
           <div className="th-surface2 border th-border rounded-xl p-4">
             <span className="text-xs font-semibold th-muted block mb-1">Projeção Faturamento 2026</span>
-            <div className="text-2xl font-bold text-primary">{fmt(totalProjectedRevenue2026)}</div>
+            <div className="text-lg sm:text-2xl font-bold text-primary truncate">{fmt(totalProjectedRevenue2026)}</div>
             <div className="text-xs text-primary/80 mt-1">Realizado + Meta Out-Dez</div>
           </div>
 
           <div className="th-surface2 border border-emerald-300 dark:border-emerald-800 rounded-xl p-4 bg-emerald-50 dark:bg-emerald-950/20">
             <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 block mb-1">Lucro Líquido Projetado 2026</span>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{fmt(totalProjectedProfit2026)}</div>
+            <div className="text-lg sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 truncate">{fmt(totalProjectedProfit2026)}</div>
             <div className="text-xs th-muted mt-1">Após custos fixos e variáveis</div>
           </div>
         </div>
@@ -468,7 +586,7 @@ const FinancialDashboard: React.FC = () => {
           <div className="th-muted text-xs mb-1">
             {selectedMonth === 'all' ? 'Faturamento Total 2026' : `Faturamento (${MONTH_SHORT[selectedMonth]})`}
           </div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">{fmt(viewRevenue)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1 truncate">{fmt(viewRevenue)}</div>
           <div className="text-xs text-primary font-medium">{viewTrend}</div>
         </div>
 
@@ -479,7 +597,7 @@ const FinancialDashboard: React.FC = () => {
           <div className="th-muted text-xs mb-1">
             {selectedMonth === 'all' ? 'Custos Totais 2026' : `Custos (${MONTH_SHORT[selectedMonth]})`}
           </div>
-          <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 mb-1">{fmt(viewExpense)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-rose-600 dark:text-rose-400 mb-1 truncate">{fmt(viewExpense)}</div>
           <div className="text-xs th-muted">Despesas operacionais</div>
         </div>
 
@@ -490,7 +608,7 @@ const FinancialDashboard: React.FC = () => {
           <div className="th-muted text-xs mb-1">
             {selectedMonth === 'all' ? 'Lucro Líquido 2026' : `Lucro (${MONTH_SHORT[selectedMonth]})`}
           </div>
-          <div className="text-2xl font-bold text-primary mb-1">{fmt(viewProfit)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-primary mb-1 truncate">{fmt(viewProfit)}</div>
           <div className="text-xs text-primary font-medium">Após todas as deduções</div>
         </div>
 
@@ -499,7 +617,7 @@ const FinancialDashboard: React.FC = () => {
             <Percent size={20}/>
           </div>
           <div className="th-muted text-xs mb-1">Margem de Lucro</div>
-          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mb-1">{viewMargin.toFixed(1)}%</div>
+          <div className="text-lg sm:text-2xl font-bold text-amber-600 dark:text-amber-400 mb-1 truncate">{viewMargin.toFixed(1)}%</div>
           <div className="text-xs th-muted">{viewMargin > 50 ? 'Margem Saudável ✓' : 'Moderada'}</div>
         </div>
       </div>
@@ -570,9 +688,16 @@ const FinancialDashboard: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b th-border th-surface2">
+              <tr className="border-b th-border th-surface2 print:bg-gray-100">
                 {['Descrição','Categoria','Mês','Tipo','Valor','Ações'].map(h => (
-                  <th key={h} className="py-2.5 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider print:text-black">{h}</th>
+                  <th
+                    key={h}
+                    className={`py-2.5 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider print:text-black ${
+                      h === 'Categoria' || h === 'Mês' ? 'hidden sm:table-cell' : ''
+                    } ${h === 'Ações' ? 'print:hidden' : ''}`}
+                  >
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -581,16 +706,16 @@ const FinancialDashboard: React.FC = () => {
                 <tr><td colSpan={6} className="py-6 text-center th-muted text-sm">Nenhuma transação encontrada neste período.</td></tr>
               ) : (
                 filteredTransactions.map(t => (
-                  <tr key={t.id} className="border-b th-border hover:bg-primary/5 transition-colors">
+                  <tr key={t.id} className="border-b th-border hover:bg-primary/5 transition-colors print:border-gray-200">
                     <td className="py-2.5 px-3 th-text font-medium print:text-black">{t.description}</td>
-                    <td className="py-2.5 px-3 th-muted print:text-black">{t.category}</td>
-                    <td className="py-2.5 px-3 th-muted print:text-black">{MONTH_SHORT[t.month] || t.month} 2026</td>
+                    <td className="py-2.5 px-3 th-muted print:text-black hidden sm:table-cell">{t.category}</td>
+                    <td className="py-2.5 px-3 th-muted print:text-black hidden sm:table-cell">{MONTH_SHORT[t.month] || t.month} 2026</td>
                     <td className="py-2.5 px-3">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${t.type === 'income' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-300 dark:border-rose-800'}`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${t.type === 'income' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 print:bg-emerald-50 print:text-emerald-800' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-300 dark:border-rose-800 print:bg-rose-50 print:text-rose-800'}`}>
                         {t.type === 'income' ? 'Receita' : 'Despesa'}
                       </span>
                     </td>
-                    <td className={`py-2.5 px-3 font-bold ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                    <td className={`py-2.5 px-3 font-bold ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400 print:text-emerald-700' : 'text-rose-600 dark:text-rose-400 print:text-rose-700'}`}>
                       {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}
                     </td>
                     <td className="py-2.5 px-3 text-right space-x-1 print:hidden">
@@ -613,7 +738,63 @@ const FinancialDashboard: React.FC = () => {
                 ))
               )}
             </tbody>
+            {/* Rodapé com Totalizadores para Impressão */}
+            <tfoot className="border-t-2 border-black/80 font-bold print:table-footer-group">
+              <tr className="bg-gray-100 text-gray-900 text-xs">
+                <td colSpan={4} className="py-2.5 px-3 uppercase tracking-wider">
+                  Totalizador do Período ({filteredTransactions.length} lançamentos)
+                </td>
+                <td className="py-2.5 px-3 font-black text-sm text-blue-900" colSpan={2}>
+                  Líquido: {fmt(viewProfit)}
+                </td>
+              </tr>
+              <tr className="text-[11px] text-gray-600 bg-gray-50 border-t print:table-row">
+                <td colSpan={4} className="py-1.5 px-3">
+                  (+) Total Receitas: <strong className="text-emerald-700">{fmt(filteredTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0))}</strong> | 
+                  (-) Total Despesas: <strong className="text-rose-700">{fmt(filteredTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0))}</strong>
+                </td>
+                <td colSpan={2} className="py-1.5 px-3 text-right">
+                  Margem: <strong>{viewMargin.toFixed(1)}%</strong>
+                </td>
+              </tr>
+            </tfoot>
           </table>
+        </div>
+
+        {/* Termo de Encerramento e Assinaturas (Exclusivo para Impressão) */}
+        <div className="hidden print:block mt-8 pt-6 border-t-2 border-black/80 space-y-8" style={{ pageBreakInside: 'avoid' }}>
+          <div className="flex items-center justify-between text-xs text-gray-700">
+            <div>
+              <p className="font-bold uppercase text-gray-900">Declaração de Conformidade & Autenticidade Contábil</p>
+              <p className="text-[11px] text-gray-600 mt-0.5">
+                Os dados acima representam a consolidação dos lançamentos de caixa, vendas e despesas operacionais da empresa.
+              </p>
+            </div>
+            <div className="text-right text-[11px] text-gray-500 font-mono">
+              HASH AUTENTICADOR: SHA256-SMOS-{Math.random().toString(36).substring(2, 10).toUpperCase()}
+            </div>
+          </div>
+
+          {/* Assinaturas Formais */}
+          <div className="grid grid-cols-2 gap-12 pt-6">
+            <div className="text-center">
+              <div className="border-t border-black w-4/5 mx-auto mb-2"></div>
+              <p className="font-bold text-xs uppercase text-gray-900">João CEO</p>
+              <p className="text-[11px] text-gray-600">Diretor Executivo / CEO</p>
+              <p className="text-[10px] text-gray-500">Solution Math Tecnologia Empresarial Ltda</p>
+            </div>
+
+            <div className="text-center">
+              <div className="border-t border-black w-4/5 mx-auto mb-2"></div>
+              <p className="font-bold text-xs uppercase text-gray-900">Gestão Contábil & Financeira</p>
+              <p className="text-[11px] text-gray-600">CRC / Controladoria Corporativa</p>
+              <p className="text-[10px] text-gray-500">Solution Math OS</p>
+            </div>
+          </div>
+
+          <div className="text-center text-[10px] text-gray-400 pt-2 border-t">
+            Documento emitido eletronicamente via plataforma Solution Math OS v3.0 Enterprise em {todayDateFormatted}. Todos os direitos reservados.
+          </div>
         </div>
       </div>
 

@@ -35,38 +35,48 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
   return (
     <div
       onClick={onFocus}
-      className={`absolute transition-all duration-200 ease-out flex flex-col ${
-        isMaximized ? 'inset-4' : 'top-10 left-10 w-[1000px] h-[650px]'
+      className={`fixed md:absolute transition-all duration-200 ease-out flex flex-col ${
+        isMaximized ? 'inset-0 md:inset-4' : 'inset-0 md:top-10 md:left-10 md:w-[1000px] md:h-[650px]'
       } ${
         isActive ? 'shadow-2xl border-primary/50' : 'shadow-lg th-border opacity-95'
-      } th-surface rounded-2xl overflow-hidden border`}
+      } th-surface rounded-none md:rounded-2xl overflow-hidden border z-50 md:z-auto`}
       style={{ zIndex: windowState.zIndex }}
     >
       {/* Window Header */}
       <div 
-        className={`h-12 flex items-center justify-between px-4 select-none ${isActive ? 'th-surface2' : 'bg-transparent'} border-b th-border`}
+        className={`h-12 flex items-center justify-between px-3 md:px-4 select-none ${isActive ? 'th-surface2' : 'bg-transparent'} border-b th-border flex-shrink-0`}
       >
         <div className="flex items-center space-x-3">
-          <div className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 cursor-pointer transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); onClose(); }}>
-            <X size={8} className="text-black opacity-0 group-hover:opacity-100" />
+          <div className="hidden md:flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 cursor-pointer transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); onClose(); }}>
+              <X size={8} className="text-black opacity-0 group-hover:opacity-100" />
+            </div>
+            <div className="w-3 h-3 rounded-full bg-amber-500 hover:bg-amber-400 cursor-pointer transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); onMinimize(); }}>
+              <Minus size={8} className="text-black opacity-0 group-hover:opacity-100" />
+            </div>
+            <div className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 cursor-pointer transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); setIsMaximized(!isMaximized); }}>
+              <Maximize2 size={8} className="text-black opacity-0 group-hover:opacity-100" />
+            </div>
           </div>
-          <div className="w-3 h-3 rounded-full bg-amber-500 hover:bg-amber-400 cursor-pointer transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); onMinimize(); }}>
-            <Minus size={8} className="text-black opacity-0 group-hover:opacity-100" />
-          </div>
-          <div className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 cursor-pointer transition-colors flex items-center justify-center group" onClick={(e) => { e.stopPropagation(); setIsMaximized(!isMaximized); }}>
-            <Maximize2 size={8} className="text-black opacity-0 group-hover:opacity-100" />
-          </div>
-          <span className="ml-4 font-semibold th-text tracking-wide text-sm">{department.name}</span>
+          <span className="font-semibold th-text tracking-wide text-sm">{department.name}</span>
         </div>
+
+        {/* Mobile Close Button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          className="md:hidden flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-500 text-xs font-bold active:bg-rose-500/20"
+        >
+          <X size={15} /> Fechar
+        </button>
       </div>
 
       {/* Window Body */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         
         {/* Sidebar - Sectors */}
-        <div className="w-64 th-surface2 border-r th-border p-4 overflow-y-auto">
-          <h4 className="text-xs font-bold th-muted uppercase tracking-wider mb-4">Setores</h4>
-          <div className="space-y-1">
+        <div className="w-full md:w-64 th-surface2 border-b md:border-b-0 md:border-r th-border p-2 md:p-4 overflow-x-auto md:overflow-y-auto flex md:flex-col gap-1.5 flex-shrink-0">
+          <h4 className="hidden md:block text-xs font-bold th-muted uppercase tracking-wider mb-4">Setores</h4>
+          <div className="flex md:flex-col gap-1.5 w-full">
             {department.sectors.map(sector => (
               <button
                 key={sector.id}
@@ -74,7 +84,7 @@ const DepartmentWindow: React.FC<DepartmentWindowProps> = ({
                   setActiveSectorId(sector.id);
                   setActiveProcessId(null);
                 }}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all ${
+                className={`text-left px-3 py-2 md:py-2.5 rounded-xl text-xs md:text-sm transition-all whitespace-nowrap md:whitespace-normal flex-shrink-0 md:flex-shrink md:w-full ${
                   activeSectorId === sector.id 
                     ? 'bg-primary/20 text-primary font-semibold border border-primary/30' 
                     : 'th-muted hover:bg-primary/5 hover:text-primary'

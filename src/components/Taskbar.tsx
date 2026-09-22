@@ -32,10 +32,10 @@ const Taskbar: React.FC<TaskbarProps> = ({
 }) => {
   
   return (
-    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 h-16 th-surface border th-border shadow-xl rounded-2xl flex items-center px-4 z-50">
+    <div className="fixed bottom-0 md:bottom-6 left-0 md:left-1/2 md:-translate-x-1/2 w-full md:w-auto h-16 th-surface border-t md:border th-border shadow-2xl md:rounded-2xl flex items-center justify-around md:justify-center px-2 md:px-4 z-40 backdrop-blur-lg bg-surface/95">
       
       {/* Start Button / System Menu */}
-      <div className="flex items-center space-x-2 mr-4">
+      <div className="hidden md:flex items-center space-x-2 mr-4">
         <button className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-md hover:bg-primary/90 transition-all hover:scale-105">
           <Layers size={22} />
         </button>
