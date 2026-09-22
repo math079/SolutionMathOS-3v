@@ -1084,6 +1084,7 @@ const LandingPage: React.FC = () => {
               <a href="#" onClick={(e) => e.preventDefault()} className="hover:text-blue-400 transition-colors">Privacidade</a>
               <a href="#" onClick={(e) => e.preventDefault()} className="hover:text-blue-400 transition-colors">Termos</a>
               <a href="#" onClick={(e) => e.preventDefault()} className="hover:text-blue-400 transition-colors">LGPD</a>
+              <Link to="/seo" className="hover:text-slate-400 text-slate-700 transition-colors">SEO</Link>
             </div>
           </div>
         </div>

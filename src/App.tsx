@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
+import { SeoAuditorView } from './pages/SeoAuditorView';
 import OSShell from './components/OSShell';
 import OS2Shell from './components/OS2Shell';
 import { companyData } from './data/structure';
@@ -45,6 +46,7 @@ function App() {
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/seo" element={<SeoAuditorView />} />
 
       {/* Protected */}
       <Route
