@@ -8,6 +8,7 @@ import {
   PhoneCall, Mail, MapPin, Check, Minus
 } from 'lucide-react';
 import { InteractiveSystemDemo } from '../components/InteractiveSystemDemo';
+import { SalesFunnelQuiz } from '../components/SalesFunnelQuiz';
 
 /* ═══════════════════════════════════════════
    DATA
@@ -121,6 +122,7 @@ const FAQS = [
 
 const NAV_LINKS = [
   { label: 'Funcionalidades', href: '#features' },
+  { label: 'Simular Plano', href: '#funil-recomendador' },
   { label: 'Como funciona', href: '#how' },
   { label: 'Planos', href: '#plans' },
   { label: 'FAQ', href: '#faq' },
@@ -385,7 +387,16 @@ const LandingPage: React.FC = () => {
 
             {/* Right — Interactive System Sandbox Demo */}
             <div className="relative hidden lg:block">
-              <InteractiveSystemDemo />
+              <InteractiveSystemDemo
+                onOpenFunnel={() => {
+                  const el = document.getElementById('funil-recomendador');
+                  if (el) {
+                    const offset = 80;
+                    const pos = el.getBoundingClientRect().top + window.scrollY - offset;
+                    window.scrollTo({ top: pos, behavior: 'smooth' });
+                  }
+                }}
+              />
 
               {/* Floating trust badge bottom-left */}
               <div className="absolute -bottom-5 -left-6 bg-white rounded-2xl shadow-2xl border border-gray-200 px-4 py-3 flex items-center gap-3">
@@ -616,6 +627,13 @@ const LandingPage: React.FC = () => {
 
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ══ INTERACTIVE SALES FUNNEL & PRODUCT RECOMMENDATION ══ */}
+      <section className="py-16 bg-gradient-to-b from-blue-50/50 via-white to-gray-50 border-b border-gray-200" id="funil-recomendador">
+        <div className="max-w-7xl mx-auto px-5">
+          <SalesFunnelQuiz />
         </div>
       </section>
 
