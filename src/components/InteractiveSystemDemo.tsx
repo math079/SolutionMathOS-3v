@@ -660,9 +660,22 @@ function IAView({
 
 function WelcomeScreen({ onStart }: { onStart: () => void }) {
   return (
-    <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white">
-      <div className="max-w-xs w-full text-center px-6">
-        <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
+    <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white p-6">
+      <div className="max-w-xs w-full text-center">
+        {/* Logo da Empresa */}
+        <div className="flex items-center justify-center gap-2.5 mb-3">
+          <img
+            src="/logo.jpg"
+            alt="Solution Math Logo"
+            className="w-10 h-10 rounded-xl object-cover border border-blue-500/30 shadow-md"
+          />
+          <div className="text-left">
+            <span className="font-extrabold text-gray-900 text-sm leading-none block">Solution Math</span>
+            <span className="text-[10px] text-teal-600 font-bold uppercase tracking-wider">OS 3.0 Enterprise</span>
+          </div>
+        </div>
+
+        <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">
           <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse" />
           Demo Interativa · Versão Demonstrativa
         </div>
@@ -785,8 +798,21 @@ function ExplainSlide({
 
 // ─── CTA Final Screen ─────────────────────────────────────────────────────────
 
-function CTAScreen({ onRestart, onOpenFunnel }: { onRestart: () => void; onOpenFunnel?: () => void }) {
+function CTAScreen({
+  onRestart,
+  onOpenFunnel,
+  onCloseFullscreen,
+}: {
+  onRestart: () => void;
+  onOpenFunnel?: () => void;
+  onCloseFullscreen?: () => void;
+}) {
   const handleFunnelClick = () => {
+    // 1. Fecha o modo tela cheia se estiver aberto
+    if (onCloseFullscreen) {
+      onCloseFullscreen();
+    }
+    // 2. Aciona o callback para rolar a tela ou direcionar para o funil
     if (onOpenFunnel) {
       onOpenFunnel();
     } else {
@@ -802,8 +828,17 @@ function CTAScreen({ onRestart, onOpenFunnel }: { onRestart: () => void; onOpenF
   return (
     <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 p-6 text-white text-center">
       <div className="max-w-sm w-full mx-auto">
-        <div className="w-14 h-14 bg-gradient-to-tr from-blue-600 to-teal-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-teal-500/20 border border-white/10">
-          <CheckCircle size={26} className="text-white" />
+        {/* Logo da Empresa */}
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <img
+            src="/logo.jpg"
+            alt="Solution Math Logo"
+            className="w-12 h-12 rounded-2xl object-cover border-2 border-teal-400/40 shadow-xl shadow-teal-500/20"
+          />
+          <div className="text-left">
+            <span className="font-extrabold text-white text-base leading-none block">Solution Math</span>
+            <span className="text-[10px] text-teal-400 font-bold uppercase tracking-wider">OS 3.0 Enterprise</span>
+          </div>
         </div>
 
         <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-teal-500/20 text-teal-300 rounded-full border border-teal-500/30">
@@ -1026,6 +1061,13 @@ export const InteractiveSystemDemo: React.FC<{ onOpenFunnel?: () => void }> = ({
           <div className="flex-1 bg-gray-100 rounded px-3 py-0.5 text-xs text-gray-400 font-mono truncate">
             solutionmath.com.br/app
           </div>
+          <button
+            onClick={() => setIsFullscreen(f => !f)}
+            title={isFS ? 'Sair da tela cheia (ESC)' : 'Expandir para tela cheia'}
+            className="flex-shrink-0 text-gray-400 hover:text-gray-700 transition-colors p-1 rounded hover:bg-gray-100"
+          >
+            {isFS ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+          </button>
         </div>
 
         {/* App Shell */}
@@ -1033,9 +1075,16 @@ export const InteractiveSystemDemo: React.FC<{ onOpenFunnel?: () => void }> = ({
 
           {/* Sidebar — dark, fiel ao SO V3 */}
           <aside className="w-44 flex-shrink-0 bg-[#0f1117] flex flex-col overflow-hidden">
-            <div className="px-3 pt-3 pb-2.5 border-b border-white/5 flex-shrink-0">
-              <p className="text-white font-bold text-xs tracking-tight">Solution Math</p>
-              <span className="text-xs text-teal-400 font-medium">OS 3.0 Enterprise</span>
+            <div className="px-3 pt-3 pb-2.5 border-b border-white/5 flex-shrink-0 flex items-center gap-2">
+              <img
+                src="/logo.jpg"
+                alt="Solution Math Logo"
+                className="w-6 h-6 rounded-md object-cover border border-teal-500/40 flex-shrink-0 shadow-sm"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-white font-bold text-xs tracking-tight truncate">Solution Math</p>
+                <span className="text-[10px] text-teal-400 font-medium block leading-none">OS 3.0 Enterprise</span>
+              </div>
             </div>
 
             <nav className="flex-1 overflow-y-auto py-2 space-y-3">
@@ -1139,6 +1188,7 @@ export const InteractiveSystemDemo: React.FC<{ onOpenFunnel?: () => void }> = ({
             <CTAScreen
               onRestart={handleRestart}
               onOpenFunnel={onOpenFunnel}
+              onCloseFullscreen={() => setIsFullscreen(false)}
             />
           )}
 

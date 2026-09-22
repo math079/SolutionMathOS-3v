@@ -117,6 +117,19 @@ Gostaria de garantir as condições e promoções recomendadas pelo funil e agen
       <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
+      {/* Brand Header */}
+      <div className="flex items-center justify-center gap-3 mb-6">
+        <img
+          src="/logo.jpg"
+          alt="Solution Math Logo"
+          className="w-10 h-10 rounded-xl object-cover border-2 border-blue-500/30 shadow-md shadow-blue-500/10"
+        />
+        <div className="text-left">
+          <span className="font-extrabold text-gray-900 text-base leading-none block">Solution Math OS</span>
+          <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">Simulador Oficial & Diagnóstico de Negócio</span>
+        </div>
+      </div>
+
       {/* Funnel Progress Tracker */}
       <div className="flex items-center justify-between max-w-md mx-auto mb-8 border-b border-gray-100 pb-4">
         {[
