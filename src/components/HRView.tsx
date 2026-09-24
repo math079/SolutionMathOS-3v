@@ -111,12 +111,27 @@ const HRView: React.FC = () => {
   const [simulatedRevenue, setSimulatedRevenue] = useState('150000');
   const [simulationResult, setSimulationResult] = useState<any>(null);
   const [simulating, setSimulating] = useState(false);
+  const [currentNetProfit, setCurrentNetProfit] = useState<number>(0);
+  const [customProfitBase, setCustomProfitBase] = useState<string>('');
 
   useEffect(() => { 
     fetchUsers(); 
     fetchContractors();
     fetchIncentives();
+    fetchNetProfit();
   }, []);
+
+  const fetchNetProfit = async () => {
+    try {
+      const res = await fetch('http://localhost:3001/api/finance/summary');
+      const data = await res.json();
+      if (data && data.net_profit !== undefined) {
+        setCurrentNetProfit(data.net_profit);
+      }
+    } catch (e) {
+      console.error("Erro ao carregar lucro líquido:", e);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -1238,6 +1253,64 @@ const HRView: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Assistente Inteligente de Bonificação sobre Lucro Líquido (5% do Dono/Sócios) */}
+              {incentiveForm.type === 'annual_bonus' && (
+                <div className="p-3.5 bg-slate-900 border border-purple-500/30 rounded-xl space-y-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-slate-800 pb-2">
+                    <span className="text-xs font-bold text-purple-300 flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-purple-400" />
+                      Calculadora de Bonificação sobre Lucro Líquido
+                    </span>
+                    <span className="text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                      Lucro Líquido Real: {fmt(currentNetProfit)}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-300">
+                    Selecione a porcentagem do lucro líquido que o dono/sócio receberá ao final do ano:
+                  </p>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {[1, 2, 3, 5, 8, 10, 15].map(pct => {
+                      const isRecommended = pct === 5;
+                      return (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => {
+                            const base = parseFloat(customProfitBase) || currentNetProfit || 0;
+                            const calculated = Math.round(base * (pct / 100));
+                            setIncentiveForm(prev => ({
+                              ...prev,
+                              amount: String(calculated),
+                              metric_description: `Bonificação Anual de ${pct}% sobre o Lucro Líquido da Empresa (${fmt(base)})`
+                            }));
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                            isRecommended
+                              ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-900/50'
+                              : 'bg-slate-800 hover:bg-slate-700 text-purple-200 border border-slate-700'
+                          }`}
+                        >
+                          {pct}% {isRecommended ? '★ (5% do Dono)' : ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-400">
+                    <span>Base alternativa de lucro (R$):</span>
+                    <input
+                      type="number"
+                      placeholder={String(Math.round(currentNetProfit))}
+                      value={customProfitBase}
+                      onChange={e => setCustomProfitBase(e.target.value)}
+                      className="w-36 bg-slate-950 border border-slate-700 rounded px-2 py-0.5 text-xs text-emerald-400 font-bold focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
