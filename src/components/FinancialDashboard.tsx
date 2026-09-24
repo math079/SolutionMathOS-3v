@@ -5,8 +5,13 @@ import {
 } from 'recharts';
 import {
   TrendingUp, TrendingDown, DollarSign, Percent, Target, Zap,
-  PlusCircle, X, Calendar, Edit3, Trash2, Printer, Calculator
+  PlusCircle, X, Calendar, Edit3, Trash2, Printer, Calculator,
+  Wallet, Layers, Repeat, BarChart3
 } from 'lucide-react';
+import { FinancialInvestmentsView } from './finance/FinancialInvestmentsView';
+import { FinancialCashFlowView } from './finance/FinancialCashFlowView';
+import { FinancialBudgetsView } from './finance/FinancialBudgetsView';
+import { FinancialRecurringView } from './finance/FinancialRecurringView';
 
 const COLORS = ['#14b8a6','#2dd4bf','#0d9488','#5eead4','#99f6e4','#f59e0b','#ef4444','#8b5cf6'];
 
@@ -36,6 +41,7 @@ const FinancialDashboard: React.FC = () => {
   const [byCategory, setByCategory]     = useState<CatRow[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [activeSubTab, setActiveSubTab] = useState<'dre' | 'investments' | 'cash_flow' | 'budgets' | 'recurring'>('dre');
   const [showAddModal, setShowAddModal]   = useState(false);
   const [editingTx, setEditingTx]       = useState<Transaction | null>(null);
 
@@ -421,6 +427,44 @@ const FinancialDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Submódulos Financeiros (Abas Modulares do Sistema) */}
+      <div className="flex flex-wrap items-center gap-2 border-b th-border pb-3 print:hidden">
+        {[
+          { id: 'dre',         label: 'Visão Geral DRE & Extrato',  icon: BarChart3 },
+          { id: 'investments', label: 'Investimentos & Holdings',   icon: Layers },
+          { id: 'cash_flow',   label: 'Caixa & Capital de Giro',     icon: Wallet },
+          { id: 'budgets',     label: 'Verbas por Setor',           icon: Target },
+          { id: 'recurring',   label: 'Gastos Recorrentes',         icon: Repeat },
+        ].map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeSubTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSubTab(tab.id as any)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                isActive
+                  ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-102'
+                  : 'th-surface2 th-muted border-th-border hover:th-text hover:border-primary/40'
+              }`}
+            >
+              <Icon size={14} className={isActive ? 'text-white' : 'text-primary'} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Renderização Condicional dos Submódulos */}
+      {activeSubTab === 'investments' && <FinancialInvestmentsView />}
+      {activeSubTab === 'cash_flow' && <FinancialCashFlowView />}
+      {activeSubTab === 'budgets' && <FinancialBudgetsView />}
+      {activeSubTab === 'recurring' && <FinancialRecurringView />}
+
+      {/* Visão Padrão DRE Executivo */}
+      {activeSubTab === 'dre' && (
+        <>
+
       {/* Month Filter Quick Badges */}
       <div className="flex flex-wrap items-center gap-1.5 print:hidden">
         <button
@@ -797,6 +841,8 @@ const FinancialDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Add / Edit Transaction Modal */}
       {showAddModal && (

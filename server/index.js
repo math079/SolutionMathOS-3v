@@ -400,6 +400,225 @@ app.delete('/api/finance/transactions/:id', (req, res) => {
 });
 
 // ════════════════════════════════════════════
+// FINANCIAL ADVANCED MODULES & ORÇAMENTOS
+// ════════════════════════════════════════════
+
+// 1. Categorias Customizadas de Investimento
+app.get('/api/finance/investment-categories', (req, res) => {
+  db.all("SELECT * FROM financial_investment_categories ORDER BY id ASC", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/finance/investment-categories', (req, res) => {
+  const { name, description, color } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'O nome da categoria é obrigatório.' });
+  }
+  db.run(
+    `INSERT INTO financial_investment_categories (name, description, color) VALUES (?, ?, ?)`,
+    [name.trim(), description || '', color || '#14b8a6'],
+    function(err) {
+      if (err) {
+        if (err.message.includes('UNIQUE')) {
+          return res.status(400).json({ error: 'Essa categoria de investimento já existe.' });
+        }
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ id: this.lastID, name: name.trim(), description: description || '', color: color || '#14b8a6' });
+    }
+  );
+});
+
+app.delete('/api/finance/investment-categories/:id', (req, res) => {
+  db.run(`DELETE FROM financial_investment_categories WHERE id = ?`, [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// 2. Orçamento e Verbas por Setor
+app.get('/api/finance/budgets', (req, res) => {
+  const month = req.query.month || new Date().toISOString().slice(0, 7);
+  db.all(
+    `SELECT b.*,
+      COALESCE((
+        SELECT SUM(t.amount) FROM transactions t 
+        WHERE t.type = 'expense' 
+        AND t.month = b.month 
+        AND (t.department = b.sector OR t.category = b.sector)
+      ), 0) as spent_amount
+     FROM financial_budgets b
+     WHERE b.month = ?
+     ORDER BY b.allocated_amount DESC`,
+    [month],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    }
+  );
+});
+
+app.post('/api/finance/budgets', (req, res) => {
+  const { sector, allocated_amount, month, notes, category_type } = req.body;
+  const currentMonth = month || new Date().toISOString().slice(0, 7);
+  const numAllocated = parseFloat(allocated_amount) || 0;
+
+  db.run(
+    `INSERT INTO financial_budgets (sector, allocated_amount, month, notes, category_type, updated_at)
+     VALUES (?, ?, ?, ?, ?, datetime('now'))
+     ON CONFLICT(sector, month) DO UPDATE SET
+       allocated_amount = excluded.allocated_amount,
+       notes = excluded.notes,
+       category_type = excluded.category_type,
+       updated_at = datetime('now')`,
+    [sector, numAllocated, currentMonth, notes || '', category_type || 'investment'],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true, sector, allocated_amount: numAllocated, month: currentMonth });
+    }
+  );
+});
+
+app.delete('/api/finance/budgets/:id', (req, res) => {
+  db.run(`DELETE FROM financial_budgets WHERE id = ?`, [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// 3. Divisão de Contas e Caixa / Capital de Giro
+app.get('/api/finance/accounts', (req, res) => {
+  db.all("SELECT * FROM financial_accounts ORDER BY id ASC", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.put('/api/finance/accounts/:id', (req, res) => {
+  const { balance, target_amount, description } = req.body;
+  db.run(
+    `UPDATE financial_accounts SET
+      balance = COALESCE(?, balance),
+      target_amount = COALESCE(?, target_amount),
+      description = COALESCE(?, description),
+      updated_at = datetime('now')
+     WHERE id = ?`,
+    [
+      balance !== undefined ? parseFloat(balance) : null,
+      target_amount !== undefined ? parseFloat(target_amount) : null,
+      description || null,
+      req.params.id
+    ],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success: true });
+    }
+  );
+});
+
+// 4. Custos Recorrentes
+app.get('/api/finance/recurring', (req, res) => {
+  db.all("SELECT * FROM financial_recurring ORDER BY due_day ASC, id DESC", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/finance/recurring', (req, res) => {
+  const { description, amount, category_type, department, due_day, payment_method } = req.body;
+  db.run(
+    `INSERT INTO financial_recurring (description, amount, category_type, department, due_day, payment_method)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      description,
+      parseFloat(amount) || 0,
+      category_type || 'fixed',
+      department || 'Geral',
+      parseInt(due_day) || 5,
+      payment_method || 'Boleto'
+    ],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({
+        id: this.lastID,
+        description,
+        amount: parseFloat(amount) || 0,
+        category_type: category_type || 'fixed',
+        department: department || 'Geral',
+        due_day: parseInt(due_day) || 5,
+        payment_method: payment_method || 'Boleto'
+      });
+    }
+  );
+});
+
+app.delete('/api/finance/recurring/:id', (req, res) => {
+  db.run(`DELETE FROM financial_recurring WHERE id = ?`, [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// 5. Inteligência e Recomendações de Capital de Giro e Burn Rate
+app.get('/api/finance/analytics/cash-flow-health', (req, res) => {
+  // Média de custos dos últimos 3 meses
+  db.all(
+    `SELECT month, SUM(amount) as monthly_expense
+     FROM transactions 
+     WHERE type = 'expense' 
+     GROUP BY month 
+     ORDER BY month DESC 
+     LIMIT 3`,
+    [],
+    (err, expenseRows) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      const count = expenseRows.length || 1;
+      const totalExpense = expenseRows.reduce((acc, r) => acc + (r.monthly_expense || 0), 0);
+      const avgMonthlyBurn = totalExpense / count;
+
+      // Buscar saldos atuais das contas
+      db.all("SELECT type, balance FROM financial_accounts", [], (errAcc, accounts) => {
+        if (errAcc) return res.status(500).json({ error: errAcc.message });
+
+        let totalCash = 0;
+        let workingCapital = 0;
+        let emergencyReserve = 0;
+
+        (accounts || []).forEach(a => {
+          totalCash += (a.balance || 0);
+          if (a.type === 'working_capital') workingCapital += (a.balance || 0);
+          if (a.type === 'emergency_reserve') emergencyReserve += (a.balance || 0);
+        });
+
+        // Recomendações automáticas
+        const recommendedRunwayMonths = 3; // 3 meses de segurança mínima
+        const idealWorkingCapital = avgMonthlyBurn * 1.5; // 1.5x custo mensal
+        const idealEmergencyReserve = avgMonthlyBurn * 3;  // 3x custo mensal
+        const currentRunway = avgMonthlyBurn > 0 ? (totalCash / avgMonthlyBurn).toFixed(1) : '12+';
+
+        res.json({
+          avg_monthly_burn: Math.round(avgMonthlyBurn),
+          total_cash: totalCash,
+          working_capital: workingCapital,
+          emergency_reserve: emergencyReserve,
+          ideal_working_capital: Math.round(idealWorkingCapital),
+          ideal_emergency_reserve: Math.round(idealEmergencyReserve),
+          current_runway_months: currentRunway,
+          recommendation: avgMonthlyBurn === 0
+            ? 'Dados insuficientes de despesas para calcular o Burn Rate. Continue registrando as operações.'
+            : totalCash >= idealEmergencyReserve
+            ? 'Excelente saúde financeira! O caixa atual cobre mais de 3 meses de operação completa.'
+            : 'Atenção recomendada: O capital de giro atual está abaixo do recomendado para 3 meses de operação.'
+        });
+      });
+    }
+  );
+});
+
+// ════════════════════════════════════════════
 // PRODUCTS (Catálogo & Lucro por Ticket)
 // ════════════════════════════════════════════
 app.get('/api/products', (req, res) => {

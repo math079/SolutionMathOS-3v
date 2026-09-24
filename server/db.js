@@ -8,6 +8,11 @@ const db = new sqlite3.Database(dbPath, (err) => {
   } else {
     console.log('Connected to the SQLite database.');
 
+    // Otimização de Performance e Concorrência para Alta Capacidade (VPS)
+    db.run("PRAGMA journal_mode = WAL;");
+    db.run("PRAGMA busy_timeout = 5000;");
+    db.run("PRAGMA synchronous = NORMAL;");
+
     db.serialize(() => {
       // Users (RH)
       db.run(`CREATE TABLE IF NOT EXISTS users (
@@ -511,6 +516,94 @@ const db = new sqlite3.Database(dbPath, (err) => {
           });
         }
       });
+      // ═══════════════════════════════════════════
+      // FINANCIAL ADVANCED MODULES (Orçamento, Caixas, Recorrentes e Investimentos)
+      // ═══════════════════════════════════════════
+
+      // 1. Categorias Customizadas de Investimento (ex: Holding, Cripto, Imóveis, Expansão)
+      db.run(`CREATE TABLE IF NOT EXISTS financial_investment_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        description TEXT,
+        color TEXT DEFAULT '#14b8a6',
+        created_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      // Inserir categorias padrão de investimento se tabela estiver vazia
+      db.get("SELECT COUNT(*) as count FROM financial_investment_categories", (err, row) => {
+        if (!err && row && row.count === 0) {
+          const defaults = [
+            ['Tráfego Pago & Marketing Digital', 'Campanhas de Google Ads, Meta Ads e aquisição de leads', '#3b82f6'],
+            ['Holding & Participações', 'Aportes societários, blindagem patrimonial e expansão', '#8b5cf6'],
+            ['Tecnologia, Infra & IA', 'Softwares, licenças, servidores e APIs de inteligência artificial', '#10b981'],
+            ['Expansão Física & Maquinário', 'Reformas, aquisição de equipamentos e novos pontos de atendimento', '#f59e0b']
+          ];
+          defaults.forEach(([name, desc, color]) => {
+            db.run(`INSERT INTO financial_investment_categories (name, description, color) VALUES (?, ?, ?)`, [name, desc, color]);
+          });
+        }
+      });
+
+      // 2. Orçamento e Verbas Planejadas por Setor / Departamento
+      db.run(`CREATE TABLE IF NOT EXISTS financial_budgets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sector TEXT NOT NULL,
+        category_type TEXT DEFAULT 'investment',
+        allocated_amount REAL NOT NULL DEFAULT 0,
+        month TEXT NOT NULL,
+        notes TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(sector, month)
+      )`);
+
+      // 3. Divisão de Contas, Caixa Operacional e Capital de Giro
+      db.run(`CREATE TABLE IF NOT EXISTS financial_accounts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        type TEXT NOT NULL, -- 'operational', 'working_capital', 'emergency_reserve', 'investment_fund'
+        balance REAL NOT NULL DEFAULT 0,
+        target_amount REAL DEFAULT 0,
+        description TEXT,
+        updated_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      // Inserir contas base de caixa caso não existam
+      db.get("SELECT COUNT(*) as count FROM financial_accounts", (err, row) => {
+        if (!err && row && row.count === 0) {
+          const initialAccounts = [
+            ['Caixa Principal Operacional', 'operational', 45000, 30000, 'Movimentação do dia a dia, entradas e saídas correntes'],
+            ['Capital de Giro Bloqueado', 'working_capital', 60000, 80000, 'Reserva de liquidez imediata para sustentar a roda operacional'],
+            ['Reserva Estratégica de Segurança', 'emergency_reserve', 35000, 60000, 'Fundo de segurança contra imprevistos e recessão'],
+            ['Fundo de Novos Investimentos', 'investment_fund', 25000, 50000, 'Capital alocado exclusivamente para expansão e aportes estratégicos']
+          ];
+          initialAccounts.forEach(([name, type, bal, target, desc]) => {
+            db.run(
+              `INSERT INTO financial_accounts (name, type, balance, target_amount, description) VALUES (?, ?, ?, ?, ?)`,
+              [name, type, bal, target, desc]
+            );
+          });
+        }
+      });
+
+      // 4. Custos e Gastos Recorrentes (Assinaturas, Aluguéis, Contratos)
+      db.run(`CREATE TABLE IF NOT EXISTS financial_recurring (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        description TEXT NOT NULL,
+        amount REAL NOT NULL DEFAULT 0,
+        category_type TEXT DEFAULT 'fixed', -- 'fixed', 'variable', 'investment'
+        department TEXT DEFAULT 'Geral',
+        due_day INTEGER DEFAULT 5,
+        payment_method TEXT DEFAULT 'Boleto',
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      // 5. Adicionar colunas de categorização avançada na tabela transactions
+      ['cost_type', 'department', 'budget_id'].forEach(col => {
+        db.run(`ALTER TABLE transactions ADD COLUMN ${col} TEXT`, () => {});
+      });
+
     });
   }
 });
