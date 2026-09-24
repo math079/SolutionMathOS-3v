@@ -17,6 +17,7 @@ interface Sale {
   customer_phone?: string;
   product_name: string;
   amount: number;
+  cost?: number;
   payment_method: string;
   channel: string;
   status: string;
@@ -67,7 +68,8 @@ export const SalesDashboardView: React.FC = () => {
     amount: '15000',
     payment_method: 'PIX',
     notes: '',
-    sync_finance: true
+    sync_finance: true,
+    cost: '0'
   });
 
   const webhookUrl = 'http://localhost:3001/api/sales/webhook';
@@ -115,7 +117,8 @@ export const SalesDashboardView: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          amount: parseFloat(form.amount) || 0
+          amount: parseFloat(form.amount) || 0,
+          cost: parseFloat(form.cost) || 0
         })
       });
 
@@ -129,7 +132,8 @@ export const SalesDashboardView: React.FC = () => {
           amount: '15000',
           payment_method: 'PIX',
           notes: '',
-          sync_finance: true
+          sync_finance: true,
+          cost: '0'
         });
         loadSalesData();
       }
@@ -431,6 +435,8 @@ export const SalesDashboardView: React.FC = () => {
                 <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider hidden sm:table-cell">Pagamento</th>
                 <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider hidden sm:table-cell">Status</th>
                 <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider">Valor</th>
+                <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider">Custo</th>
+                <th className="py-3 px-3 text-left text-xs font-semibold th-muted uppercase tracking-wider">Lucro</th>
                 <th className="py-3 px-3 text-right text-xs font-semibold th-muted uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
@@ -475,6 +481,12 @@ export const SalesDashboardView: React.FC = () => {
                     </td>
                     <td className="py-3 px-3 font-bold text-emerald-500">
                       {fmt(sale.amount)}
+                    </td>
+                    <td className="py-3 px-3 font-bold text-rose-500">
+                      {sale.cost ? fmt(sale.cost) : 'R$ 0,00'}
+                    </td>
+                    <td className="py-3 px-3 font-bold text-primary">
+                      {fmt(sale.amount - (sale.cost || 0))}
                     </td>
                     <td className="py-3 px-3 text-right">
                       <button
@@ -565,6 +577,17 @@ export const SalesDashboardView: React.FC = () => {
                     value={form.amount}
                     onChange={e => setForm({ ...form, amount: e.target.value })}
                     className="th-input text-sm font-bold text-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold th-muted mb-1 block">Custo de Desenvolvimento / Execução (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Ex: 20000"
+                    value={form.cost}
+                    onChange={e => setForm({ ...form, cost: e.target.value })}
+                    className="th-input text-sm font-bold text-rose-500"
                   />
                 </div>
               </div>

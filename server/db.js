@@ -446,6 +446,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
         customer_phone TEXT,
         product_name TEXT NOT NULL,
         amount REAL NOT NULL,
+        cost REAL DEFAULT 0,
         payment_method TEXT DEFAULT 'PIX',
         channel TEXT DEFAULT 'Manual',
         status TEXT DEFAULT 'Aprovado',
@@ -572,10 +573,10 @@ const db = new sqlite3.Database(dbPath, (err) => {
       db.get("SELECT COUNT(*) as count FROM financial_accounts", (err, row) => {
         if (!err && row && row.count === 0) {
           const initialAccounts = [
-            ['Caixa Principal Operacional', 'operational', 45000, 30000, 'Movimentação do dia a dia, entradas e saídas correntes'],
-            ['Capital de Giro Bloqueado', 'working_capital', 60000, 80000, 'Reserva de liquidez imediata para sustentar a roda operacional'],
-            ['Reserva Estratégica de Segurança', 'emergency_reserve', 35000, 60000, 'Fundo de segurança contra imprevistos e recessão'],
-            ['Fundo de Novos Investimentos', 'investment_fund', 25000, 50000, 'Capital alocado exclusivamente para expansão e aportes estratégicos']
+            ['Caixa Principal Operacional', 'operational', 78500, 50000, 'Movimentação do dia a dia, entradas e saídas correntes'],
+            ['Capital de Giro Bloqueado', 'working_capital', 45000, 80000, 'Reserva de liquidez imediata para sustentar a roda operacional'],
+            ['Reserva Estratégica de Segurança', 'emergency_reserve', 32000, 60000, 'Fundo de segurança contra imprevistos e recessão'],
+            ['Fundo de Novos Investimentos', 'investment_fund', 18500, 50000, 'Capital alocado exclusivamente para expansão e aportes estratégicos']
           ];
           initialAccounts.forEach(([name, type, bal, target, desc]) => {
             db.run(
@@ -596,13 +597,121 @@ const db = new sqlite3.Database(dbPath, (err) => {
         due_day INTEGER DEFAULT 5,
         payment_method TEXT DEFAULT 'Boleto',
         is_active INTEGER DEFAULT 1,
+        source_type TEXT DEFAULT 'manual', -- 'manual', 'contractor'
+        source_id INTEGER,
         created_at TEXT DEFAULT (datetime('now'))
       )`);
 
-      // 5. Adicionar colunas de categorização avançada na tabela transactions
+      ['source_type', 'source_id'].forEach(col => {
+        db.run(`ALTER TABLE financial_recurring ADD COLUMN ${col} TEXT`, () => {});
+      });
+
+      db.get("SELECT COUNT(*) as count FROM financial_recurring WHERE source_type = 'manual'", (err, row) => {
+        if (!err && row && row.count === 0) {
+          const recurring = [
+            ['Hospedagem VPS KVM 4 (Hostinger)', 119.17, 'fixed', 'TI & Infraestrutura', 5, 'Cartão de Crédito'],
+            ['Domínio solutionmathos.com.br', 5.83, 'fixed', 'TI & Infraestrutura', 15, 'Cartão de Crédito'],
+            ['Google Workspace (5 licenças)', 175, 'fixed', 'TI & Infraestrutura', 10, 'Cartão de Crédito'],
+            ['Certificado SSL Wildcard', 12.50, 'fixed', 'TI & Infraestrutura', 1, 'Cartão de Crédito'],
+            ['Tokens API OpenRouter (IA Lyra)', 85, 'variable', 'TI & Infraestrutura', 28, 'Cartão de Crédito'],
+            ['Aluguel Escritório Comercial', 3200, 'fixed', 'Operações', 10, 'Boleto'],
+            ['Energia Elétrica', 420, 'variable', 'Operações', 20, 'Boleto'],
+            ['Internet Fibra 500Mbps', 189.90, 'fixed', 'TI & Infraestrutura', 15, 'Débito Automático'],
+            ['Plano Saúde Empresarial (4 vidas)', 1960, 'fixed', 'RH & Benefícios', 5, 'Boleto'],
+            ['Seguro Empresarial', 350, 'fixed', 'Operações', 1, 'Boleto'],
+            ['Ferramenta CRM (licença mensal)', 297, 'fixed', 'Vendas', 10, 'Cartão de Crédito'],
+            ['Contabilidade & BPO Fiscal', 2800, 'fixed', 'Contabilidade', 5, 'Boleto'],
+            ['Assessoria Jurídica', 3500, 'fixed', 'Jurídico', 10, 'Boleto']
+          ];
+          recurring.forEach(([desc, amount, catType, dept, day, payment]) => {
+            db.run(
+              `INSERT INTO financial_recurring (description, amount, category_type, department, due_day, payment_method, is_active, source_type)
+               VALUES (?, ?, ?, ?, ?, ?, 1, 'manual')`,
+              [desc, amount, catType, dept, day, payment]
+            );
+          });
+        }
+      });
+
+      // 5. Empresas e Serviços Terceirizados (RH & Operações)
+      db.run(`CREATE TABLE IF NOT EXISTS hr_contractors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company_name TEXT NOT NULL,
+        service_type TEXT NOT NULL,
+        monthly_cost REAL NOT NULL DEFAULT 0,
+        contract_status TEXT DEFAULT 'Ativo',
+        due_day INTEGER DEFAULT 10,
+        contact_name TEXT,
+        contact_email TEXT,
+        contact_phone TEXT,
+        notes TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      // Seed inicial de empresas terceirizadas se vazio
+      db.get("SELECT COUNT(*) as count FROM hr_contractors", (err, row) => {
+        if (!err && row && row.count === 0) {
+          const sampleContractors = [
+            ['Assessoria Jurídica Silva & Associados', 'Jurídico & Compliance', 3500, 'Ativo', 10, 'Dr. Roberto Silva', 'juridico@silvaadv.com.br', '(11) 98888-1122', 'Contrato de blindagem contratual e trabalhista'],
+            ['Contabilidade & BPO Fiscal Express', 'Contabilidade & Fiscal', 2800, 'Ativo', 5, 'Mariana Costa', 'contato@expresscontabil.com.br', '(11) 97777-3344', 'Escrituração, balancetes mensais e folha fiscal'],
+            ['Agência de Performance & Tráfego Alpha', 'Marketing & Growth', 4500, 'Ativo', 15, 'Lucas Lima', 'lucas@agenciaalpha.com', '(11) 96666-5566', 'Gestão estratégica de tráfego pago Google e Meta Ads'],
+            ['Facilities, Limpeza & Segurança TechGuard', 'Operações & Facilities', 1700, 'Ativo', 20, 'Claudio Ramos', 'operacoes@techguard.com.br', '(11) 95555-7788', 'Manutenção predial e infraestrutura física']
+          ];
+          sampleContractors.forEach(([name, serv, cost, st, day, contact, email, phone, notes]) => {
+            db.run(
+              `INSERT INTO hr_contractors (company_name, service_type, monthly_cost, contract_status, due_day, contact_name, contact_email, contact_phone, notes)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [name, serv, cost, st, day, contact, email, phone, notes],
+              function(errInsert) {
+                if (!errInsert) {
+                  const contractorId = this.lastID;
+                  const currentMonth = '2026-09';
+                  // Lançar no Financeiro Geral (Transactions)
+                  db.run(
+                    `INSERT INTO transactions (description, amount, type, category, month, cost_type, department, source_type, source_id)
+                     VALUES (?, ?, 'expense', 'Terceirizados', ?, 'fixed', ?, 'contractor', ?)`,
+                    [`Terceirizado: ${name} (${serv})`, cost, currentMonth, serv, contractorId]
+                  );
+                  // Lançar em Gastos Recorrentes
+                  db.run(
+                    `INSERT INTO financial_recurring (description, amount, category_type, department, due_day, payment_method, is_active, source_type, source_id)
+                     VALUES (?, ?, 'fixed', ?, ?, 'Boleto / TED', 1, 'contractor', ?)`,
+                    [`Contrato: ${name} (${serv})`, cost, serv, day, contractorId]
+                  );
+                }
+              }
+            );
+          });
+        }
+      });
+
+      // Seed inicial de Verbas Setoriais para o mês 2026-09 se vazio
+      db.get("SELECT COUNT(*) as count FROM financial_budgets WHERE month = '2026-09'", (err, row) => {
+        if (!err && row && row.count === 0) {
+          const sampleBudgets = [
+            ['RH & Gestão Executiva (CEOs & Liderança)', 'fixed', 42000, '2026-09', 'Folha fixa interna. João CEO consome R$ 15.000 (39.5% do total da folha).'],
+            ['Marketing & Aquisição (Tráfego Pago)', 'investment', 15000, '2026-09', 'Verba alocada com base no Fundo de Investimentos disponível (R$ 25.000 em caixa).'],
+            ['TI, Cloud & Inteligência Artificial', 'variable', 6000, '2026-09', 'Hospedagem VPS KVM 4, domínios e consumo de tokens de IA.'],
+            ['Operações & Prestadores Terceirizados', 'fixed', 14000, '2026-09', 'Contabilidade, assessoria jurídica e infraestrutura operacional contínua.'],
+            ['Vendas & Comercial', 'variable', 8000, '2026-09', 'Comissões, ferramentas de prospecção e eventos comerciais.']
+          ];
+          sampleBudgets.forEach(([sector, catType, amount, month, notes]) => {
+            db.run(
+              `INSERT INTO financial_budgets (sector, category_type, allocated_amount, month, notes) VALUES (?, ?, ?, ?, ?)`,
+              [sector, catType, amount, month, notes]
+            );
+          });
+        }
+      });
+
+      // 6. Adicionar colunas de categorização avançada na tabela transactions
       ['cost_type', 'department', 'budget_id'].forEach(col => {
         db.run(`ALTER TABLE transactions ADD COLUMN ${col} TEXT`, () => {});
       });
+
+      // 7. Novas colunas (sales.cost e users.equity_percentage)
+      db.run(`ALTER TABLE sales ADD COLUMN cost REAL DEFAULT 0`, () => {});
+      db.run(`ALTER TABLE users ADD COLUMN equity_percentage REAL DEFAULT 0`, () => {});
 
     });
   }

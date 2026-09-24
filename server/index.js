@@ -108,10 +108,11 @@ function syncPayrollToTransactions(userId, userName, userRole, salary, status, c
 }
 
 app.post('/api/users', (req, res) => {
-  const { name, role, email, phone, contract_type, salary, status, hired_at } = req.body;
+  const { name, role, email, phone, contract_type, salary, status, hired_at, equity_percentage } = req.body;
   const numSalary = parseFloat(salary) || 0;
+  const numEquity = parseFloat(equity_percentage) || 0;
   db.run(
-    `INSERT INTO users (name, role, email, phone, contract_type, salary, status, hired_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO users (name, role, email, phone, contract_type, salary, status, hired_at, equity_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       name,
       role || 'Colaborador',
@@ -120,7 +121,8 @@ app.post('/api/users', (req, res) => {
       contract_type || 'PJ',
       numSalary,
       status || 'Ativo',
-      hired_at || new Date().toISOString().split('T')[0]
+      hired_at || new Date().toISOString().split('T')[0],
+      numEquity
     ],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
@@ -136,16 +138,17 @@ app.post('/api/users', (req, res) => {
 
       res.json({
         id: newUserId, name, role, email, phone, contract_type,
-        salary: numSalary, status: newStatus, hired_at
+        salary: numSalary, status: newStatus, hired_at, equity_percentage: numEquity
       });
     }
   );
 });
 
 app.put('/api/users/:id', (req, res) => {
-  const { name, role, email, phone, contract_type, salary, status } = req.body;
+  const { name, role, email, phone, contract_type, salary, status, equity_percentage } = req.body;
   const userId = req.params.id;
   const numSalary = salary !== undefined ? parseFloat(salary) : null;
+  const numEquity = equity_percentage !== undefined ? parseFloat(equity_percentage) : null;
 
   db.run(
     `UPDATE users SET
@@ -155,9 +158,10 @@ app.put('/api/users/:id', (req, res) => {
       phone = COALESCE(?, phone),
       contract_type = COALESCE(?, contract_type),
       salary = COALESCE(?, salary),
-      status = COALESCE(?, status)
+      status = COALESCE(?, status),
+      equity_percentage = COALESCE(?, equity_percentage)
      WHERE id = ?`,
-    [name||null, role||null, email||null, phone||null, contract_type||null, numSalary, status||null, userId],
+    [name||null, role||null, email||null, phone||null, contract_type||null, numSalary, status||null, numEquity, userId],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
 
@@ -190,6 +194,194 @@ app.delete('/api/users/:id', (req, res) => {
     res.json({ success: true });
   });
 });
+
+// ════════════════════════════════════════════
+// EMPRESAS & PRESTADORES TERCEIRIZADOS (RH -> FINANCEIRO GERAL)
+// ════════════════════════════════════════════
+
+function syncContractorToFinance(contractorId, companyName, serviceType, cost, dueDay, status, cb) {
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const numCost = parseFloat(cost) || 0;
+
+  if (status && status !== 'Ativo') {
+    db.run(`DELETE FROM transactions WHERE source_type = 'contractor' AND source_id = ? AND month >= ?`, [contractorId, currentMonth]);
+    db.run(`UPDATE financial_recurring SET is_active = 0 WHERE source_type = 'contractor' AND source_id = ?`, [contractorId], cb);
+    return;
+  }
+
+  const descTx = `Terceirizado: ${companyName} (${serviceType})`;
+  const descRec = `Contrato: ${companyName} (${serviceType})`;
+
+  // 1. Transactions (Financeiro Geral / DRE)
+  db.get(
+    `SELECT id FROM transactions WHERE source_type = 'contractor' AND source_id = ? AND month = ?`,
+    [contractorId, currentMonth],
+    (err, existing) => {
+      if (!err && existing) {
+        db.run(
+          `UPDATE transactions SET description = ?, amount = ?, department = ? WHERE id = ?`,
+          [descTx, numCost, serviceType, existing.id]
+        );
+      } else if (!err) {
+        db.run(
+          `INSERT INTO transactions (description, amount, type, category, month, cost_type, department, source_type, source_id)
+           VALUES (?, ?, 'expense', 'Terceirizados', ?, 'fixed', ?, 'contractor', ?)`,
+          [descTx, numCost, currentMonth, serviceType, contractorId]
+        );
+      }
+    }
+  );
+
+  // 2. Financial Recurring (Gastos Recorrentes)
+  db.get(
+    `SELECT id FROM financial_recurring WHERE source_type = 'contractor' AND source_id = ?`,
+    [contractorId],
+    (err, existingRec) => {
+      if (!err && existingRec) {
+        db.run(
+          `UPDATE financial_recurring SET description = ?, amount = ?, department = ?, due_day = ?, is_active = 1 WHERE id = ?`,
+          [descRec, numCost, serviceType, dueDay || 10, existingRec.id],
+          cb
+        );
+      } else if (!err) {
+        db.run(
+          `INSERT INTO financial_recurring (description, amount, category_type, department, due_day, payment_method, is_active, source_type, source_id)
+           VALUES (?, ?, 'fixed', ?, ?, 'Boleto / TED', 1, 'contractor', ?)`,
+          [descRec, numCost, serviceType, dueDay || 10, contractorId],
+          cb
+        );
+      }
+    }
+  );
+}
+
+app.get('/api/hr/contractors', (req, res) => {
+  db.all("SELECT * FROM hr_contractors ORDER BY id DESC", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+app.post('/api/hr/contractors', (req, res) => {
+  const { company_name, service_type, monthly_cost, contract_status, due_day, contact_name, contact_email, contact_phone, notes } = req.body;
+  const cost = parseFloat(monthly_cost) || 0;
+  const status = contract_status || 'Ativo';
+  const day = parseInt(due_day) || 10;
+
+  db.run(
+    `INSERT INTO hr_contractors (company_name, service_type, monthly_cost, contract_status, due_day, contact_name, contact_email, contact_phone, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [company_name, service_type, cost, status, day, contact_name || '', contact_email || '', contact_phone || '', notes || ''],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      const newId = this.lastID;
+      syncContractorToFinance(newId, company_name, service_type, cost, day, status, () => {});
+      res.json({ id: newId, company_name, service_type, monthly_cost: cost, contract_status: status, due_day: day });
+    }
+  );
+});
+
+app.put('/api/hr/contractors/:id', (req, res) => {
+  const { company_name, service_type, monthly_cost, contract_status, due_day, contact_name, contact_email, contact_phone, notes } = req.body;
+  const id = req.params.id;
+  const cost = parseFloat(monthly_cost) || 0;
+  const status = contract_status || 'Ativo';
+  const day = parseInt(due_day) || 10;
+
+  db.run(
+    `UPDATE hr_contractors SET
+      company_name = COALESCE(?, company_name),
+      service_type = COALESCE(?, service_type),
+      monthly_cost = COALESCE(?, monthly_cost),
+      contract_status = COALESCE(?, contract_status),
+      due_day = COALESCE(?, due_day),
+      contact_name = COALESCE(?, contact_name),
+      contact_email = COALESCE(?, contact_email),
+      contact_phone = COALESCE(?, contact_phone),
+      notes = COALESCE(?, notes)
+     WHERE id = ?`,
+    [company_name, service_type, cost, status, day, contact_name, contact_email, contact_phone, notes, id],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      syncContractorToFinance(parseInt(id), company_name, service_type, cost, day, status, () => {});
+      res.json({ success: true });
+    }
+  );
+});
+
+app.delete('/api/hr/contractors/:id', (req, res) => {
+  const id = req.params.id;
+  db.run(`DELETE FROM transactions WHERE source_type = 'contractor' AND source_id = ?`, [id]);
+  db.run(`DELETE FROM financial_recurring WHERE source_type = 'contractor' AND source_id = ?`, [id]);
+  db.run(`DELETE FROM hr_contractors WHERE id = ?`, [id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// Análise Estatística de Custo de Gestão (CEOs vs Equipe) e Impacto no Caixa
+app.get('/api/finance/analytics/management-cost', (req, res) => {
+  db.all("SELECT id, name, role, salary, contract_type FROM users WHERE status = 'Ativo'", [], (errUsers, users) => {
+    if (errUsers) return res.status(500).json({ error: errUsers.message });
+
+    db.all("SELECT balance, type FROM financial_accounts", [], (errAcc, accounts) => {
+      const totalCash = (accounts || []).reduce((acc, a) => acc + (a.balance || 0), 0);
+      
+      let executiveCost = 0;
+      let operationalCost = 0;
+      const executiveMembers = [];
+      const operationalMembers = [];
+
+      (users || []).forEach(u => {
+        const roleLower = (u.role || '').toLowerCase();
+        const isExecutive = roleLower.includes('ceo') || 
+                            roleLower.includes('diretor') || 
+                            roleLower.includes('fundador') || 
+                            roleLower.includes('executiv') ||
+                            roleLower.includes('sócio') ||
+                            u.contract_type === 'Sócio';
+
+        const sal = parseFloat(u.salary) || 0;
+        if (isExecutive) {
+          executiveCost += sal;
+          executiveMembers.push({ name: u.name, role: u.role, salary: sal });
+        } else {
+          operationalCost += sal;
+          operationalMembers.push({ name: u.name, role: u.role, salary: sal });
+        }
+      });
+
+      const totalPayroll = executiveCost + operationalCost;
+      const executiveRatio = totalPayroll > 0 ? (executiveCost / totalPayroll) * 100 : 0;
+      const cashBurnPayrollRatio = totalCash > 0 ? (totalPayroll / totalCash) * 100 : 0;
+
+      let diagnosis = 'Saudável';
+      let recommendation = 'A relação entre custos de liderança e time operacional está equilibrada.';
+
+      if (executiveRatio > 35) {
+        diagnosis = 'Atenção - Gestão Elevada';
+        recommendation = `A alta liderança (CEOs/Sócios) consome ${executiveRatio.toFixed(1)}% de toda a folha de pagamento. Em empresas em tração, o ideal recomendado é manter entre 20% e 30%, atrelando retiradas maiores à distribuição de lucros/dividendos.`;
+      } else if (executiveRatio > 50) {
+        diagnosis = 'Crítico - Sobrecarga de Liderança';
+        recommendation = 'Mais de 50% dos recursos de pessoal estão concentrados na diretoria. Risco de subdimensionamento da equipe executora.';
+      }
+
+      res.json({
+        total_payroll: totalPayroll,
+        executive_cost: executiveCost,
+        operational_cost: operationalCost,
+        executive_ratio: executiveRatio,
+        total_cash: totalCash,
+        cash_burn_payroll_ratio: cashBurnPayrollRatio,
+        executive_members: executiveMembers,
+        operational_count: operationalMembers.length,
+        diagnosis,
+        recommendation
+      });
+    });
+  });
+});
+
 
 
 // ════════════════════════════════════════════
@@ -285,12 +477,19 @@ app.put('/api/deals/:id', (req, res) => {
       function(err) {
         if (err) return res.status(500).json({ error: err.message });
 
-        // Auto-sync: If stage changed to 'Ganho' (and wasn't Ganho before)
+        // Auto-sync: If stage changed to 'Ganho'
         if (finalStage === 'Ganho' && prevStage !== 'Ganho' && finalValue > 0) {
-          db.run(
-            `INSERT INTO transactions (description, amount, type, category, month) VALUES (?, ?, 'income', 'Sistemas', ?)`,
-            [`Venda CRM: ${deal.title}`, finalValue, currentMonth]
-          );
+          db.get(`SELECT id FROM transactions WHERE source_type = 'deal' AND source_id = ?`, [dealId], (errTx, txRow) => {
+            if (!errTx && !txRow) {
+              db.run(
+                `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
+                 VALUES (?, ?, 'income', 'Vendas CRM', ?, 'deal', ?)`,
+                [`Deal Fechado: ${deal.title}`, finalValue, currentMonth, dealId]
+              );
+            }
+          });
+        } else if (finalStage === 'Perdido' && prevStage !== 'Perdido') {
+          db.run(`DELETE FROM transactions WHERE source_type = 'deal' AND source_id = ?`, [dealId]);
         }
 
         res.json({ success: true, dealId, stage: finalStage, value: finalValue });
@@ -1404,8 +1603,9 @@ app.get('/api/sales/stats', (req, res) => {
 
 // Lançamento manual de venda
 app.post('/api/sales', (req, res) => {
-  const { customer_name, customer_email, customer_phone, product_name, amount, payment_method, notes, sync_finance } = req.body;
+  const { customer_name, customer_email, customer_phone, product_name, amount, cost, payment_method, notes, sync_finance } = req.body;
   const numAmount = parseFloat(amount) || 0;
+  const numCost = parseFloat(cost) || 0;
   if (!customer_name || numAmount <= 0) {
     return res.status(400).json({ error: 'Nome do cliente e valor da venda são obrigatórios.' });
   }
@@ -1414,9 +1614,9 @@ app.post('/api/sales', (req, res) => {
   const externalId = 'MAN-' + Date.now().toString().slice(-6);
 
   db.run(
-    `INSERT INTO sales (customer_name, customer_email, customer_phone, product_name, amount, payment_method, channel, status, notes, month, external_id)
-     VALUES (?, ?, ?, ?, ?, ?, 'Manual', 'Aprovado', ?, ?, ?)`,
-    [customer_name, customer_email || '', customer_phone || '', product_name || 'Venda Direta', numAmount, payment_method || 'PIX', notes || '', currentMonth, externalId],
+    `INSERT INTO sales (customer_name, customer_email, customer_phone, product_name, amount, cost, payment_method, channel, status, notes, month, external_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'Manual', 'Aprovado', ?, ?, ?)`,
+    [customer_name, customer_email || '', customer_phone || '', product_name || 'Venda Direta', numAmount, numCost, payment_method || 'PIX', notes || '', currentMonth, externalId],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
       const saleId = this.lastID;
@@ -1428,12 +1628,20 @@ app.post('/api/sales', (req, res) => {
            VALUES (?, ?, 'income', 'Sistemas', ?, 'sale_manual', ?)`,
           [`Venda #${saleId}: ${customer_name} (${product_name || 'Sistema'})`, numAmount, currentMonth, saleId]
         );
+        if (numCost > 0) {
+          db.run(
+            `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
+             VALUES (?, ?, 'expense', 'Custo de Venda', ?, 'sale_cost', ?)`,
+            [`Custo: ${customer_name} (${product_name || 'Sistema'})`, numCost, currentMonth, saleId]
+          );
+        }
       }
 
       res.json({
         id: saleId,
         customer_name,
         amount: numAmount,
+        cost: numCost,
         external_id: externalId,
         status: 'Aprovado',
         channel: 'Manual',

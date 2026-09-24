@@ -126,7 +126,7 @@ export const FinancialInvestmentsView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner & Context */}
-      <div className="bg-gradient-to-r from-purple-900/40 via-indigo-900/30 to-slate-900/50 border border-purple-500/20 rounded-2xl p-6">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -148,14 +148,14 @@ export const FinancialInvestmentsView: React.FC = () => {
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-slate-900 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-purple-500"
+              className="bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-purple-500"
             />
           </div>
         </div>
 
         {/* KPIs de Investimento */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-4 border-t border-purple-500/20">
-          <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-4 border-t border-slate-800">
+          <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl">
             <span className="text-xs text-slate-400 block font-medium">Verba de Investimento Alocada:</span>
             <div className="text-xl font-bold text-white mt-1">
               R$ {totalAllocated.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -163,7 +163,7 @@ export const FinancialInvestmentsView: React.FC = () => {
             <span className="text-[11px] text-purple-400">Planejado para {selectedMonth}</span>
           </div>
 
-          <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+          <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl">
             <span className="text-xs text-slate-400 block font-medium">Total Já Executado / Aportado:</span>
             <div className="text-xl font-bold text-emerald-400 mt-1">
               R$ {totalSpent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -173,7 +173,7 @@ export const FinancialInvestmentsView: React.FC = () => {
             </span>
           </div>
 
-          <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+          <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl">
             <span className="text-xs text-slate-400 block font-medium">Saldo Disponível para Aporte:</span>
             <div className={`text-xl font-bold mt-1 ${totalAllocated - totalSpent >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
               R$ {(totalAllocated - totalSpent).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -205,7 +205,7 @@ export const FinancialInvestmentsView: React.FC = () => {
 
           {/* Form Dinâmico para Cadastrar Categoria Personalizada */}
           {isAddingCategory && (
-            <form onSubmit={handleCreateCategory} className="bg-slate-900 border border-purple-500/40 rounded-2xl p-4 space-y-3">
+            <form onSubmit={handleCreateCategory} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <span className="text-xs font-bold text-purple-300">Nova Categoria de Investimento</span>
                 <span className="text-[11px] text-slate-400">Livre para sua empresa nomear</span>
@@ -219,7 +219,7 @@ export const FinancialInvestmentsView: React.FC = () => {
                     placeholder="Ex: Holding & Participações, Cripto, Imóveis..."
                     value={newCatName}
                     onChange={(e) => setNewCatName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div>
@@ -236,7 +236,7 @@ export const FinancialInvestmentsView: React.FC = () => {
                       placeholder="Descrição breve da finalidade..."
                       value={newCatDesc}
                       onChange={(e) => setNewCatDesc(e.target.value)}
-                      className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                      className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
                     />
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export const FinancialInvestmentsView: React.FC = () => {
               return (
                 <div
                   key={cat.id}
-                  className="bg-slate-900/80 border border-slate-800 hover:border-slate-700 rounded-2xl p-4 transition-all"
+                  className="bg-slate-900 border border-slate-800 rounded-2xl p-5 transition-all"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -332,7 +332,7 @@ export const FinancialInvestmentsView: React.FC = () => {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-xs font-medium focus:outline-none focus:border-purple-500"
+                className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-xs font-medium focus:outline-none focus:border-purple-500"
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.name}>{c.name}</option>
@@ -351,7 +351,7 @@ export const FinancialInvestmentsView: React.FC = () => {
                 placeholder="Ex: 20000.00"
                 value={allocatedAmount}
                 onChange={(e) => setAllocatedAmount(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-xs font-bold focus:outline-none focus:border-purple-500"
+                className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-xs font-bold focus:outline-none focus:border-purple-500"
               />
             </div>
 
@@ -364,7 +364,7 @@ export const FinancialInvestmentsView: React.FC = () => {
                 placeholder="Ex: Destinado para campanhas de Google Ads de alta conversão..."
                 value={budgetNotes}
                 onChange={(e) => setBudgetNotes(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-purple-500"
+                className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-purple-500"
               />
             </div>
 
@@ -376,7 +376,7 @@ export const FinancialInvestmentsView: React.FC = () => {
             </button>
           </form>
 
-          <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
+          <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
             <p className="font-semibold text-purple-300 flex items-center gap-1">
               <Info size={12} />
               Integração com DRE:

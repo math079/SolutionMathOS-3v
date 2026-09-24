@@ -376,6 +376,16 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2, onLogout }) => {
   const [activeView, setActiveView] = useState<OS2View>('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [newLeadsCount, setNewLeadsCount] = useState<number>(0);
+  const [lyraHiddenPages, setLyraHiddenPages] = useState<string[]>(() => JSON.parse(localStorage.getItem('lyra_hidden_pages') || '[]'));
+
+  const toggleLyraVisibility = () => {
+    setLyraHiddenPages(prev => {
+      const isHidden = prev.includes(activeView);
+      const next = isHidden ? prev.filter(p => p !== activeView) : [...prev, activeView];
+      localStorage.setItem('lyra_hidden_pages', JSON.stringify(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -539,7 +549,15 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2, onLogout }) => {
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-y-auto th-bg relative">
           {renderContent()}
-          {activeView !== 'ai-chat' && <LyraFloatingButton currentModule={activeView} />}
+          {activeView !== 'ai-chat' && !lyraHiddenPages.includes(activeView) && <LyraFloatingButton currentModule={activeView} />}
+          {activeView !== 'ai-chat' && (
+            <button
+              onClick={toggleLyraVisibility}
+              className="absolute bottom-4 left-4 z-40 text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              Lyra: {lyraHiddenPages.includes(activeView) ? 'Oculta' : 'Visível'}
+            </button>
+          )}
         </div>
       </div>
     </div>

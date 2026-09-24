@@ -9,6 +9,18 @@ export const FinancialBudgetsView: React.FC = () => {
   const [budgets, setBudgets] = useState<SectorBudget[]>([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [loading, setLoading] = useState(true);
+  const [managementCost, setManagementCost] = useState<{
+    total_payroll: number;
+    executive_cost: number;
+    operational_cost: number;
+    executive_ratio: number;
+    total_cash: number;
+    cash_burn_payroll_ratio: number;
+    executive_members: Array<{ name: string; role: string; salary: number }>;
+    operational_count: number;
+    diagnosis: string;
+    recommendation: string;
+  } | null>(null);
 
   // Form para nova verba
   const [sector, setSector] = useState('');
@@ -23,6 +35,10 @@ export const FinancialBudgetsView: React.FC = () => {
       const res = await fetch(`http://localhost:3001/api/finance/budgets?month=${selectedMonth}`);
       const data = await res.json();
       setBudgets(data || []);
+
+      const resMgmt = await fetch('http://localhost:3001/api/finance/analytics/management-cost');
+      const dataMgmt = await resMgmt.json();
+      setManagementCost(dataMgmt);
     } catch (err) {
       console.error(err);
     } finally {
@@ -138,6 +154,79 @@ export const FinancialBudgetsView: React.FC = () => {
           <span className="text-[11px] text-slate-500">Margem restante para gastar</span>
         </div>
       </div>
+
+      {/* Diagnóstico de Gestão & Folha: CEOs vs. Equipe Operacional */}
+      {managementCost && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                <Info size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  Diagnóstico de Gestão & Folha (C-Level / Diretoria vs. Operação)
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                    managementCost.diagnosis === 'Saudável'
+                      ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                      : 'bg-amber-950 text-amber-400 border border-amber-800'
+                  }`}>
+                    {managementCost.diagnosis}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Análise da distribuição de capital entre alta liderança, time operacional e o caixa da empresa.
+                </p>
+              </div>
+            </div>
+            <div className="text-right text-xs">
+              <span className="text-slate-400">Impacto no Caixa Total: </span>
+              <strong className="text-white">
+                {managementCost.cash_burn_payroll_ratio.toFixed(1)}% do caixa/mês
+              </strong>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1">
+              <span className="text-xs text-slate-400 font-medium">Alta Gestão (CEOs & Sócios):</span>
+              <div className="text-lg font-bold text-purple-400">
+                R$ {managementCost.executive_cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </div>
+              <div className="text-[11px] text-slate-400">
+                Representa <strong className="text-purple-300">{managementCost.executive_ratio.toFixed(1)}%</strong> da folha total
+              </div>
+              {managementCost.executive_members.length > 0 && (
+                <div className="pt-1.5 border-t border-slate-800/80 text-[10px] text-slate-400">
+                  {managementCost.executive_members.map(m => `${m.name} (${m.role}): R$ ${m.salary.toLocaleString('pt-BR')}`).join(' | ')}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1">
+              <span className="text-xs text-slate-400 font-medium">Equipe Técnica / Operacional:</span>
+              <div className="text-lg font-bold text-teal-400">
+                R$ {managementCost.operational_cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </div>
+              <div className="text-[11px] text-slate-400">
+                <strong className="text-teal-300">{(100 - managementCost.executive_ratio).toFixed(1)}%</strong> da folha ({managementCost.operational_count} colaboradores)
+              </div>
+              <div className="pt-1.5 border-t border-slate-800/80 text-[10px] text-slate-400">
+                Mão de obra direta executando vendas, produto e suporte.
+              </div>
+            </div>
+
+            <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+              <span className="text-xs font-semibold text-amber-400 flex items-center gap-1">
+                <AlertCircle size={13} /> Recomendação Estratégica:
+              </span>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                {managementCost.recommendation}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Form de Adicionar Verba */}
       {isAdding && (

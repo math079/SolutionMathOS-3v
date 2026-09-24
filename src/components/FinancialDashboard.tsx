@@ -934,7 +934,7 @@ const FinancialDashboard: React.FC = () => {
               <div>
                 <label className="text-xs font-semibold th-muted mb-1 block">Meta Anual de Faturamento (R$) *</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold th-muted">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold th-muted">R$</span>
                   <input
                     type="number"
                     step="1000"
@@ -942,7 +942,7 @@ const FinancialDashboard: React.FC = () => {
                     placeholder="500000"
                     value={targetForm.annual_target}
                     onChange={e => setTargetForm({ ...targetForm, annual_target: e.target.value })}
-                    className="th-input pl-9 text-base font-bold text-amber-500"
+                    className="th-input pl-12 text-base font-bold text-amber-500"
                   />
                 </div>
                 <p className="text-[11px] th-muted mt-1">Ex: 500000 para quinhentos mil reais no ano.</p>
@@ -951,7 +951,7 @@ const FinancialDashboard: React.FC = () => {
               <div>
                 <label className="text-xs font-semibold th-muted mb-1 block">Meta Mensal de Faturamento (R$) *</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold th-muted">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold th-muted">R$</span>
                   <input
                     type="number"
                     step="1000"
@@ -959,7 +959,7 @@ const FinancialDashboard: React.FC = () => {
                     placeholder="45000"
                     value={targetForm.monthly_target}
                     onChange={e => setTargetForm({ ...targetForm, monthly_target: e.target.value })}
-                    className="th-input pl-9 text-base font-bold text-primary"
+                    className="th-input pl-12 text-base font-bold text-primary"
                   />
                 </div>
                 <p className="text-[11px] th-muted mt-1">Ex: 45000 para a meta mensal de Setembro e dos próximos meses.</p>
