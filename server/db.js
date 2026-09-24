@@ -553,10 +553,13 @@ const db = new sqlite3.Database(dbPath, (err) => {
         allocated_amount REAL NOT NULL DEFAULT 0,
         month TEXT NOT NULL,
         notes TEXT,
+        manual_spent REAL DEFAULT NULL,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now')),
         UNIQUE(sector, month)
       )`);
+
+      db.run(`ALTER TABLE financial_budgets ADD COLUMN manual_spent REAL DEFAULT NULL`, () => {});
 
       // 3. Divisão de Contas, Caixa Operacional e Capital de Giro
       db.run(`CREATE TABLE IF NOT EXISTS financial_accounts (

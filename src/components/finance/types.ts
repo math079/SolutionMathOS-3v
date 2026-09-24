@@ -14,6 +14,8 @@ export interface SectorBudget {
   category_type: CostType;
   allocated_amount: number;
   spent_amount?: number;
+  manual_spent?: number | null;
+  is_manual?: boolean;
   month: string;
   notes?: string;
 }

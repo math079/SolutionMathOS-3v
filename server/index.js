@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
+const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
 const db = require('./db');
@@ -645,47 +646,127 @@ app.delete('/api/finance/investment-categories/:id', (req, res) => {
   });
 });
 
-// 2. Orçamento e Verbas por Setor
+// 2. Orçamento e Verbas por Setor com Inteligência Dinâmica e Gasto Manual
 app.get('/api/finance/budgets', (req, res) => {
   const month = req.query.month || new Date().toISOString().slice(0, 7);
-  db.all(
-    `SELECT b.*,
-      COALESCE((
-        SELECT SUM(t.amount) FROM transactions t 
-        WHERE t.type = 'expense' 
-        AND t.month = b.month 
-        AND (t.department = b.sector OR t.category = b.sector)
-      ), 0) as spent_amount
-     FROM financial_budgets b
-     WHERE b.month = ?
-     ORDER BY b.allocated_amount DESC`,
-    [month],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
-    }
-  );
+
+  db.all('SELECT * FROM financial_budgets WHERE month = ? ORDER BY allocated_amount DESC', [month], (err, budgets) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    db.all("SELECT * FROM transactions WHERE type = 'expense' AND month = ?", [month], (errTx, txs) => {
+      const expenses = txs || [];
+
+      const result = (budgets || []).map(b => {
+        // Se houver gasto manual definido pelo usuário, usa ele prioritariamente!
+        if (b.manual_spent !== null && b.manual_spent !== undefined) {
+          return {
+            ...b,
+            spent_amount: parseFloat(b.manual_spent) || 0,
+            is_manual: true
+          };
+        }
+
+        // Match inteligente automático baseado em setor, departamento e categoria
+        const sec = b.sector || '';
+        const s = sec.toLowerCase();
+        const isTech = s.includes('tecnologia') || s.includes('infra') || s.includes('cloud') || s.includes('inteligência artificial') || /\b(ti|ia)\b/i.test(sec);
+        const isMarketing = s.includes('marketing') || s.includes('tráfego') || s.includes('aquisição');
+        const isRH = s.includes('rh') || s.includes('pessoal') || s.includes('liderança') || s.includes('ceos');
+        const isOps = s.includes('operaç') || s.includes('terceiriz') || s.includes('prestador');
+        const isSales = s.includes('vendas') || s.includes('comercial');
+        const isHolding = s.includes('holding') || s.includes('participaç');
+        const isExpansion = s.includes('expans') || s.includes('maquin') || s.includes('físic');
+
+        let total = 0;
+
+        expenses.forEach(t => {
+          const cat = (t.category || '').toLowerCase();
+          const dept = (t.department || '').toLowerCase();
+          const desc = (t.description || '').toLowerCase();
+
+          let matches = false;
+
+          // Match exato
+          if (dept === s || cat === s) {
+            matches = true;
+          }
+          // RH & Gestão Executiva / Pessoal / Liderança
+          else if (isRH && (cat === 'pessoas' || cat === 'rh' || cat === 'folha' || t.source_type === 'payroll')) {
+            matches = true;
+          }
+          // Marketing & Tráfego Pago / Aquisição
+          else if (isMarketing && (cat === 'marketing' || desc.includes('tráfego') || desc.includes('ads') || desc.includes('campanha'))) {
+            matches = true;
+          }
+          // Tecnologia, Infra, IA, Cloud & TI
+          else if (isTech && (cat === 'infraestrutura' || cat === 'ia' || cat === 'ferramentas' || cat === 'sistemas' || cat === 'integrações' || cat === 'ti' || 
+                   desc.includes('vps') || desc.includes('servidor') || desc.includes('openrouter'))) {
+            matches = true;
+          }
+          // Operações & Terceirizados / Prestadores
+          else if (isOps && (cat === 'terceirizados' || dept.includes('operaç') || t.source_type === 'contractor')) {
+            matches = true;
+          }
+          // Vendas & Comercial
+          else if (isSales && (cat === 'custo de venda' || cat === 'vendas' || t.source_type === 'sale_cost')) {
+            matches = true;
+          }
+          // Holding & Investimentos
+          else if (isHolding && (cat === 'holding' || cat === 'investimentos' || dept.includes('holding') || desc.includes('holding'))) {
+            matches = true;
+          }
+          // Expansão Física / Maquinário
+          else if (isExpansion && (cat === 'expansão' || desc.includes('maquinário') || desc.includes('equipamento'))) {
+            matches = true;
+          }
+
+          if (matches) {
+            total += (parseFloat(t.amount) || 0);
+          }
+        });
+
+        return {
+          ...b,
+          spent_amount: total,
+          is_manual: false
+        };
+      });
+
+      res.json(result);
+    });
+  });
 });
 
 app.post('/api/finance/budgets', (req, res) => {
-  const { sector, allocated_amount, month, notes, category_type } = req.body;
+  const { sector, allocated_amount, month, notes, category_type, manual_spent } = req.body;
   const currentMonth = month || new Date().toISOString().slice(0, 7);
   const numAllocated = parseFloat(allocated_amount) || 0;
+  const numManualSpent = (manual_spent === null || manual_spent === undefined || manual_spent === '') ? null : parseFloat(manual_spent);
 
   db.run(
-    `INSERT INTO financial_budgets (sector, allocated_amount, month, notes, category_type, updated_at)
-     VALUES (?, ?, ?, ?, ?, datetime('now'))
+    `INSERT INTO financial_budgets (sector, allocated_amount, month, notes, category_type, manual_spent, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
      ON CONFLICT(sector, month) DO UPDATE SET
        allocated_amount = excluded.allocated_amount,
        notes = excluded.notes,
        category_type = excluded.category_type,
+       manual_spent = excluded.manual_spent,
        updated_at = datetime('now')`,
-    [sector, numAllocated, currentMonth, notes || '', category_type || 'investment'],
+    [sector, numAllocated, currentMonth, notes || '', category_type || 'investment', numManualSpent],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ success: true, sector, allocated_amount: numAllocated, month: currentMonth });
+      res.json({ success: true, sector, allocated_amount: numAllocated, month: currentMonth, manual_spent: numManualSpent });
     }
   );
+});
+
+app.put('/api/finance/budgets/:id/spent', (req, res) => {
+  const { manual_spent } = req.body;
+  const val = (manual_spent === null || manual_spent === undefined || manual_spent === '') ? null : parseFloat(manual_spent);
+  db.run(`UPDATE financial_budgets SET manual_spent = ?, updated_at = datetime('now') WHERE id = ?`, [val, req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true, id: req.params.id, manual_spent: val });
+  });
 });
 
 app.delete('/api/finance/budgets/:id', (req, res) => {
@@ -693,6 +774,246 @@ app.delete('/api/finance/budgets/:id', (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ success: true });
   });
+});
+
+// ════════════════════════════════════════════
+// IMPORTADOR DE PLANILHAS EXCEL (.xlsx/.csv)
+// ════════════════════════════════════════════
+const uploadSpreadsheet = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+
+// Download do Template Modelo
+app.get('/api/finance/import-template', (req, res) => {
+  try {
+    const wb = XLSX.utils.book_new();
+
+    const txData = [
+      { 'Data': '2026-09-01', 'Descricao': 'Assinatura Plataforma Enterprise', 'Valor': 25000.00, 'Tipo': 'Receita', 'Categoria': 'Sistemas', 'Departamento': 'Comercial' },
+      { 'Data': '2026-09-03', 'Descricao': 'Hospedagem Servidor VPS Cloud', 'Valor': 119.90, 'Tipo': 'Despesa', 'Categoria': 'Infraestrutura', 'Departamento': 'TI & Cloud' },
+      { 'Data': '2026-09-05', 'Descricao': 'Campanha Tráfego Google Ads', 'Valor': 4500.00, 'Tipo': 'Despesa', 'Categoria': 'Marketing', 'Departamento': 'Marketing & Aquisição' },
+      { 'Data': '2026-09-10', 'Descricao': 'Assessoria Contábil Mensal', 'Valor': 2500.00, 'Tipo': 'Despesa', 'Categoria': 'Terceirizados', 'Departamento': 'Contabilidade & Fiscal' },
+      { 'Data': '2026-09-15', 'Descricao': 'Folha Equipe Dev', 'Valor': 18500.00, 'Tipo': 'Despesa', 'Categoria': 'Pessoas', 'Departamento': 'RH' }
+    ];
+    const wsTx = XLSX.utils.json_to_sheet(txData);
+    XLSX.utils.book_append_sheet(wb, wsTx, 'Transacoes_Extrato');
+
+    const usersData = [
+      { 'Nome': 'Matheus CEO', 'Cargo': 'CEO Fundador', 'Salario': 25000.00, 'Tipo_Contrato': 'Sócio', 'Email': 'matheus@empresa.com', 'Telefone': '(11) 98888-0001', 'Participacao_Socio_%': 60, 'Status': 'Ativo' },
+      { 'Nome': 'Pedro Tech Lead', 'Cargo': 'CTO / Diretor de Tecnologia', 'Salario': 18000.00, 'Tipo_Contrato': 'CLT', 'Email': 'pedro@empresa.com', 'Telefone': '(11) 98888-0002', 'Participacao_Socio_%': 0, 'Status': 'Ativo' },
+      { 'Nome': 'Ana Marketing', 'Cargo': 'Especialista em Tráfego', 'Salario': 7500.00, 'Tipo_Contrato': 'PJ', 'Email': 'ana@empresa.com', 'Telefone': '(11) 98888-0003', 'Participacao_Socio_%': 0, 'Status': 'Ativo' }
+    ];
+    const wsUsers = XLSX.utils.json_to_sheet(usersData);
+    XLSX.utils.book_append_sheet(wb, wsUsers, 'Colaboradores_RH');
+
+    const salesData = [
+      { 'Cliente': 'Empresa Alpha Tech Ltda', 'Produto': 'Solution Math OS - Enterprise', 'Valor': 45000.00, 'Custo_Desenvolvimento': 6000.00, 'Metodo_Pagamento': 'PIX', 'Canal': 'Manual', 'Email': 'contato@alpha.com.br' },
+      { 'Cliente': 'Supermercado Central', 'Produto': 'Licença Anual Sistema PDV', 'Valor': 12000.00, 'Custo_Desenvolvimento': 1500.00, 'Metodo_Pagamento': 'Boleto Bancário', 'Canal': 'Site / Webhook', 'Email': 'financeiro@central.com.br' }
+    ];
+    const wsSales = XLSX.utils.json_to_sheet(salesData);
+    XLSX.utils.book_append_sheet(wb, wsSales, 'Vendas_Clientes');
+
+    const recurringData = [
+      { 'Descricao': 'VPS KVM 4 Hostinger', 'Valor': 119.17, 'Tipo': 'fixed', 'Departamento': 'TI & Cloud', 'Dia_Vencimento': 5, 'Metodo_Pagamento': 'Cartão de Crédito' },
+      { 'Descricao': 'Aluguel Escritório Comercial', 'Valor': 3200.00, 'Tipo': 'fixed', 'Departamento': 'Operações', 'Dia_Vencimento': 10, 'Metodo_Pagamento': 'Boleto' },
+      { 'Descricao': 'Google Workspace (E-mails)', 'Valor': 175.00, 'Tipo': 'fixed', 'Departamento': 'TI & Cloud', 'Dia_Vencimento': 15, 'Metodo_Pagamento': 'Cartão de Crédito' }
+    ];
+    const wsRec = XLSX.utils.json_to_sheet(recurringData);
+    XLSX.utils.book_append_sheet(wb, wsRec, 'Gastos_Recorrentes');
+
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Disposition', 'attachment; filename="modelo_banco_dados_financeiro.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buf);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao gerar modelo: ' + err.message });
+  }
+});
+
+// Importação e processamento da planilha
+app.post('/api/finance/import-spreadsheet', uploadSpreadsheet.single('file'), async (req, res) => {
+  if (!req.file || !req.file.buffer) {
+    return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  }
+
+  try {
+    const wb = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const currentMonth = new Date().toISOString().slice(0, 7);
+
+    const counts = {
+      transactions: 0,
+      users: 0,
+      sales: 0,
+      recurring: 0
+    };
+
+    for (const sheetName of wb.SheetNames) {
+      const sheet = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      if (!rows || rows.length === 0) continue;
+
+      const normName = sheetName.toLowerCase();
+      const firstRow = rows[0];
+      const keys = Object.keys(firstRow).map(k => k.toLowerCase());
+
+      // 1. Colaboradores / RH
+      if (normName.includes('colaborador') || normName.includes('usuario') || normName.includes('user') || normName.includes('equipe') || keys.some(k => k.includes('cargo') || k.includes('salario'))) {
+        for (const r of rows) {
+          const name = r['Nome'] || r['nome'] || r['Name'] || r['colaborador'];
+          if (!name) continue;
+          const role = r['Cargo'] || r['cargo'] || r['Função'] || 'Colaborador';
+          const salary = parseFloat(r['Salario'] || r['salario'] || r['Remuneração'] || r['salary'] || 0) || 0;
+          const contractType = r['Tipo_Contrato'] || r['tipo_contrato'] || r['Contrato'] || 'PJ';
+          const email = r['Email'] || r['email'] || '';
+          const phone = r['Telefone'] || r['telefone'] || r['phone'] || '';
+          const equity = parseFloat(r['Participacao_Socio_%'] || r['equity_percentage'] || 0) || null;
+          const status = r['Status'] || r['status'] || 'Ativo';
+
+          await new Promise((resolve) => {
+            db.run(
+              `INSERT INTO users (name, role, salary, contract_type, email, phone, equity_percentage, status)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              [name, role, salary, contractType, email, phone, equity, status],
+              function(err) {
+                if (!err && this.lastID) {
+                  counts.users++;
+                  if (salary > 0 && status === 'Ativo') {
+                    syncPayrollToTransactions(this.lastID, name, role, salary, status, () => {});
+                  }
+                }
+                resolve();
+              }
+            );
+          });
+        }
+      }
+
+      // 2. Vendas
+      else if (normName.includes('venda') || normName.includes('sale') || keys.some(k => k.includes('cliente') && (k.includes('produto') || k.includes('valor')))) {
+        for (const r of rows) {
+          const customer = r['Cliente'] || r['cliente'] || r['customer_name'] || r['Nome'];
+          if (!customer) continue;
+          const product = r['Produto'] || r['produto'] || r['product_name'] || 'Sistema / Serviço';
+          const amount = parseFloat(r['Valor'] || r['valor'] || r['amount'] || 0) || 0;
+          const cost = parseFloat(r['Custo_Desenvolvimento'] || r['custo'] || r['cost'] || 0) || 0;
+          const payment = r['Metodo_Pagamento'] || r['pagamento'] || r['payment_method'] || 'PIX';
+          const channel = r['Canal'] || r['canal'] || r['channel'] || 'Planilha';
+          const email = r['Email'] || r['email'] || '';
+          const phone = r['Telefone'] || r['telefone'] || '';
+
+          if (amount > 0) {
+            await new Promise((resolve) => {
+              db.run(
+                `INSERT INTO sales (customer_name, customer_email, customer_phone, product_name, amount, cost, payment_method, channel, status, month, external_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Aprovado', ?, ?)`,
+                [customer, email, phone, product, amount, cost, payment, channel, currentMonth, 'IMP-' + Math.floor(1000 + Math.random() * 9000)],
+                function(err) {
+                  if (!err && this.lastID) {
+                    const saleId = this.lastID;
+                    counts.sales++;
+                    db.run(
+                      `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
+                       VALUES (?, ?, 'income', 'Sistemas', ?, 'sale_manual', ?)`,
+                      [`Venda Importada #${saleId}: ${customer} (${product})`, amount, currentMonth, saleId]
+                    );
+                    if (cost > 0) {
+                      db.run(
+                        `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
+                         VALUES (?, ?, 'expense', 'Custo de Venda', ?, 'sale_cost', ?)`,
+                        [`Custo Importado: ${customer} (${product})`, cost, currentMonth, saleId]
+                      );
+                    }
+                  }
+                  resolve();
+                }
+              );
+            });
+          }
+        }
+      }
+
+      // 3. Gastos Recorrentes
+      else if (normName.includes('recorrente') || normName.includes('recurring') || keys.some(k => k.includes('vencimento') && k.includes('valor'))) {
+        for (const r of rows) {
+          const desc = r['Descricao'] || r['descricao'] || r['description'];
+          if (!desc) continue;
+          const amount = parseFloat(r['Valor'] || r['valor'] || r['amount'] || 0) || 0;
+          const type = (r['Tipo'] || r['category_type'] || 'fixed').toLowerCase().includes('var') ? 'variable' : 'fixed';
+          const dept = r['Departamento'] || r['departamento'] || r['department'] || 'Geral';
+          const dueDay = parseInt(r['Dia_Vencimento'] || r['vencimento'] || r['due_day'] || 10) || 10;
+          const payment = r['Metodo_Pagamento'] || r['pagamento'] || r['payment_method'] || 'Boleto';
+
+          if (amount > 0) {
+            await new Promise((resolve) => {
+              db.run(
+                `INSERT INTO financial_recurring (description, amount, category_type, department, due_day, payment_method, is_active, source_type)
+                 VALUES (?, ?, ?, ?, ?, ?, 1, 'manual')`,
+                [desc, amount, type, dept, dueDay, payment],
+                function(err) {
+                  if (!err) counts.recurring++;
+                  resolve();
+                }
+              );
+            });
+          }
+        }
+      }
+
+      // 4. Transações / Extrato Geral
+      else {
+        for (const r of rows) {
+          const desc = r['Descricao'] || r['descricao'] || r['description'] || r['Histórico'] || r['Historico'] || r['Item'];
+          if (!desc) continue;
+
+          let rawAmount = r['Valor'] || r['valor'] || r['amount'] || r['Quantia'] || 0;
+          if (typeof rawAmount === 'string') {
+            rawAmount = rawAmount.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+          }
+          let amount = parseFloat(rawAmount) || 0;
+
+          let type = (r['Tipo'] || r['tipo'] || r['type'] || '').toLowerCase();
+          if (!type) {
+            type = amount < 0 ? 'expense' : 'income';
+          } else if (type.includes('despesa') || type.includes('saida') || type.includes('saída') || type.includes('expense') || type.includes('débito')) {
+            type = 'expense';
+          } else {
+            type = 'income';
+          }
+          amount = Math.abs(amount);
+
+          const dateRaw = r['Data'] || r['data'] || r['date'];
+          let month = currentMonth;
+          if (dateRaw && String(dateRaw).length >= 7) {
+            month = String(dateRaw).slice(0, 7);
+          }
+
+          const category = r['Categoria'] || r['categoria'] || r['category'] || (type === 'income' ? 'Sistemas' : 'Operações');
+          const dept = r['Departamento'] || r['departamento'] || r['department'] || null;
+
+          if (amount > 0) {
+            await new Promise((resolve) => {
+              db.run(
+                `INSERT INTO transactions (description, amount, type, category, department, month, source_type)
+                 VALUES (?, ?, ?, ?, ?, ?, 'import_spreadsheet')`,
+                [desc, amount, type, category, dept, month],
+                function(err) {
+                  if (!err) counts.transactions++;
+                  resolve();
+                }
+              );
+            });
+          }
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Planilha processada e banco de dados populado com sucesso!',
+      counts
+    });
+  } catch (err) {
+    console.error('Erro ao importar planilha:', err);
+    res.status(500).json({ error: 'Erro ao processar planilha: ' + err.message });
+  }
 });
 
 // 3. Divisão de Contas e Caixa / Capital de Giro
