@@ -109,11 +109,13 @@ function syncPayrollToTransactions(userId, userName, userRole, salary, status, c
 }
 
 app.post('/api/users', (req, res) => {
-  const { name, role, email, phone, contract_type, salary, status, hired_at, equity_percentage } = req.body;
+  const { name, role, email, phone, contract_type, salary, status, hired_at, equity_percentage, commission_rate, base_target } = req.body;
   const numSalary = parseFloat(salary) || 0;
   const numEquity = parseFloat(equity_percentage) || 0;
+  const numCommission = parseFloat(commission_rate) || 0;
+  const numTarget = parseFloat(base_target) || 0;
   db.run(
-    `INSERT INTO users (name, role, email, phone, contract_type, salary, status, hired_at, equity_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO users (name, role, email, phone, contract_type, salary, status, hired_at, equity_percentage, commission_rate, base_target) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       name,
       role || 'Colaborador',
@@ -123,7 +125,9 @@ app.post('/api/users', (req, res) => {
       numSalary,
       status || 'Ativo',
       hired_at || new Date().toISOString().split('T')[0],
-      numEquity
+      numEquity,
+      numCommission,
+      numTarget
     ],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
@@ -139,17 +143,20 @@ app.post('/api/users', (req, res) => {
 
       res.json({
         id: newUserId, name, role, email, phone, contract_type,
-        salary: numSalary, status: newStatus, hired_at, equity_percentage: numEquity
+        salary: numSalary, status: newStatus, hired_at, equity_percentage: numEquity,
+        commission_rate: numCommission, base_target: numTarget
       });
     }
   );
 });
 
 app.put('/api/users/:id', (req, res) => {
-  const { name, role, email, phone, contract_type, salary, status, equity_percentage } = req.body;
+  const { name, role, email, phone, contract_type, salary, status, equity_percentage, commission_rate, base_target } = req.body;
   const userId = req.params.id;
   const numSalary = salary !== undefined ? parseFloat(salary) : null;
   const numEquity = equity_percentage !== undefined ? parseFloat(equity_percentage) : null;
+  const numCommission = commission_rate !== undefined ? parseFloat(commission_rate) : null;
+  const numTarget = base_target !== undefined ? parseFloat(base_target) : null;
 
   db.run(
     `UPDATE users SET
@@ -160,9 +167,11 @@ app.put('/api/users/:id', (req, res) => {
       contract_type = COALESCE(?, contract_type),
       salary = COALESCE(?, salary),
       status = COALESCE(?, status),
-      equity_percentage = COALESCE(?, equity_percentage)
+      equity_percentage = COALESCE(?, equity_percentage),
+      commission_rate = COALESCE(?, commission_rate),
+      base_target = COALESCE(?, base_target)
      WHERE id = ?`,
-    [name||null, role||null, email||null, phone||null, contract_type||null, numSalary, status||null, numEquity, userId],
+    [name||null, role||null, email||null, phone||null, contract_type||null, numSalary, status||null, numEquity, numCommission, numTarget, userId],
     function(err) {
       if (err) return res.status(500).json({ error: err.message });
 
@@ -317,6 +326,216 @@ app.delete('/api/hr/contractors/:id', (req, res) => {
   db.run(`DELETE FROM hr_contractors WHERE id = ?`, [id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ success: true });
+  });
+});
+
+// ════════════════════════════════════════════
+// COMISSÕES & BONIFICAÇÕES (RH -> CUSTO VARIÁVEL FINANCEIRO)
+// ════════════════════════════════════════════
+
+function syncIncentiveToFinance(incentiveId, userName, type, amount, period, status, cb) {
+  const currentMonth = period ? period.slice(0, 7) : new Date().toISOString().slice(0, 7);
+  const numAmount = parseFloat(amount) || 0;
+
+  if (status && status === 'Cancelado') {
+    db.run(`DELETE FROM transactions WHERE source_type = 'incentive' AND source_id = ?`, [incentiveId], cb);
+    return;
+  }
+
+  const typeLabel = type === 'commission' ? 'Comissão Vendas' : type === 'annual_bonus' ? 'Bonificação Anual (PLR)' : 'Bônus Mensal Desempenho';
+  const descTx = `Incentivo: ${userName} (${typeLabel})`;
+  const dept = type === 'commission' ? 'Comercial & Vendas' : 'Diretoria & Sócios';
+
+  db.get(
+    `SELECT id FROM transactions WHERE source_type = 'incentive' AND source_id = ?`,
+    [incentiveId],
+    (err, existing) => {
+      if (!err && existing) {
+        db.run(
+          `UPDATE transactions SET description = ?, amount = ?, month = ?, department = ? WHERE id = ?`,
+          [descTx, numAmount, currentMonth, dept, existing.id],
+          cb
+        );
+      } else if (!err) {
+        db.run(
+          `INSERT INTO transactions (description, amount, type, category, month, cost_type, department, source_type, source_id)
+           VALUES (?, ?, 'expense', 'Comissões & Bônus', ?, 'variable', ?, 'incentive', ?)`,
+          [descTx, numAmount, currentMonth, dept, incentiveId],
+          cb
+        );
+      } else if (cb) {
+        cb(err);
+      }
+    }
+  );
+}
+
+// Rotas CRUD de Incentivos
+app.get('/api/hr/incentives', (req, res) => {
+  db.all(
+    `SELECT i.*, COALESCE(u.name, 'Colaborador') as user_name, COALESCE(u.role, 'Geral') as user_role, COALESCE(u.contract_type, 'PJ') as user_contract_type, u.equity_percentage, u.commission_rate
+     FROM hr_incentives i
+     LEFT JOIN users u ON i.user_id = u.id
+     ORDER BY i.id DESC`,
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    }
+  );
+});
+
+app.post('/api/hr/incentives', (req, res) => {
+  const { user_id, type, amount, reference_period, metric_description, target_achieved_percent, status, notes } = req.body;
+  const numAmount = parseFloat(amount) || 0;
+  const period = reference_period || new Date().toISOString().slice(0, 7);
+  const st = status || 'Aprovado';
+
+  db.run(
+    `INSERT INTO hr_incentives (user_id, type, amount, reference_period, metric_description, target_achieved_percent, status, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [user_id, type, numAmount, period, metric_description || '', target_achieved_percent || 100, st, notes || ''],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      const incentiveId = this.lastID;
+
+      db.get(`SELECT name FROM users WHERE id = ?`, [user_id], (errUser, u) => {
+        const uName = u ? u.name : 'Colaborador';
+        syncIncentiveToFinance(incentiveId, uName, type, numAmount, period, st, () => {});
+      });
+
+      res.json({ id: incentiveId, success: true });
+    }
+  );
+});
+
+app.put('/api/hr/incentives/:id', (req, res) => {
+  const { user_id, type, amount, reference_period, metric_description, target_achieved_percent, status, notes } = req.body;
+  const incentiveId = req.params.id;
+  const numAmount = amount !== undefined ? parseFloat(amount) : null;
+
+  db.run(
+    `UPDATE hr_incentives SET
+      user_id = COALESCE(?, user_id),
+      type = COALESCE(?, type),
+      amount = COALESCE(?, amount),
+      reference_period = COALESCE(?, reference_period),
+      metric_description = COALESCE(?, metric_description),
+      target_achieved_percent = COALESCE(?, target_achieved_percent),
+      status = COALESCE(?, status),
+      notes = COALESCE(?, notes)
+     WHERE id = ?`,
+    [user_id||null, type||null, numAmount, reference_period||null, metric_description||null, target_achieved_percent||null, status||null, notes||null, incentiveId],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+
+      db.get(`SELECT i.*, u.name as user_name FROM hr_incentives i JOIN users u ON i.user_id = u.id WHERE i.id = ?`, [incentiveId], (err2, row) => {
+        if (!err2 && row) {
+          syncIncentiveToFinance(incentiveId, row.user_name, row.type, row.amount, row.reference_period, row.status, () => {});
+        }
+      });
+
+      res.json({ success: true });
+    }
+  );
+});
+
+app.delete('/api/hr/incentives/:id', (req, res) => {
+  const incentiveId = req.params.id;
+  db.run(`DELETE FROM transactions WHERE source_type = 'incentive' AND source_id = ?`, [incentiveId], () => {});
+  db.run(`DELETE FROM hr_incentives WHERE id = ?`, [incentiveId], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true });
+  });
+});
+
+// Endpoint de Simulação de Incentivo por Faturamento
+app.post('/api/hr/incentives/simulate', (req, res) => {
+  const { simulated_revenue, apply_to_database, reference_period } = req.body;
+  const rev = parseFloat(simulated_revenue) || 150000;
+  const period = reference_period || new Date().toISOString().slice(0, 7);
+
+  db.all(`SELECT * FROM users WHERE status = 'Ativo'`, [], async (err, users) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    const simulations = (users || []).map(u => {
+      const isSocio = (u.contract_type === 'Sócio' || (u.equity_percentage && u.equity_percentage > 0) || (u.role && (u.role.toLowerCase().includes('ceo') || u.role.toLowerCase().includes('fundador') || u.role.toLowerCase().includes('presidente'))));
+      const isSales = u.role && (u.role.toLowerCase().includes('vendedor') || u.role.toLowerCase().includes('comercial') || u.role.toLowerCase().includes('closer') || u.role.toLowerCase().includes('sdr'));
+
+      const rate = u.commission_rate > 0 ? u.commission_rate : (isSales ? 5 : 0);
+      const commissionAmount = rate > 0 ? Math.round(rev * (rate / 100)) : 0;
+
+      let bonusMonthly = 0;
+      let bonusAnnual = 0;
+      if (isSocio) {
+        const equity = (u.equity_percentage && u.equity_percentage > 0) ? (u.equity_percentage / 100) : 0.4;
+        bonusMonthly = Math.round(rev * 0.04 * equity); // 4% do faturamento como bônus mensal de sócio
+        bonusAnnual = Math.round(rev * 0.08 * equity);  // 8% como provisão de PLR anual
+      } else if (isSales) {
+        bonusMonthly = rev >= 100000 ? 2500 : 1000;
+        bonusAnnual = Math.round(commissionAmount * 0.2); // 20% das comissões anuais como bônus de retenção
+      }
+
+      return {
+        user_id: u.id,
+        name: u.name,
+        role: u.role,
+        contract_type: u.contract_type,
+        is_socio: isSocio,
+        is_sales: isSales,
+        commission_rate: rate,
+        projected_commission: commissionAmount,
+        projected_monthly_bonus: bonusMonthly,
+        projected_annual_bonus: bonusAnnual,
+        total_projected_variable: commissionAmount + bonusMonthly + bonusAnnual
+      };
+    });
+
+    const totalVariableCost = simulations.reduce((acc, s) => acc + s.total_projected_variable, 0);
+
+    // Se o usuário pediu para aplicar ao banco, gera os registros automaticamente!
+    if (apply_to_database) {
+      for (const sim of simulations) {
+        if (sim.projected_commission > 0) {
+          await new Promise((resolve) => {
+            db.run(
+              `INSERT INTO hr_incentives (user_id, type, amount, reference_period, metric_description, target_achieved_percent, status)
+               VALUES (?, 'commission', ?, ?, ?, 100, 'Aprovado')`,
+              [sim.user_id, sim.projected_commission, period, `Comissão de ${sim.commission_rate}% sobre vendas simuladas de R$ ${rev.toLocaleString('pt-BR')}`],
+              function(errIns) {
+                if (!errIns && this.lastID) {
+                  syncIncentiveToFinance(this.lastID, sim.name, 'commission', sim.projected_commission, period, 'Aprovado', () => {});
+                }
+                resolve();
+              }
+            );
+          });
+        }
+
+        if (sim.projected_monthly_bonus > 0) {
+          await new Promise((resolve) => {
+            db.run(
+              `INSERT INTO hr_incentives (user_id, type, amount, reference_period, metric_description, target_achieved_percent, status)
+               VALUES (?, 'monthly_bonus', ?, ?, ?, 100, 'Aprovado')`,
+              [sim.user_id, sim.projected_monthly_bonus, period, `Bônus Mensal por Meta Batida de Faturamento (R$ ${rev.toLocaleString('pt-BR')})`],
+              function(errIns) {
+                if (!errIns && this.lastID) {
+                  syncIncentiveToFinance(this.lastID, sim.name, 'monthly_bonus', sim.projected_monthly_bonus, period, 'Aprovado', () => {});
+                }
+                resolve();
+              }
+            );
+          });
+        }
+      }
+    }
+
+    res.json({
+      simulated_revenue: rev,
+      total_variable_cost: totalVariableCost,
+      variable_cost_ratio_percent: rev > 0 ? ((totalVariableCost / rev) * 100).toFixed(1) : 0,
+      simulations
+    });
   });
 });
 

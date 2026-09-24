@@ -715,6 +715,40 @@ const db = new sqlite3.Database(dbPath, (err) => {
       // 7. Novas colunas (sales.cost e users.equity_percentage)
       db.run(`ALTER TABLE sales ADD COLUMN cost REAL DEFAULT 0`, () => {});
       db.run(`ALTER TABLE users ADD COLUMN equity_percentage REAL DEFAULT 0`, () => {});
+      db.run(`ALTER TABLE users ADD COLUMN commission_rate REAL DEFAULT 0`, () => {});
+      db.run(`ALTER TABLE users ADD COLUMN base_target REAL DEFAULT 0`, () => {});
+
+      // 8. Tabela de Incentivos, Comissões e Bonificações (RH & Custo Variável)
+      db.run(`CREATE TABLE IF NOT EXISTS hr_incentives (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        type TEXT NOT NULL, -- 'commission', 'monthly_bonus', 'annual_bonus'
+        amount REAL NOT NULL DEFAULT 0,
+        reference_period TEXT NOT NULL,
+        metric_description TEXT,
+        target_achieved_percent REAL DEFAULT 100,
+        status TEXT DEFAULT 'Aprovado',
+        notes TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )`);
+
+      // Seed inicial de incentivos caso vazio
+      db.get("SELECT COUNT(*) as count FROM hr_incentives", (err, row) => {
+        if (!err && row && row.count === 0) {
+          const sampleIncentives = [
+            [1, 'monthly_bonus', 5000, '2026-09', 'Superação de Meta Mensal de Faturamento (120% atingido)', 120, 'Aprovado'],
+            [2, 'commission', 4500, '2026-09', 'Comissão de 5% sobre Fechamento Deal ERP ABC', 100, 'Aprovado'],
+            [1, 'annual_bonus', 15000, '2026', 'PLR Provisão Anual de Sócios / Lucro Líquido', 100, 'Aprovado']
+          ];
+          sampleIncentives.forEach(([uid, type, amt, period, desc, pct, status]) => {
+            db.run(
+              `INSERT INTO hr_incentives (user_id, type, amount, reference_period, metric_description, target_achieved_percent, status)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [uid, type, amt, period, desc, pct, status]
+            );
+          });
+        }
+      });
 
     });
   }

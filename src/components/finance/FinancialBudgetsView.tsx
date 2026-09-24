@@ -301,7 +301,7 @@ export const FinancialBudgetsView: React.FC = () => {
             </div>
 
             <div className="text-xs font-semibold text-slate-400">
-              Impacto no Caixa Total: <span className="text-purple-400 font-bold">{managementCost.cash_burn_payroll_ratio}% do caixa/mês</span>
+              Impacto no Caixa Total: <span className="text-purple-400 font-bold">{Number(managementCost.cash_burn_payroll_ratio || 0).toFixed(1)}% do caixa/mês</span>
             </div>
           </div>
 
@@ -312,7 +312,7 @@ export const FinancialBudgetsView: React.FC = () => {
                 R$ {managementCost.executive_cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <p className="text-[11px] text-slate-500">
-                Representa <strong className="text-purple-300">{managementCost.executive_ratio}%</strong> da folha total
+                Representa <strong className="text-purple-300">{Number(managementCost.executive_ratio || 0).toFixed(1)}%</strong> da folha total
               </p>
               <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-800/60">
                 {managementCost.executive_members.length > 0 ? (
