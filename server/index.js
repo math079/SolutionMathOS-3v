@@ -468,19 +468,26 @@ app.put('/api/deals/:id', (req, res) => {
     if (err || !deal) return res.status(500).json({ error: err ? err.message : 'Deal not found' });
 
     const prevStage = deal.stage;
-    const finalStage = stage || prevStage;
+    const finalStage = stage !== undefined ? stage : prevStage;
     const finalValue = value !== undefined ? parseFloat(value) : deal.value;
 
     db.run(
-      `UPDATE deals SET stage=COALESCE(?,stage), value=COALESCE(?,value), notes=COALESCE(?,notes) WHERE id=?`,
-      [stage||null, value!==undefined ? parseFloat(value) : null, notes||null, dealId],
-      function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+      `UPDATE deals SET stage = COALESCE(?, stage), value = COALESCE(?, value), notes = COALESCE(?, notes) WHERE id = ?`,
+      [stage !== undefined ? stage : null, value !== undefined ? parseFloat(value) : null, notes !== undefined ? notes : null, dealId],
+      function(errUpdate) {
+        if (errUpdate) return res.status(500).json({ error: errUpdate.message });
 
-        // Auto-sync: If stage changed to 'Ganho'
-        if (finalStage === 'Ganho' && prevStage !== 'Ganho' && finalValue > 0) {
+        // Auto-sync com o Financeiro
+        if (finalStage === 'Ganho' && finalValue > 0) {
           db.get(`SELECT id FROM transactions WHERE source_type = 'deal' AND source_id = ?`, [dealId], (errTx, txRow) => {
-            if (!errTx && !txRow) {
+            if (!errTx && txRow) {
+              // Atualiza o valor caso tenha mudado
+              db.run(
+                `UPDATE transactions SET amount = ?, description = ?, month = ? WHERE id = ?`,
+                [finalValue, `Deal Fechado: ${deal.title}`, currentMonth, txRow.id]
+              );
+            } else {
+              // Insere receita no financeiro
               db.run(
                 `INSERT INTO transactions (description, amount, type, category, month, source_type, source_id)
                  VALUES (?, ?, 'income', 'Vendas CRM', ?, 'deal', ?)`,
@@ -488,7 +495,8 @@ app.put('/api/deals/:id', (req, res) => {
               );
             }
           });
-        } else if (finalStage === 'Perdido' && prevStage !== 'Perdido') {
+        } else if (finalStage !== 'Ganho') {
+          // Se não é Ganho (ex: Perdido, Negociação, Novo Lead), remove do Financeiro
           db.run(`DELETE FROM transactions WHERE source_type = 'deal' AND source_id = ?`, [dealId]);
         }
 

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
-  DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent,
-  PointerSensor, useSensor, useSensors, closestCorners
+  DndContext, DragEndEvent, DragOverlay, DragStartEvent,
+  PointerSensor, useSensor, useSensors, closestCorners, useDroppable
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { PlusCircle, X, DollarSign, User, Trash2 } from 'lucide-react';
+import { PlusCircle, X, DollarSign, User, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 
 const STAGES = ['Novo Lead', 'Contato Feito', 'Proposta Enviada', 'Negociação', 'Ganho', 'Perdido'];
 const STAGE_COLORS: Record<string, string> = {
@@ -30,25 +30,30 @@ interface Deal {
 interface User_ { id: number; name: string; role: string; }
 interface Client_ { id: number; name: string; }
 
-// ── Sortable Card ──
-const DealCard: React.FC<{ deal: Deal; onDelete: (id: number) => void }> = ({ deal, onDelete }) => {
+// ── Sortable Card com Botões Rápidos ──
+const DealCard: React.FC<{
+  deal: Deal;
+  onDelete: (id: number) => void;
+  onMoveStage: (id: number, stage: string) => void;
+}> = ({ deal, onDelete, onMoveStage }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: `deal-${deal.id}`, data: { deal }
+    id: `deal-${deal.id}`, data: { deal, stage: deal.stage }
   });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}
-      className="th-card p-4 cursor-grab active:cursor-grabbing group hover:border-primary/40 transition-all shadow-sm">
-      <div className="flex justify-between items-start mb-2">
+      className="th-card p-3.5 cursor-grab active:cursor-grabbing group hover:border-primary/40 transition-all shadow-sm space-y-2.5">
+      <div className="flex justify-between items-start">
         <h4 className="font-bold th-text text-sm leading-tight flex-1 pr-2">{deal.title}</h4>
         <button onClick={(e) => { e.stopPropagation(); onDelete(deal.id); }}
-          className="th-muted hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0">
+          className="th-muted hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+          title="Excluir deal">
           <Trash2 size={13}/>
         </button>
       </div>
       {deal.client_name && (
-        <div className="text-xs th-muted mb-3">{deal.client_name}</div>
+        <div className="text-xs th-muted">{deal.client_name}</div>
       )}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1 text-primary font-bold text-sm">
@@ -60,15 +65,64 @@ const DealCard: React.FC<{ deal: Deal; onDelete: (id: number) => void }> = ({ de
           </div>
         )}
       </div>
+
+      {/* Ações Rápidas de Estágio (Ganho / Perdido / Mudar) */}
+      <div className="pt-2 border-t th-border flex items-center justify-between gap-1.5" onClick={(e) => e.stopPropagation()}>
+        <select
+          value={deal.stage}
+          onChange={(e) => onMoveStage(deal.id, e.target.value)}
+          className="bg-slate-900 border border-slate-700 rounded-lg text-[10px] th-text px-1.5 py-1 font-semibold outline-none flex-1 max-w-[105px]"
+        >
+          {STAGES.map(s => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+
+        <div className="flex items-center gap-1">
+          {deal.stage !== 'Ganho' && (
+            <button
+              onClick={() => onMoveStage(deal.id, 'Ganho')}
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white border border-emerald-500/20 transition-all"
+              title="Marcar como Ganho (Envia para o Financeiro)"
+            >
+              <CheckCircle2 size={10} /> Ganho
+            </button>
+          )}
+          {deal.stage !== 'Perdido' && (
+            <button
+              onClick={() => onMoveStage(deal.id, 'Perdido')}
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white border border-rose-500/20 transition-all"
+              title="Marcar como Perdido (Remove do Financeiro)"
+            >
+              <XCircle size={10} /> Perdido
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
 
-// ── Stage Column ──
-const StageColumn: React.FC<{ stage: string; deals: Deal[]; onDelete: (id: number) => void }> = ({ stage, deals, onDelete }) => {
+// ── Stage Column (Droppable) ──
+const StageColumn: React.FC<{
+  stage: string;
+  deals: Deal[];
+  onDelete: (id: number) => void;
+  onMoveStage: (id: number, stage: string) => void;
+}> = ({ stage, deals, onDelete, onMoveStage }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: stage,
+    data: { stage }
+  });
   const total = deals.reduce((s, d) => s + d.value, 0);
+
   return (
-    <div className={`flex flex-col w-60 shrink-0 border rounded-2xl overflow-hidden ${STAGE_COLORS[stage]}`}>
+    <div
+      ref={setNodeRef}
+      className={`flex flex-col w-64 shrink-0 border rounded-2xl overflow-hidden transition-all ${
+        STAGE_COLORS[stage]
+      } ${isOver ? 'ring-2 ring-primary ring-offset-2 ring-offset-slate-950 bg-primary/10' : ''}`}
+    >
       <div className="px-4 py-3 border-b th-border">
         <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${STAGE_BADGE[stage]}`}>{stage}</div>
         <div className="flex justify-between items-center">
@@ -77,8 +131,17 @@ const StageColumn: React.FC<{ stage: string; deals: Deal[]; onDelete: (id: numbe
         </div>
       </div>
       <SortableContext items={deals.map(d => `deal-${d.id}`)} strategy={verticalListSortingStrategy}>
-        <div className="flex-1 p-3 space-y-3 min-h-[120px] overflow-y-auto max-h-[480px]">
-          {deals.map(deal => <DealCard key={deal.id} deal={deal} onDelete={onDelete}/>)}
+        <div className="flex-1 p-3 space-y-3 min-h-[140px] overflow-y-auto max-h-[500px]">
+          {deals.length === 0 ? (
+            <div className="h-full min-h-[120px] flex flex-col items-center justify-center border-2 border-dashed border-slate-700/40 rounded-xl p-3 text-center">
+              <span className="text-[11px] th-muted font-medium">Solte aqui para marcar como</span>
+              <span className={`text-xs font-bold mt-1 ${STAGE_BADGE[stage]}`}>{stage}</span>
+            </div>
+          ) : (
+            deals.map(deal => (
+              <DealCard key={deal.id} deal={deal} onDelete={onDelete} onMoveStage={onMoveStage} />
+            ))
+          )}
         </div>
       </SortableContext>
     </div>
@@ -93,22 +156,49 @@ const CRMKanban: React.FC = () => {
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
   const [form, setForm]       = useState({ title: '', client_id: '', value: '', stage: 'Novo Lead', assignee_id: '', notes: '' });
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
-    const [d, u, c] = await Promise.all([
-      fetch('http://localhost:3001/api/deals').then(r => r.json()),
-      fetch('http://localhost:3001/api/users').then(r => r.json()),
-      fetch('http://localhost:3001/api/crm/clients').then(r => r.json()),
-    ]);
-    setDeals(d); setUsers(u); setClients(c);
+    try {
+      const [d, u, c] = await Promise.all([
+        fetch('http://localhost:3001/api/deals').then(r => r.json()),
+        fetch('http://localhost:3001/api/users').then(r => r.json()),
+        fetch('http://localhost:3001/api/crm/clients').then(r => r.json()),
+      ]);
+      setDeals(Array.isArray(d) ? d : []);
+      setUsers(Array.isArray(u) ? u : []);
+      setClients(Array.isArray(c) ? c : []);
+    } catch (err) {
+      console.error('Erro ao carregar dados do CRM:', err);
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
     const deal = deals.find(d => `deal-${d.id}` === event.active.id);
     setActiveDeal(deal || null);
+  };
+
+  const handleMoveStage = async (dealId: number, targetStage: string) => {
+    // Atualização otimista imediata na UI
+    setDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: targetStage } : d));
+
+    try {
+      const res = await fetch(`http://localhost:3001/api/deals/${dealId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: targetStage })
+      });
+      if (res.ok) {
+        // Recarrega do servidor para atualizar totais de Pipeline e Ganho
+        loadAll();
+      } else {
+        console.error('Falha ao atualizar deal');
+      }
+    } catch (err) {
+      console.error('Erro ao mover estágio:', err);
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -117,32 +207,28 @@ const CRMKanban: React.FC = () => {
     if (!over) return;
 
     const dealId = parseInt(String(active.id).replace('deal-', ''));
-    const newStage = over.data?.current?.sortable?.containerId
-      ? deals.find(d => `deal-${d.id}` === String(over.id))?.stage
-      : String(over.id);
+    if (!dealId) return;
 
-    if (!newStage) return;
-    const deal = deals.find(d => d.id === dealId);
-    if (!deal || deal.stage === newStage) return;
+    let targetStage: string | undefined;
 
-    setDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: newStage } : d));
-    await fetch(`http://localhost:3001/api/deals/${dealId}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stage: newStage })
-    });
-  };
+    // Caso 1: Soltou direto na coluna (useDroppable)
+    if (STAGES.includes(String(over.id))) {
+      targetStage = String(over.id);
+    }
+    // Caso 2: over.data contém o estágio da coluna
+    else if (over.data?.current?.stage) {
+      targetStage = over.data.current.stage;
+    }
+    // Caso 3: Soltou em cima de outro card
+    else if (String(over.id).startsWith('deal-')) {
+      const overDealId = parseInt(String(over.id).replace('deal-', ''));
+      const targetDeal = deals.find(d => d.id === overDealId);
+      targetStage = targetDeal?.stage;
+    }
 
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-    const dealId = parseInt(String(active.id).replace('deal-', ''));
-    const overId  = String(over.id);
-    const targetStage = STAGES.includes(overId) ? overId
-      : deals.find(d => `deal-${d.id}` === overId)?.stage;
-    if (!targetStage) return;
-    const deal = deals.find(d => d.id === dealId);
-    if (!deal || deal.stage === targetStage) return;
-    setDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: targetStage } : d));
+    if (!targetStage || !STAGES.includes(targetStage)) return;
+
+    await handleMoveStage(dealId, targetStage);
   };
 
   const handleAddDeal = async (e: React.FormEvent) => {
@@ -164,7 +250,7 @@ const CRMKanban: React.FC = () => {
     setDeals(prev => prev.filter(d => d.id !== id));
   };
 
-  const totalPipeline = deals.reduce((s, d) => s + d.value, 0);
+  const totalPipeline = deals.filter(d => d.stage !== 'Ganho' && d.stage !== 'Perdido').reduce((s, d) => s + d.value, 0);
   const totalWon = deals.filter(d => d.stage === 'Ganho').reduce((s, d) => s + d.value, 0);
 
   return (
@@ -188,12 +274,13 @@ const CRMKanban: React.FC = () => {
       {/* Kanban Board */}
       <div className="flex-1 overflow-x-auto p-6">
         <DndContext sensors={sensors} collisionDetection={closestCorners}
-          onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragOver={handleDragOver}>
+          onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="flex gap-4 h-full">
             {STAGES.map(stage => (
               <StageColumn key={stage} stage={stage}
                 deals={deals.filter(d => d.stage === stage)}
-                onDelete={handleDelete}/>
+                onDelete={handleDelete}
+                onMoveStage={handleMoveStage}/>
             ))}
           </div>
           <DragOverlay>
