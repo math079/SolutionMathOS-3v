@@ -41,7 +41,7 @@ export const LyraAvatar: React.FC<{ size?: 'sm' | 'md' | 'lg' | 'xl'; pulse?: bo
   return (
     <div className={`relative shrink-0 ${dims[size]}`}>
       <img
-        src="/lyra-avatar.jpg"
+        src="/logo.jpg"
         alt="Lyra AI"
         className={`${dims[size]} rounded-2xl object-cover border border-purple-500/40 shadow-lg shadow-purple-500/25 ${pulse ? 'animate-pulse ring-2 ring-purple-500' : ''}`}
       />
@@ -333,7 +333,7 @@ export const LyraFloatingButton: React.FC<LyraFloatingButtonProps> = ({ currentM
         title={open ? 'Fechar Lyra' : 'Lyra — IA Assistente Solution Math'}
       >
         <img
-          src="/lyra-avatar.jpg"
+          src="/logo.jpg"
           alt="Lyra AI"
           className="w-full h-full object-cover"
         />
@@ -558,12 +558,11 @@ export const AIChatView: React.FC = () => {
           </div>
 
           {/* Official Lyra Image Card */}
-          <div className="relative rounded-3xl overflow-hidden border border-purple-500/30 shadow-2xl shadow-purple-950/80 mb-6 group">
-            <img src="/lyra-avatar.jpg" alt="Lyra Visual Official" className="w-full h-80 object-cover object-top transition-transform duration-500 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-            <div className="absolute bottom-4 left-4 right-4">
-              <span className="text-xs font-bold text-purple-300 bg-purple-950/80 px-2.5 py-1 rounded-full border border-purple-500/30">Lyra v2.0</span>
-              <p className="text-white text-sm font-semibold mt-1.5">"Olá! Como posso ajudar você hoje?"</p>
+          <div className="relative rounded-3xl overflow-hidden border border-purple-500/30 shadow-2xl shadow-purple-950/80 mb-6 group bg-gradient-to-b from-purple-950/40 to-black/80 p-6 flex flex-col items-center justify-center">
+            <img src="/logo.jpg" alt="Lyra Visual Official" className="w-56 h-56 object-contain rounded-2xl transition-transform duration-500 group-hover:scale-105 border border-primary/30 p-2 bg-slate-950/80 shadow-lg shadow-purple-900/30" />
+            <div className="mt-4 text-center">
+              <span className="text-xs font-bold text-purple-300 bg-purple-950/80 px-3 py-1 rounded-full border border-purple-500/30">Lyra v2.0 &bull; Solution Math</span>
+              <p className="text-white text-sm font-semibold mt-2">"Olá! Sou a assistente oficial da Solution Math. Como posso ajudar?"</p>
             </div>
           </div>
 
