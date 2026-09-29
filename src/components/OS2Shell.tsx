@@ -4,7 +4,7 @@ import {
   Building2, Package, Calendar as CalendarIcon, Settings,
   ChevronLeft, Bell, Search, LogOut, ShoppingBag, ShieldCheck,
   FileSpreadsheet, LifeBuoy, Bot, Zap, Filter, BadgeDollarSign,
-  Target, Edit3, X, Check
+  Target, Edit3, X, Check, FileText
 } from 'lucide-react';
 import FinancialDashboard from './FinancialDashboard';
 import CRMKanban from './CRMKanban';
@@ -22,6 +22,7 @@ import { AIChatView, LyraFloatingButton } from './AIChatView';
 import { WorkflowsView } from './WorkflowsView';
 import { LeadsView } from './LeadsView';
 import { SalesDashboardView } from './SalesDashboardView';
+import { FiscalInvoiceView } from './FiscalInvoiceView';
 import { useAuth } from '../contexts/AuthContext';
 
 interface OS2ShellProps {
@@ -29,7 +30,7 @@ interface OS2ShellProps {
   onLogout?: () => void;
 }
 
-type OS2View = 'home' | 'sales' | 'finance' | 'products' | 'crm-kanban' | 'crm-leads' | 'funnel-leads' | 'store' | 'agenda' | 'tasks' | 'hr' | 'reports' | 'helpdesk' | 'audit' | 'ai-chat' | 'workflows';
+type OS2View = 'home' | 'sales' | 'finance' | 'products' | 'crm-kanban' | 'crm-leads' | 'funnel-leads' | 'store' | 'agenda' | 'tasks' | 'hr' | 'reports' | 'helpdesk' | 'audit' | 'ai-chat' | 'workflows' | 'fiscal';
 
 interface NavItem {
   id: OS2View;
@@ -56,6 +57,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'workflows',   label: 'Workflows & Automações', icon: <Zap size={18}/>,        group: 'Gestão', minPlan: 'growth' },
   { id: 'helpdesk',    label: 'Suporte & Helpdesk',  icon: <LifeBuoy size={18}/>,        group: 'Gestão', minPlan: 'start' },
   { id: 'audit',       label: 'Logs de Segurança',   icon: <ShieldCheck size={18}/>,     group: 'Gestão', minPlan: 'enterprise', adminOnly: true },
+  { id: 'fiscal',      label: 'Módulo Fiscal (NF-e/MDF-e)', icon: <FileText size={18}/>, group: 'Gestão', minPlan: 'enterprise' },
   { id: 'ai-chat',     label: 'IA Assistente',        icon: <Bot size={18}/>,             group: 'Gestão', minPlan: 'start' },
 ];
 
@@ -450,6 +452,7 @@ const OS2Shell: React.FC<OS2ShellProps> = ({ onExitOS2, onLogout }) => {
       case 'workflows':    return <WorkflowsView onOpenLyra={() => setActiveView('ai-chat')} />;
       case 'helpdesk':     return <HelpdeskView/>;
       case 'audit':        return <AuditLogsView/>;
+      case 'fiscal':       return <FiscalInvoiceView/>;
       case 'ai-chat':      return <AIChatView/>;
       default:             return <OS2Home onNavigate={setActiveView} />;
     }
