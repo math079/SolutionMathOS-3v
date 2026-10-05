@@ -181,7 +181,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
         if (!err && row.count <= 3) {
           db.run(`DELETE FROM users`);
           db.run(`INSERT INTO users (name, role, email, phone, contract_type, salary, status, hired_at) VALUES
-            ('João CEO', 'CEO / Executivo', 'joao@solutionmath.com', '(11) 98888-1001', 'Sócio', 15000, 'Ativo', '2024-01-15'),
+            ('Matheus Saraiva', 'CEO & Fundador', 'matheus@solutionmath.com', '(11) 98888-1001', 'Sócio', 15000, 'Ativo', '2024-01-15'),
             ('Ana Vendas', 'Gerente Comercial', 'ana.vendas@solutionmath.com', '(11) 97777-2002', 'CLT', 6500, 'Ativo', '2024-03-01'),
             ('Pedro Dev', 'Tech Lead Full Stack', 'pedro.dev@solutionmath.com', '(11) 96666-3003', 'PJ', 9500, 'Ativo', '2024-02-10'),
             ('Carla Design', 'UI/UX Designer Senior', 'carla.design@solutionmath.com', '(11) 95555-4004', 'PJ', 7000, 'Ativo', '2024-05-20')`);
@@ -692,7 +692,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
       db.get("SELECT COUNT(*) as count FROM financial_budgets WHERE month = '2026-09'", (err, row) => {
         if (!err && row && row.count === 0) {
           const sampleBudgets = [
-            ['RH & Gestão Executiva (CEOs & Liderança)', 'fixed', 42000, '2026-09', 'Folha fixa interna. João CEO consome R$ 15.000 (39.5% do total da folha).'],
+            ['RH & Gestão Executiva (CEOs & Liderança)', 'fixed', 42000, '2026-09', 'Folha fixa interna. Matheus Saraiva (CEO) consome R$ 15.000 (39.5% do total da folha).'],
             ['Marketing & Aquisição (Tráfego Pago)', 'investment', 15000, '2026-09', 'Verba alocada com base no Fundo de Investimentos disponível (R$ 25.000 em caixa).'],
             ['TI, Cloud & Inteligência Artificial', 'variable', 6000, '2026-09', 'Hospedagem VPS KVM 4, domínios e consumo de tokens de IA.'],
             ['Operações & Prestadores Terceirizados', 'fixed', 14000, '2026-09', 'Contabilidade, assessoria jurídica e infraestrutura operacional contínua.'],

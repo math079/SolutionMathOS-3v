@@ -335,6 +335,42 @@ export const ReportsView: React.FC = () => {
           )}
         </>
       )}
+
+      {/* Termo de Encerramento e Assinaturas (Exclusivo para Impressão / PDF) */}
+      <div className="hidden print:block mt-12 pt-8 border-t-2 border-black/80 space-y-8" style={{ pageBreakInside: 'avoid' }}>
+        <div className="flex items-center justify-between text-xs text-gray-700">
+          <div>
+            <p className="font-bold uppercase text-gray-900">Validação e Conformidade Executiva</p>
+            <p className="text-[11px] text-gray-600 mt-0.5">
+              Relatório consolidado e autenticado pela diretoria executiva da Solution Math.
+            </p>
+          </div>
+          <div className="text-right text-[11px] text-gray-500 font-mono">
+            AUTENTICAÇÃO DIGITAL: SMOS-EXEC-{new Date().getFullYear()}
+          </div>
+        </div>
+
+        {/* Assinaturas Formais */}
+        <div className="grid grid-cols-2 gap-12 pt-6">
+          <div className="text-center">
+            <div className="border-t border-black w-4/5 mx-auto mb-2"></div>
+            <p className="font-bold text-xs uppercase text-gray-900">Matheus Saraiva</p>
+            <p className="text-[11px] text-gray-600 font-semibold">Fundador &amp; CEO Executivo &bull; <span className="text-emerald-700">Assinado Eletronicamente</span></p>
+            <p className="text-[10px] text-gray-500">Solution Math Tecnologia Empresarial Ltda</p>
+          </div>
+
+          <div className="text-center">
+            <div className="border-t border-black w-4/5 mx-auto mb-2"></div>
+            <p className="font-bold text-xs uppercase text-gray-900">Controladoria &amp; Gestão Estratégica</p>
+            <p className="text-[11px] text-gray-600">Diretoria de Operações</p>
+            <p className="text-[10px] text-gray-500">Solution Math OS</p>
+          </div>
+        </div>
+
+        <div className="text-center text-[10px] text-gray-400 pt-3 border-t">
+          Documento emitido eletronicamente via plataforma Solution Math OS v3.0 Enterprise em {new Date().toLocaleDateString('pt-BR')}.
+        </div>
+      </div>
     </div>
   );
 };

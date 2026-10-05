@@ -823,15 +823,15 @@ const FinancialDashboard: React.FC = () => {
           <div className="grid grid-cols-2 gap-12 pt-6">
             <div className="text-center">
               <div className="border-t border-black w-4/5 mx-auto mb-2"></div>
-              <p className="font-bold text-xs uppercase text-gray-900">João CEO</p>
-              <p className="text-[11px] text-gray-600">Diretor Executivo / CEO</p>
+              <p className="font-bold text-xs uppercase text-gray-900">Matheus Saraiva</p>
+              <p className="text-[11px] text-gray-600 font-semibold">Fundador &amp; CEO Executivo &bull; <span className="text-emerald-700">Assinado Eletronicamente</span></p>
               <p className="text-[10px] text-gray-500">Solution Math Tecnologia Empresarial Ltda</p>
             </div>
 
             <div className="text-center">
               <div className="border-t border-black w-4/5 mx-auto mb-2"></div>
-              <p className="font-bold text-xs uppercase text-gray-900">Gestão Contábil & Financeira</p>
-              <p className="text-[11px] text-gray-600">CRC / Controladoria Corporativa</p>
+              <p className="font-bold text-xs uppercase text-gray-900">Gestão Contábil &amp; Controladoria</p>
+              <p className="text-[11px] text-gray-600">CRC / Auditoria Corporativa</p>
               <p className="text-[10px] text-gray-500">Solution Math OS</p>
             </div>
           </div>
